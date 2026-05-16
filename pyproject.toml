@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forex-bot"
+version = "0.1.0"
+description = "Event-driven forex trading bot for major US economic news releases"
+requires-python = ">=3.11"
+dependencies = [
+    "ib_async",
+    "httpx",
+    "beautifulsoup4",
+    "lxml",
+    "fredapi",
+    "pydantic>=2.0",
+    "pydantic-settings",
+    "sqlalchemy>=2.0",
+    "apscheduler>=3.10",
+    "typer",
+    "rich",
+    "python-dotenv",
+    "pyyaml",
+    "loguru",
+    "aiosqlite",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-mock",
+]
+
+[project.scripts]
+forex-bot = "forex_bot.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "integration: requires IB Gateway running",
+]

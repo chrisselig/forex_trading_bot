@@ -1,0 +1,92 @@
+from __future__ import annotations
+
+from loguru import logger
+
+from forex_bot.config import get_settings
+from forex_bot.broker.client import IBClient
+from forex_bot.broker.contracts import get_pip_size
+from forex_bot.data.trade_journal import TradeJournal
+from forex_bot.models.account import AccountSummary
+from forex_bot.models.market import PriceSnapshot
+from forex_bot.risk.rules import (
+    RiskRule,
+    MaxRiskPerTrade,
+    MaxDailyDrawdown,
+    MaxConcurrentPositions,
+    MandatoryStopLoss,
+    MaxSpread,
+)
+from forex_bot.risk.circuit_breaker import CircuitBreaker
+from forex_bot.strategy.signals import Signal
+
+
+class RiskManager:
+    """Validates all trades against risk rules. No bypass possible."""
+
+    def __init__(self, client: IBClient, circuit_breaker: CircuitBreaker, journal: TradeJournal):
+        self._client = client
+        self._circuit_breaker = circuit_breaker
+        self._journal = journal
+        settings = get_settings()
+        self._rules: list[RiskRule] = [
+            MandatoryStopLoss() if settings.risk.mandatory_stop_loss else None,
+            MaxRiskPerTrade(settings.risk.max_risk_per_trade_pct),
+            MaxDailyDrawdown(settings.risk.max_daily_drawdown_pct),
+            MaxConcurrentPositions(settings.risk.max_concurrent_positions),
+            MaxSpread(settings.risk.max_spread_pips),
+        ]
+        self._rules = [r for r in self._rules if r is not None]
+
+    async def validate(self, signal: Signal, price: PriceSnapshot | None = None) -> list[str]:
+        """Validate a signal against all risk rules. Returns list of violations."""
+        # Check circuit breaker first
+        cb_error = self._circuit_breaker.check()
+        if cb_error:
+            return [cb_error]
+
+        account = await self._client.get_account_summary()
+        positions = await self._client.get_positions()
+        daily_pnl = await self._journal.get_daily_pnl()
+
+        violations = []
+        for rule in self._rules:
+            error = rule.validate(
+                signal=signal,
+                account=account,
+                price=price,
+                open_position_count=len(positions),
+                daily_pnl=daily_pnl,
+            )
+            if error:
+                violations.append(error)
+
+        if violations:
+            logger.warning(f"Risk violations for {signal.instrument}: {violations}")
+        else:
+            logger.debug(f"Risk check passed for {signal.instrument}")
+
+        return violations
+
+    def calculate_position_size(
+        self,
+        account_balance: float,
+        stop_loss_pips: float,
+        pair: str,
+        risk_pct: float | None = None,
+    ) -> float:
+        """Calculate position size based on risk percentage and stop loss distance.
+
+        Formula: units = (balance * risk%) / (sl_pips * pip_value)
+        For standard forex lots, pip_value depends on the pair.
+        """
+        if risk_pct is None:
+            risk_pct = get_settings().risk.max_risk_per_trade_pct
+
+        pip_size = get_pip_size(pair)
+        risk_amount = account_balance * (risk_pct / 100)
+        # For simplicity, pip_value ≈ pip_size for most pairs
+        # In production, this would account for the quote currency conversion
+        units = risk_amount / (stop_loss_pips * pip_size)
+        # Round to nearest 1000 (mini lot)
+        units = round(units / 1000) * 1000
+        return max(units, 1000)  # Minimum 1 micro lot (1000 units)

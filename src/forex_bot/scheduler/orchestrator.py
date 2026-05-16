@@ -1,0 +1,183 @@
+from __future__ import annotations
+
+import asyncio
+import signal
+from datetime import datetime, timedelta
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.interval import IntervalTrigger
+from loguru import logger
+
+from forex_bot.broker.client import IBClient
+from forex_bot.broker.pricing import PricingService
+from forex_bot.calendar.scraper import ForexFactoryScraper
+from forex_bot.calendar.parser import EventParser
+from forex_bot.calendar.store import EventStore
+from forex_bot.config import get_settings
+from forex_bot.data.database import init_db
+from forex_bot.data.trade_journal import TradeJournal
+from forex_bot.execution.engine import ExecutionEngine
+from forex_bot.execution.monitor import PositionMonitor
+from forex_bot.execution.reconciler import Reconciler
+from forex_bot.models.events import EconomicEvent
+from forex_bot.risk.circuit_breaker import CircuitBreaker
+from forex_bot.risk.manager import RiskManager
+from forex_bot.scheduler.jobs import JobManager
+from forex_bot.scheduler.shutdown import ShutdownHandler
+from forex_bot.strategy.registry import create_default_registry
+
+
+class Orchestrator:
+    """Main orchestrator: startup, scheduling, and event coordination."""
+
+    def __init__(self):
+        self._settings = get_settings()
+        self._client = IBClient()
+        self._scheduler = AsyncIOScheduler(timezone="UTC")
+        self._circuit_breaker = CircuitBreaker(
+            max_daily_drawdown_pct=self._settings.risk.max_daily_drawdown_pct,
+        )
+        self._journal = TradeJournal()
+        self._risk_manager = RiskManager(self._client, self._circuit_breaker, self._journal)
+        self._execution_engine = ExecutionEngine(
+            self._client, self._risk_manager, self._circuit_breaker, self._journal
+        )
+        self._monitor = PositionMonitor(self._client, self._journal, self._circuit_breaker)
+        self._reconciler = Reconciler(self._client)
+        self._pricing = PricingService(self._client)
+        self._scraper = ForexFactoryScraper()
+        self._parser = EventParser()
+        self._event_store = EventStore()
+        self._strategy_registry = create_default_registry()
+        self._job_manager = JobManager(
+            scheduler=self._scheduler,
+            execution_engine=self._execution_engine,
+            pricing=self._pricing,
+            event_store=self._event_store,
+            strategy_registry=self._strategy_registry,
+            monitor=self._monitor,
+            client=self._client,
+            settings=self._settings,
+        )
+        self._shutdown_handler = ShutdownHandler(self._client, self._scheduler, self._monitor)
+        self._running = False
+
+    async def start(self) -> None:
+        """Full startup sequence."""
+        logger.info("Starting Forex Trading Bot...")
+
+        # 1. Initialize database
+        await init_db()
+
+        # 2. Connect to IB
+        await self._client.connect()
+
+        # 3. Reconcile state
+        state = await self._reconciler.reconcile()
+        logger.info(f"Account NLV: ${state['net_liquidation']:,.2f}")
+
+        # 4. Start position monitoring
+        self._monitor.start_monitoring()
+
+        # 5. Refresh calendar
+        await self._refresh_calendar()
+
+        # 6. Schedule recurring jobs
+        self._schedule_recurring_jobs()
+
+        # 7. Schedule upcoming event jobs
+        await self._schedule_event_jobs()
+
+        # 8. Register shutdown handlers
+        self._shutdown_handler.register()
+
+        # 9. Start scheduler
+        self._scheduler.start()
+        self._running = True
+        logger.info("Forex Trading Bot is running. Press Ctrl+C to stop.")
+
+    async def _refresh_calendar(self) -> None:
+        """Fetch and store upcoming events."""
+        try:
+            events = await self._scraper.fetch_week()
+            filtered = self._parser.filter_events(events)
+            await self._event_store.save_events(filtered)
+            await self._event_store.update_actuals(events)
+            logger.info(f"Calendar refreshed: {len(filtered)} target events")
+        except Exception as e:
+            logger.error(f"Calendar refresh failed: {e}")
+
+    def _schedule_recurring_jobs(self) -> None:
+        """Set up periodic jobs."""
+        # Calendar refresh every 6 hours
+        self._scheduler.add_job(
+            self._refresh_calendar,
+            IntervalTrigger(hours=6),
+            id="calendar_refresh",
+            replace_existing=True,
+        )
+
+        # Health check every 5 minutes
+        self._scheduler.add_job(
+            self._health_check,
+            IntervalTrigger(minutes=5),
+            id="health_check",
+            replace_existing=True,
+        )
+
+        # Check expired positions every minute
+        self._scheduler.add_job(
+            self._monitor.close_expired_positions,
+            IntervalTrigger(minutes=1),
+            id="check_expired",
+            replace_existing=True,
+        )
+
+        # Daily circuit breaker reset at 00:00 UTC
+        self._scheduler.add_job(
+            self._circuit_breaker.reset_daily,
+            CronTrigger(hour=0, minute=0),
+            id="daily_cb_reset",
+            replace_existing=True,
+        )
+
+        logger.info("Recurring jobs scheduled")
+
+    async def _schedule_event_jobs(self) -> None:
+        """Schedule pre/post event jobs for upcoming events."""
+        events = await self._event_store.get_upcoming(within_hours=24)
+        pre_minutes = self._settings.strategy.pre_event_minutes
+
+        for event in events:
+            self._job_manager.schedule_event_jobs(event, pre_minutes)
+
+        logger.info(f"Scheduled jobs for {len(events)} upcoming events")
+
+    async def _health_check(self) -> None:
+        """Verify IB connection and reconnect if needed."""
+        if not self._client.is_connected:
+            logger.warning("IB connection lost during health check")
+            try:
+                await self._client.connect()
+                logger.info("IB reconnection successful")
+            except Exception as e:
+                logger.error(f"IB reconnection failed: {e}")
+
+    async def run_forever(self) -> None:
+        """Start and run until interrupted."""
+        await self.start()
+        try:
+            while self._running:
+                await asyncio.sleep(1)
+        except (KeyboardInterrupt, SystemExit):
+            logger.info("Shutdown signal received")
+        finally:
+            await self.stop()
+
+    async def stop(self) -> None:
+        """Graceful shutdown."""
+        self._running = False
+        await self._shutdown_handler.shutdown()
+        logger.info("Forex Trading Bot stopped.")

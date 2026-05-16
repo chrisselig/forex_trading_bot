@@ -1,0 +1,32 @@
+broker:
+  host: "127.0.0.1"
+  port: 4002
+  client_id: 1
+  timeout: 30
+
+trading:
+  instruments:
+    - EURUSD
+    - GBPUSD
+    - USDJPY
+    - USDCAD
+  default_timeframe: "5 mins"
+
+risk:
+  max_risk_per_trade_pct: 1.0
+  max_daily_drawdown_pct: 3.0
+  max_concurrent_positions: 3
+  mandatory_stop_loss: true
+  max_spread_pips: 3.0
+
+strategy:
+  pre_event_minutes: 30
+  post_event_minutes: 60
+  straddle_distance_pips: 20
+  straddle_tp_pips: 30
+  straddle_sl_pips: 15
+  surprise_threshold_pct: 10.0
+  surprise_entry_delay_seconds: 5
+  surprise_tp_pips: 25
+  surprise_sl_pips: 15
+  max_holding_minutes: 120
