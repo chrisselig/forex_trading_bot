@@ -33,17 +33,31 @@ class RiskConfig(BaseModel):
     max_spread_pips: float = 3.0
 
 
+class StraddlePairOverride(BaseModel):
+    distance_pips: float
+    tp_pips: float
+    sl_pips: float
+
+
 class StrategyConfig(BaseModel):
     pre_event_minutes: int = 30
     post_event_minutes: int = 60
     straddle_distance_pips: float = 20.0
     straddle_tp_pips: float = 30.0
     straddle_sl_pips: float = 15.0
+    straddle_pair_overrides: dict[str, StraddlePairOverride] = Field(default_factory=dict)
     surprise_threshold_pct: float = 10.0
     surprise_entry_delay_seconds: int = 5
     surprise_tp_pips: float = 25.0
     surprise_sl_pips: float = 15.0
     max_holding_minutes: int = 120
+
+    def get_straddle_params(self, instrument: str) -> tuple[float, float, float]:
+        """Return (distance, tp, sl) in pips for the given instrument."""
+        override = self.straddle_pair_overrides.get(instrument)
+        if override:
+            return override.distance_pips, override.tp_pips, override.sl_pips
+        return self.straddle_distance_pips, self.straddle_tp_pips, self.straddle_sl_pips
 
 
 class EventTarget(BaseModel):

@@ -17,10 +17,7 @@ class StraddleStrategy(BaseStrategy):
     name = "straddle"
 
     def __init__(self):
-        settings = get_settings()
-        self._distance_pips = settings.strategy.straddle_distance_pips
-        self._tp_pips = settings.strategy.straddle_tp_pips
-        self._sl_pips = settings.strategy.straddle_sl_pips
+        self._settings = get_settings()
 
     async def evaluate_pre_event(
         self,
@@ -28,11 +25,14 @@ class StraddleStrategy(BaseStrategy):
         price: PriceSnapshot,
     ) -> list[Signal]:
         """Place buy stop above and sell stop below current mid price."""
+        distance_pips, tp_pips, sl_pips = self._settings.strategy.get_straddle_params(
+            price.instrument
+        )
         pip = get_pip_size(price.instrument)
         mid = price.mid
-        distance = self._distance_pips * pip
-        tp_distance = self._tp_pips * pip
-        sl_distance = self._sl_pips * pip
+        distance = distance_pips * pip
+        tp_distance = tp_pips * pip
+        sl_distance = sl_pips * pip
 
         buy_entry = mid + distance
         sell_entry = mid - distance
@@ -63,8 +63,9 @@ class StraddleStrategy(BaseStrategy):
         ]
 
         logger.info(
-            f"Straddle signals for {event.title}: "
-            f"BUY@{buy_entry:.5f} SELL@{sell_entry:.5f} (mid={mid:.5f})"
+            f"Straddle signals for {event.title} on {price.instrument}: "
+            f"BUY@{buy_entry:.5f} SELL@{sell_entry:.5f} (mid={mid:.5f}, "
+            f"D={distance_pips} TP={tp_pips} SL={sl_pips})"
         )
         return signals
 
