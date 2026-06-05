@@ -44,7 +44,7 @@ The bot sleeps between events, wakes up before scheduled releases, executes pre-
                     └──────┬───────┘
                            │
                     ┌──────▼───────┐
-                    │  IB Gateway  │ (localhost:4002)
+                    │  TWS / IB    │ (localhost:7497)
                     │  via ib_async│
                     └──────────────┘
 ```
@@ -94,7 +94,7 @@ Signal → RiskManager.validate() → CircuitBreaker.check() → ExecutionEngine
 | Max Risk Per Trade | 1% | Max account risk per trade |
 | Max Daily Drawdown | 3% | Halts trading for the day |
 | Max Concurrent Positions | 3 | Limits open position count |
-| Max Spread | 3 pips | Rejects trades during wide spreads |
+| Max Spread | 15 pips | Rejects trades during wide spreads (wider for exotics) |
 
 ### Circuit Breaker
 
@@ -145,14 +145,16 @@ Sign up at [interactivebrokers.com](https://www.interactivebrokers.com). Select 
 
 IBKR is IIROC registered and available in all Canadian provinces, including Alberta.
 
-### 2. IB Gateway
+### 2. TWS or IB Gateway
 
-Download [IB Gateway](https://www.interactivebrokers.com/en/trading/ibgateway-stable.php) (lightweight headless option) or use the full TWS.
+Download [TWS](https://www.interactivebrokers.com/en/trading/tws.php) (full desktop) or [IB Gateway](https://www.interactivebrokers.com/en/trading/ibgateway-stable.php) (lightweight headless).
 
-Configure:
-- Enable API connections in settings
-- Socket port: **4002** (paper) or **4001** (live)
-- Allow connections from localhost
+Configure the API socket in TWS:
+1. **File → Global Configuration → API → Settings**
+2. Check **"Enable ActiveX and Socket Clients"**
+3. Confirm socket port: **7497** (TWS paper) / **7496** (TWS live) / **4002** (Gateway paper) / **4001** (Gateway live)
+4. Uncheck **"Read-Only API"** (required for order placement)
+5. Click **Apply / OK**
 
 ### 3. FRED API Key (Optional)
 
@@ -173,16 +175,25 @@ python3 --version  # must be 3.11 or higher
 git clone git@github.com:chrisselig/forex_trading_bot.git
 cd forex_trading_bot
 
-# Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
+# Create conda environment
+conda create -n forex-bot python=3.12 -y
+conda activate forex-bot
 
 # Install
 pip install -e ".[dev]"
 
 # Configure
 cp .env.example .env
-# Edit .env with your FRED_API_KEY (optional)
+# Edit .env — set IB_PORT and FRED_API_KEY
+```
+
+### .env setup
+
+```bash
+FRED_API_KEY=your_key_here   # Free from fred.stlouisfed.org
+IB_HOST=127.0.0.1
+IB_PORT=7497                 # 7497=TWS paper, 7496=TWS live, 4002=Gateway paper
+IB_CLIENT_ID=1
 ```
 
 ---
@@ -194,15 +205,16 @@ cp .env.example .env
 ```yaml
 broker:
   host: "127.0.0.1"
-  port: 4002          # 4002 = paper, 4001 = live
+  port: 4002          # Overridden by IB_PORT in .env
   client_id: 1
   timeout: 30
 
 trading:
   instruments:
-    - EURUSD
+    - USDZAR
+    - USDTRY
+    - GBPJPY
     - GBPUSD
-    - USDJPY
     - USDCAD
   default_timeframe: "5 mins"
 
@@ -211,7 +223,7 @@ risk:
   max_daily_drawdown_pct: 3.0
   max_concurrent_positions: 3
   mandatory_stop_loss: true
-  max_spread_pips: 3.0
+  max_spread_pips: 15.0       # Wider for exotic pairs (USDZAR, USDTRY)
 
 strategy:
   pre_event_minutes: 30
@@ -234,17 +246,7 @@ Pre-configured events: NFP, CPI, FOMC, GDP, Jobless Claims, ISM Manufacturing, P
 
 ### .env
 
-```
-FRED_API_KEY=your_key_here
-```
-
-Environment variables override YAML settings:
-
-```
-IB_HOST=127.0.0.1
-IB_PORT=4002
-IB_CLIENT_ID=1
-```
+Environment variables override YAML settings. See the [Installation](#installation) section for setup.
 
 ---
 
@@ -253,18 +255,38 @@ IB_CLIENT_ID=1
 ### Start the Bot
 
 ```bash
-# Start IB Gateway first, then:
+conda activate forex-bot
 forex-bot run
 ```
 
 The bot will:
-1. Connect to IB Gateway
+1. Connect to TWS/IB Gateway
 2. Reconcile any open positions/orders
 3. Fetch the economic calendar
 4. Schedule pre/post event jobs
-5. Run health checks every 5 minutes
+5. Run health checks every 5 minutes (auto-reconnects and re-schedules jobs on disconnect)
 6. Refresh the calendar every 6 hours
 7. Gracefully shutdown on Ctrl+C
+
+### Before a Trading Day
+
+1. Open TWS and log into your paper (or live) account
+2. Ensure the API socket is enabled (File → Global Configuration → API → Settings)
+3. Start the bot: `conda activate forex-bot && forex-bot run`
+4. The bot will auto-schedule jobs for upcoming events and handle reconnections
+
+### Reconnection Behavior
+
+- TWS disconnects nightly at ~11:45 PM ET
+- The bot's health check (every 5 min) detects the drop, reconnects, refreshes the calendar, and re-schedules event jobs
+- If TWS is restarted manually, the bot will reconnect on the next health check cycle
+
+### Resetting the Paper Account
+
+To clear all positions and reset the paper account balance:
+1. Go to the [IB Client Portal](https://www.interactivebrokers.com/portal)
+2. Log in → **Settings → Account Settings → Paper Trading Account → Reset**
+3. The reset takes a few minutes to process
 
 ### CLI Commands
 
@@ -331,9 +353,9 @@ Interactive Brokers uses a **socket-based API**, not REST. Key differences:
 - **No API key or token** — authentication is handled by IB Gateway's own login
 - **Event-driven** — IB pushes data via events, `ib_async` wraps them as awaitables
 - **Forex contracts** — represented as `Forex('EURUSD')`, not string tickers
-- **Daily reset** — IB Gateway auto-disconnects at ~11:45 PM ET. The bot's health check detects this and reconnects
+- **Daily reset** — TWS/IB Gateway auto-disconnects at ~11:45 PM ET. The bot's health check detects this, reconnects, and re-schedules event jobs
 - **Pacing limits** — max 60 historical data requests per 10 minutes. The pricing service throttles automatically
-- **Paper trading** — same API, different port (4002 vs 4001). Toggle in IB Account Management
+- **Paper trading** — same API, different port. TWS: 7497 (paper) / 7496 (live). Gateway: 4002 (paper) / 4001 (live)
 
 ---
 
