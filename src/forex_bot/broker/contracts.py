@@ -15,6 +15,8 @@ PIP_SIZES: dict[str, float] = {
     "USDJPY": 0.01,
     "EURJPY": 0.01,
     "GBPJPY": 0.01,
+    "USDZAR": 0.0001,
+    "USDTRY": 0.0001,
 }
 
 

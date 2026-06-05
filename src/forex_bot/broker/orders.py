@@ -41,7 +41,7 @@ class OrderService:
         """Place a single order with IB."""
         await self._client.ensure_connected()
         contract = make_forex_contract(order.instrument)
-        self.ib.qualifyContracts(contract)
+        await self.ib.qualifyContractsAsync(contract)
         ib_order = self._create_ib_order(order)
         logger.info(f"Placing {order.order_type} {order.side} {order.quantity} {order.instrument}")
 
@@ -64,7 +64,7 @@ class OrderService:
         """Place a bracket order (entry + TP + SL) with IB."""
         await self._client.ensure_connected()
         contract = make_forex_contract(instrument)
-        self.ib.qualifyContracts(contract)
+        await self.ib.qualifyContractsAsync(contract)
 
         action = side.value
         bracket = self.ib.bracketOrder(
@@ -88,6 +88,39 @@ class OrderService:
             return trades
         except Exception as e:
             raise OrderError(f"Failed to place bracket order: {e}") from e
+
+    async def place_order_with_stop(self, order: Order) -> IBTrade:
+        """Place an order with an attached stop loss order."""
+        if order.stop_loss is None:
+            raise OrderError("Stop loss is required")
+        await self._client.ensure_connected()
+        contract = make_forex_contract(order.instrument)
+        await self.ib.qualifyContractsAsync(contract)
+
+        ib_order = self._create_ib_order(order)
+        ib_order.transmit = False  # Hold until child is attached
+
+        reverse_action = "SELL" if order.side == OrderSide.BUY else "BUY"
+        sl_order = StopOrder(
+            action=reverse_action,
+            totalQuantity=order.quantity,
+            stopPrice=order.stop_loss,
+            parentId=0,  # Will be set after parent is placed
+            transmit=True,
+        )
+
+        logger.info(
+            f"Placing {order.order_type} {order.side} {order.quantity} {order.instrument} "
+            f"with SL={order.stop_loss}"
+        )
+
+        try:
+            parent_trade = self.ib.placeOrder(contract, ib_order)
+            sl_order.parentId = parent_trade.order.orderId
+            self.ib.placeOrder(contract, sl_order)
+            return parent_trade
+        except Exception as e:
+            raise OrderError(f"Failed to place order with stop: {e}") from e
 
     async def cancel_order(self, ib_trade: IBTrade) -> None:
         """Cancel an open order."""
