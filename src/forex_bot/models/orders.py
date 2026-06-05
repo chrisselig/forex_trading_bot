@@ -1,5 +1,5 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from pydantic import BaseModel, Field
 
@@ -37,7 +37,7 @@ class Order(BaseModel):
     status: OrderStatus = OrderStatus.PENDING
     event_id: int | None = None
     strategy: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     filled_at: datetime | None = None
     fill_price: float | None = None
 
@@ -56,7 +56,7 @@ class Trade(BaseModel):
     pnl_pips: float | None = None
     event_id: int | None = None
     strategy: str = ""
-    opened_at: datetime = Field(default_factory=datetime.utcnow)
+    opened_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     closed_at: datetime | None = None
 
     @property

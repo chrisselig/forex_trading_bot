@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pydantic import BaseModel, Field
 
 from forex_bot.models.orders import OrderSide, OrderType
@@ -18,7 +18,7 @@ class Signal(BaseModel):
     event_id: int | None = None
     strategy: str = ""
     reason: str = ""
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class CloseSignal(BaseModel):
@@ -26,4 +26,4 @@ class CloseSignal(BaseModel):
     instrument: str
     reason: str = ""
     strategy: str = ""
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

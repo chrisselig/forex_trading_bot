@@ -1,7 +1,7 @@
 """Shared test fixtures."""
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -20,7 +20,7 @@ def sample_event():
         title="Non-Farm Employment Change",
         country="USD",
         impact=EventImpact.HIGH,
-        scheduled_at=datetime.utcnow() + timedelta(minutes=30),
+        scheduled_at=datetime.now(UTC) + timedelta(minutes=30),
         forecast="200K",
         previous="180K",
     )
@@ -33,7 +33,7 @@ def sample_event_with_actual():
         title="Non-Farm Employment Change",
         country="USD",
         impact=EventImpact.HIGH,
-        scheduled_at=datetime.utcnow() - timedelta(minutes=5),
+        scheduled_at=datetime.now(UTC) - timedelta(minutes=5),
         actual="250K",
         forecast="200K",
         previous="180K",
@@ -44,7 +44,7 @@ def sample_event_with_actual():
 def sample_price():
     return PriceSnapshot(
         instrument="EURUSD",
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(UTC),
         bid=1.08500,
         ask=1.08520,
     )

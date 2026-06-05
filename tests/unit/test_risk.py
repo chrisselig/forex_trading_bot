@@ -1,7 +1,7 @@
 """Unit tests for risk management."""
 
 import pytest
-from datetime import datetime
+from datetime import UTC, datetime
 
 from forex_bot.models.account import AccountSummary
 from forex_bot.models.market import PriceSnapshot
@@ -26,7 +26,7 @@ def account():
 def price():
     return PriceSnapshot(
         instrument="EURUSD",
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(UTC),
         bid=1.08500,
         ask=1.08520,
     )

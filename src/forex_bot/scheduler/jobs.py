@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.date import DateTrigger
@@ -41,7 +41,7 @@ class JobManager:
 
     def schedule_event_jobs(self, event: EconomicEvent, pre_minutes: int) -> None:
         """Schedule pre-event and post-event jobs for a specific event."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         # Pre-event job
         pre_time = event.scheduled_at - timedelta(minutes=pre_minutes)

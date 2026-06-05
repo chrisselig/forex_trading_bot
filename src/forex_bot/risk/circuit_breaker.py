@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from loguru import logger
 
@@ -34,7 +34,7 @@ class CircuitBreaker:
     @property
     def state(self) -> CircuitState:
         if self._state == CircuitState.COOLDOWN and self._cooldown_until:
-            if datetime.utcnow() >= self._cooldown_until:
+            if datetime.now(UTC) >= self._cooldown_until:
                 self._state = CircuitState.ACTIVE
                 self._cooldown_until = None
                 logger.info("Circuit breaker cooldown expired, returning to ACTIVE")
@@ -50,7 +50,7 @@ class CircuitBreaker:
         if state == CircuitState.HALTED:
             return f"Circuit breaker HALTED: {self._halt_reason}. Manual reset required."
         if state == CircuitState.COOLDOWN:
-            remaining = (self._cooldown_until - datetime.utcnow()).total_seconds() / 60
+            remaining = (self._cooldown_until - datetime.now(UTC)).total_seconds() / 60
             return f"Circuit breaker in COOLDOWN for {remaining:.0f} more minutes"
         return None
 
@@ -76,7 +76,7 @@ class CircuitBreaker:
 
     def _enter_cooldown(self, reason: str) -> None:
         self._state = CircuitState.COOLDOWN
-        self._cooldown_until = datetime.utcnow() + timedelta(minutes=self._cooldown_minutes)
+        self._cooldown_until = datetime.now(UTC) + timedelta(minutes=self._cooldown_minutes)
         logger.warning(f"Circuit breaker → COOLDOWN: {reason}")
 
     def _halt(self, reason: str) -> None:

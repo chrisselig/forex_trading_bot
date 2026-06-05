@@ -3,7 +3,7 @@
 
 import asyncio
 import sys
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
@@ -22,7 +22,7 @@ async def main():
     store = EventStore()
 
     # Fetch current and next week
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     total_saved = 0
 
     for week_offset in range(0, 2):

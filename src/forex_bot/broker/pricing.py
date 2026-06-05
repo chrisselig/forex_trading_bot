@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 from loguru import logger
 from ib_async import IB, BarData
 
@@ -54,7 +54,7 @@ class PricingService:
 
         snapshot = PriceSnapshot(
             instrument=pair,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             bid=ticker.bid,
             ask=ticker.ask,
         )
@@ -75,7 +75,7 @@ class PricingService:
                 if ticker.bid and ticker.ask and ticker.bid > 0:
                     yield PriceSnapshot(
                         instrument=pair,
-                        timestamp=datetime.utcnow(),
+                        timestamp=datetime.now(UTC),
                         bid=ticker.bid,
                         ask=ticker.ask,
                     )

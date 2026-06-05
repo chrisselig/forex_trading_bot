@@ -1,5 +1,5 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from pydantic import BaseModel, Field
 
@@ -21,7 +21,7 @@ class EconomicEvent(BaseModel):
     previous: str | None = None
     source_url: str = ""
     fred_series: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def has_actual(self) -> bool:

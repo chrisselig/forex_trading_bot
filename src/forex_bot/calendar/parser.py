@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from loguru import logger
@@ -60,7 +60,7 @@ class EventParser:
         within_minutes: int = 60,
     ) -> list[EconomicEvent]:
         """Get events scheduled within the next N minutes."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         cutoff = now + timedelta(minutes=within_minutes)
         return [e for e in events if now <= e.scheduled_at <= cutoff]
 

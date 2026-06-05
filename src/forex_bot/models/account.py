@@ -1,5 +1,5 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import UTC, datetime
 from pydantic import BaseModel, Field
 
 
@@ -12,4 +12,4 @@ class AccountSummary(BaseModel):
     maintenance_margin: float = 0.0
     unrealized_pnl: float = 0.0
     realized_pnl: float = 0.0
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
