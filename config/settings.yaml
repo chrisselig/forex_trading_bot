@@ -23,9 +23,9 @@ risk:
 strategy:
   pre_event_minutes: 30
   post_event_minutes: 60
-  straddle_distance_pips: 20
-  straddle_tp_pips: 30
-  straddle_sl_pips: 15
+  straddle_distance_pips: 15   # Optimized via Monte Carlo (Jan 2025 - Jun 2026)
+  straddle_tp_pips: 40         # Walk-forward validated on GBPUSD
+  straddle_sl_pips: 10         # Min 10 pips for news event spread safety
   surprise_threshold_pct: 10.0
   surprise_entry_delay_seconds: 5
   surprise_tp_pips: 25
