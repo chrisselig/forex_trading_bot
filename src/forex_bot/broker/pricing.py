@@ -40,7 +40,7 @@ class PricingService:
         """Get current bid/ask for a forex pair."""
         await self._client.ensure_connected()
         contract = make_forex_contract(pair)
-        self.ib.qualifyContracts(contract)
+        await self.ib.qualifyContractsAsync(contract)
         ticker = self.ib.reqMktData(contract, snapshot=True)
         # Wait for data to arrive
         for _ in range(50):
@@ -65,7 +65,7 @@ class PricingService:
         """Yield PriceSnapshot objects as prices update. Async generator."""
         await self._client.ensure_connected()
         contract = make_forex_contract(pair)
-        self.ib.qualifyContracts(contract)
+        await self.ib.qualifyContractsAsync(contract)
         self.ib.reqMktData(contract)
         ticker = self.ib.ticker(contract)
 
@@ -94,7 +94,7 @@ class PricingService:
         await self._throttle()
 
         contract = make_forex_contract(pair)
-        self.ib.qualifyContracts(contract)
+        await self.ib.qualifyContractsAsync(contract)
 
         try:
             bars: list[BarData] = await self.ib.reqHistoricalDataAsync(
