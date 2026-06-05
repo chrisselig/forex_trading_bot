@@ -162,6 +162,9 @@ class Orchestrator:
             try:
                 await self._client.connect()
                 logger.info("IB reconnection successful")
+                await self._refresh_calendar()
+                await self._schedule_event_jobs()
+                logger.info("Event jobs re-scheduled after reconnect")
             except Exception as e:
                 logger.error(f"IB reconnection failed: {e}")
 
