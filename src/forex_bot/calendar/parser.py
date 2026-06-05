@@ -60,7 +60,7 @@ class EventParser:
         within_minutes: int = 60,
     ) -> list[EconomicEvent]:
         """Get events scheduled within the next N minutes."""
-        now = datetime.now(UTC)
+        now = datetime.now(UTC).replace(tzinfo=None)
         cutoff = now + timedelta(minutes=within_minutes)
         return [e for e in events if now <= e.scheduled_at <= cutoff]
 

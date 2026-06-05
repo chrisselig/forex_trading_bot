@@ -69,7 +69,7 @@ class EventStore:
 
     async def get_upcoming(self, within_hours: int = 24) -> list[EconomicEvent]:
         """Get events scheduled within the next N hours."""
-        now = datetime.now(UTC)
+        now = datetime.now(UTC).replace(tzinfo=None)
         cutoff = now + timedelta(hours=within_hours)
 
         async with get_session() as session:
