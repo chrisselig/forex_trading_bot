@@ -41,7 +41,7 @@ class JobManager:
 
     def schedule_event_jobs(self, event: EconomicEvent, pre_minutes: int) -> None:
         """Schedule pre-event and post-event jobs for a specific event."""
-        now = datetime.now(UTC)
+        now = datetime.now(UTC).replace(tzinfo=None)
 
         # Pre-event job
         pre_time = event.scheduled_at - timedelta(minutes=pre_minutes)
