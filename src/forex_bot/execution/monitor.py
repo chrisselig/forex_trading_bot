@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from loguru import logger
 from ib_async import Trade as IBTrade
 
@@ -59,12 +59,12 @@ class PositionMonitor:
     def _on_new_order(self, trade: IBTrade) -> None:
         """Track new orders."""
         order_id = trade.order.orderId
-        self._tracked_trades[order_id] = datetime.utcnow()
+        self._tracked_trades[order_id] = datetime.now(UTC)
         logger.debug(f"Tracking new order #{order_id}")
 
     async def check_holding_times(self) -> list[int]:
         """Check for positions exceeding max holding time. Returns order IDs to close."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         expired = []
         for order_id, opened_at in list(self._tracked_trades.items()):
             if now - opened_at > timedelta(minutes=self._max_holding):

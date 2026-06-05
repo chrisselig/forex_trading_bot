@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,7 +69,7 @@ class EventStore:
 
     async def get_upcoming(self, within_hours: int = 24) -> list[EconomicEvent]:
         """Get events scheduled within the next N hours."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         cutoff = now + timedelta(hours=within_hours)
 
         async with get_session() as session:

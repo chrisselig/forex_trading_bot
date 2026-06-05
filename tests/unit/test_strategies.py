@@ -1,7 +1,7 @@
 """Unit tests for trading strategies."""
 
 import pytest
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import patch, MagicMock
 
 from forex_bot.models.events import EconomicEvent, EventImpact
@@ -16,7 +16,7 @@ def event():
         title="Non-Farm Employment Change",
         country="USD",
         impact=EventImpact.HIGH,
-        scheduled_at=datetime.utcnow(),
+        scheduled_at=datetime.now(UTC),
         forecast="200K",
         previous="180K",
     )
@@ -29,7 +29,7 @@ def event_with_positive_surprise():
         title="Non-Farm Employment Change",
         country="USD",
         impact=EventImpact.HIGH,
-        scheduled_at=datetime.utcnow(),
+        scheduled_at=datetime.now(UTC),
         actual="250K",
         forecast="200K",
         previous="180K",
@@ -43,7 +43,7 @@ def event_unemployment_positive_surprise():
         title="Unemployment Rate",
         country="USD",
         impact=EventImpact.HIGH,
-        scheduled_at=datetime.utcnow(),
+        scheduled_at=datetime.now(UTC),
         actual="4.0%",
         forecast="3.5%",
         previous="3.5%",
@@ -54,7 +54,7 @@ def event_unemployment_positive_surprise():
 def price():
     return PriceSnapshot(
         instrument="EURUSD",
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(UTC),
         bid=1.08500,
         ask=1.08520,
     )
@@ -117,7 +117,7 @@ class TestSurpriseStrategy:
     async def test_no_signal_below_threshold(self, price):
         event = EconomicEvent(
             title="NFP",
-            scheduled_at=datetime.utcnow(),
+            scheduled_at=datetime.now(UTC),
             actual="205K",
             forecast="200K",
         )
