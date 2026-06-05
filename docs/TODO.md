@@ -1,5 +1,47 @@
 # To Do List
 
+## Priority Matrix
+
+Items are prioritized by **Impact** (how much it improves profitability/reliability) vs **Effort** (time and complexity to implement).
+
+```
+                        I M P A C T
+                 Low          Medium          High
+            ┌────────────┬────────────┬────────────┐
+    High    │            │ Trump      │            │
+            │            │ Strategy   │            │
+   E        ├────────────┼────────────┼────────────┤
+   F        │ Multiple   │ Model Drift│ Mobile     │
+   F        │ Testing    │ Detection  │ Dashboard  │
+   O        │ Correction │            │            │
+   R        ├────────────┼────────────┼────────────┤
+   T        │ OCA        │ FOMC Split │ 1-Min Data │
+            │ Modeling   │ Analysis   │ Recording  │
+    Low     │            │ Spread/    │ Re-run MC  │
+            │            │ Slippage   │ w/ 1-min   │
+            └────────────┴────────────┴────────────┘
+```
+
+### Do First (High Impact, Low Effort)
+- 1-min data recording — unlocks better Monte Carlo
+- Re-run MC optimization with 1-min bars once data exists
+
+### Do Next (High Impact, High Effort)
+- Mobile dashboard app
+- Trump tweet strategy
+
+### Schedule (Medium Impact)
+- Model drift detection
+- FOMC-specific parameter split
+- Spread/slippage logging & modeling
+
+### Backlog (Low Impact or Low Urgency)
+- OCA modeling for straddle legs
+- Multiple testing correction (Bonferroni)
+- Expand sample size (ongoing, passive)
+
+---
+
 ## Monte Carlo / Straddle Optimization Improvements
 
 ### 1. Hourly Bar Resolution
@@ -75,3 +117,42 @@ The goal is NOT to make all the money — execute small, profitable, frequent (i
 Look into recording per-minute forex data while the bot is running and saving it for future analysis. This would solve the hourly bar resolution limitation for future Monte Carlo runs.
 
 **Action**: Investigate streaming 1-min bars from IB during events and persisting them (DuckDB or SQLite). This data would enable re-running the straddle optimization with much finer granularity.
+
+---
+
+## Mobile Dashboard / Tracking App
+
+### Problem
+The IBKR mobile app is annoying to use for tracking bot performance. Need a simple way to monitor wins/losses and overall profitability from an Android phone.
+
+### Requirements
+- Track wins/losses per trade, per strategy, per pair
+- Show rolling P&L, win rate, Sharpe, drawdown — anything that helps keep this profitable over time
+- Accessible from Android phone
+- Simple and focused — not a full trading terminal, just a monitoring dashboard
+
+### Options to Explore
+- **Shiny for Python (shinylive)** — deploy on shinyapps.io, free tier available
+- **Streamlit** — simple Python dashboards, can host on Streamlit Cloud (free)
+- **Flask/FastAPI + lightweight frontend** — more control, host on a free tier (Render, Railway)
+- **Telegram bot** — push notifications + quick stats on demand, no app to build
+
+### Data Source
+Read from the bot's SQLite trade journal (`data/forex_bot.db`). Could sync to a cloud DB or expose via a simple API.
+
+---
+
+## Model Drift Detection
+
+### Problem
+Market regimes change (tightening → easing, low vol → high vol). The optimized straddle parameters may degrade over time without detection.
+
+### Approach
+- Track rolling out-of-sample performance (e.g., last 20 trades vs historical baseline)
+- Alert when win rate, mean P&L, or Sharpe drops below a threshold
+- Flag when actual spreads or slippage diverge significantly from modeled assumptions
+- Consider automated re-optimization on a quarterly cadence (re-run Monte Carlo with latest data)
+
+### Integration
+- Could feed into the mobile dashboard as a "strategy health" indicator
+- Circuit breaker could incorporate drift signals (e.g., auto-cooldown if drift detected)
