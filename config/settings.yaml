@@ -6,9 +6,10 @@ broker:
 
 trading:
   instruments:
-    - EURUSD
+    - USDZAR
+    - USDTRY
+    - GBPJPY
     - GBPUSD
-    - USDJPY
     - USDCAD
   default_timeframe: "5 mins"
 
@@ -17,7 +18,7 @@ risk:
   max_daily_drawdown_pct: 3.0
   max_concurrent_positions: 3
   mandatory_stop_loss: true
-  max_spread_pips: 3.0
+  max_spread_pips: 15.0
 
 strategy:
   pre_event_minutes: 30

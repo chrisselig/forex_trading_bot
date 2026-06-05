@@ -21,7 +21,7 @@ class BrokerConfig(BaseModel):
 
 
 class TradingConfig(BaseModel):
-    instruments: list[str] = Field(default_factory=lambda: ["EURUSD", "GBPUSD", "USDJPY", "USDCAD"])
+    instruments: list[str] = Field(default_factory=lambda: ["USDZAR", "USDTRY", "GBPJPY", "GBPUSD", "USDCAD"])
     default_timeframe: str = "5 mins"
 
 

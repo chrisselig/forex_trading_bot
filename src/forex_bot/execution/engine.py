@@ -78,9 +78,15 @@ class ExecutionEngine:
         # Log order to journal
         order_id = await self._journal.log_order(order)
 
+        # Enforce stop loss at execution boundary (defense in depth)
+        if order.stop_loss is None:
+            logger.error(f"Order rejected: missing stop loss for {order.instrument}")
+            await self._journal.update_order_status(order_id, OrderStatus.REJECTED)
+            return None
+
         # Place with IB
         try:
-            if signal.stop_loss and signal.take_profit and signal.price:
+            if signal.take_profit and signal.price:
                 trades = await self._order_service.place_bracket_order(
                     instrument=order.instrument,
                     side=order.side,
@@ -93,7 +99,8 @@ class ExecutionEngine:
                     order.ib_order_id = trades[0].order.orderId
                     order.status = OrderStatus.SUBMITTED
             else:
-                ib_trade = await self._order_service.place_order(order)
+                # Market order with attached stop loss
+                ib_trade = await self._order_service.place_order_with_stop(order)
                 order.ib_order_id = ib_trade.order.orderId
                 order.status = OrderStatus.SUBMITTED
 
