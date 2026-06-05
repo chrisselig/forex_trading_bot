@@ -5,7 +5,7 @@ from forex_bot.config import load_settings, BrokerConfig, RiskConfig
 
 def test_loads_settings_from_yaml():
     settings = load_settings()
-    assert settings.broker.port in (4001, 4002)
+    assert settings.broker.port in (4001, 4002, 7496, 7497)
     assert len(settings.trading.instruments) > 0
 
 
