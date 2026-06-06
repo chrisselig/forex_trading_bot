@@ -4,9 +4,14 @@
 # then launches the forex trading bot.
 #
 # Designed to run from cron or systemd before market hours.
-# Requires IB credentials in ~/.env_ibc (not committed to git):
+# Requires IB credentials in .env:
 #   IB_USERNAME=your_username
 #   IB_PASSWORD=your_password
+#
+# Usage:
+#   ./start_tws_and_bot.sh          # Normal start (skips if already running)
+#   ./start_tws_and_bot.sh --fresh  # Kill everything and start from scratch
+#   ./start_tws_and_bot.sh --stop   # Kill everything and exit
 #
 
 set -euo pipefail
@@ -25,6 +30,38 @@ mkdir -p "$LOG_DIR"
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$BOT_LOG"
 }
+
+stop_all() {
+    log "Stopping forex bot..."
+    pkill -9 -f "forex-bot run" 2>/dev/null && log "Forex bot killed" || log "No forex bot running"
+
+    log "Stopping TWS/IBC..."
+    pkill -9 -f "java.*jts" 2>/dev/null && log "TWS killed" || log "No TWS running"
+    pkill -9 -f "ibcstart" 2>/dev/null || true
+
+    sleep 2
+
+    # Verify everything is stopped
+    if pgrep -f "forex-bot run" >/dev/null 2>&1; then
+        log "WARNING: Forex bot still running after kill"
+    fi
+    if ss -tlnp 2>/dev/null | grep -q ":${API_PORT}"; then
+        log "WARNING: Port $API_PORT still in use after kill"
+    fi
+    log "All processes stopped"
+}
+
+# --- Handle command flags ---
+case "${1:-}" in
+    --stop)
+        stop_all
+        exit 0
+        ;;
+    --fresh)
+        log "Fresh start requested — killing existing processes..."
+        stop_all
+        ;;
+esac
 
 # --- Load IB credentials ---
 if [[ ! -f "$IBC_CREDS" ]]; then
@@ -87,5 +124,13 @@ conda activate forex-bot
 cd "$PROJECT_DIR"
 nohup forex-bot run >> "$BOT_LOG" 2>&1 &
 BOT_PID=$!
-log "Forex bot started (PID: $BOT_PID)"
+
+# Verify bot started successfully
+sleep 5
+if ps -p $BOT_PID >/dev/null 2>&1; then
+    log "Forex bot started (PID: $BOT_PID)"
+else
+    log "ERROR: Forex bot failed to start. Check $BOT_LOG"
+    exit 1
+fi
 log "Bot log: $BOT_LOG"
