@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$HOME/ibc/logs"
 BOT_LOG="$LOG_DIR/forex_bot_$(date +%Y%m%d).log"
-IBC_CREDS="$HOME/.env_ibc"
+IBC_CREDS="$PROJECT_DIR/.env"
 IBC_DIR="$HOME/ibc"
 API_PORT=7497
 MAX_WAIT=180  # seconds to wait for API socket
@@ -28,10 +28,7 @@ log() {
 
 # --- Load IB credentials ---
 if [[ ! -f "$IBC_CREDS" ]]; then
-    log "ERROR: $IBC_CREDS not found. Create it with:"
-    log "  echo 'IB_USERNAME=your_username' > $IBC_CREDS"
-    log "  echo 'IB_PASSWORD=your_password' >> $IBC_CREDS"
-    log "  chmod 600 $IBC_CREDS"
+    log "ERROR: $IBC_CREDS not found. Add IB_USERNAME and IB_PASSWORD to your .env file."
     exit 1
 fi
 source "$IBC_CREDS"
@@ -51,11 +48,13 @@ else
 
     log "Starting TWS via IBC..."
     export DISPLAY="${DISPLAY:-:0}"
-    export TWSUSERID="$IB_USERNAME"
-    export TWSPASSWORD="$IB_PASSWORD"
+
+    # Write credentials into IBC config (file is chmod 600)
+    sed -i "s/^IbLoginId=.*/IbLoginId=$IB_USERNAME/" "$IBC_DIR/config.ini"
+    sed -i "s/^IbPassword=.*/IbPassword=$IB_PASSWORD/" "$IBC_DIR/config.ini"
+
     "$IBC_DIR/twsstart.sh" -inline \
         >> "$LOG_DIR/ibc_$(date +%Y%m%d).log" 2>&1 &
-    unset TWSUSERID TWSPASSWORD
 
     # Wait for API socket to come up
     log "Waiting for TWS API on port $API_PORT (up to ${MAX_WAIT}s)..."
@@ -69,6 +68,10 @@ else
         fi
     done
     log "TWS API is listening on port $API_PORT (took ${elapsed}s)"
+
+    # Give TWS time to finish initialization (dismiss dialogs, load data)
+    log "Waiting 15s for TWS to finish initializing..."
+    sleep 15
 fi
 
 # --- Start the forex bot ---
