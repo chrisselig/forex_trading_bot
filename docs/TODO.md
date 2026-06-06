@@ -156,3 +156,18 @@ Market regimes change (tightening → easing, low vol → high vol). The optimiz
 ### Integration
 - Could feed into the mobile dashboard as a "strategy health" indicator
 - Circuit breaker could incorporate drift signals (e.g., auto-cooldown if drift detected)
+
+---
+
+## Live Trading Readiness
+
+### 2FA Testing Required Before Going Live
+
+Paper trading does not require 2FA, so the IBC auto-start pipeline is fully unattended. **Live trading will require 2FA via the IBKR Mobile app.** Before switching to live:
+
+1. Test the IBC auto-start with live credentials and confirm the 2FA push notification arrives
+2. Verify the `TWOFA_TIMEOUT_ACTION=restart` setting correctly re-triggers the push if missed
+3. Confirm the `ReloginAfterSecondFactorAuthenticationTimeout=yes` setting works as expected
+4. Time the full login flow (TWS launch → 2FA approval → API socket ready) to ensure the 1-hour pre-market window is sufficient
+5. Consider whether the nightly TWS restart also requires 2FA re-authentication on live accounts
+6. Update the cron schedule if the live login flow takes significantly longer than paper

@@ -194,6 +194,10 @@ FRED_API_KEY=your_key_here   # Free from fred.stlouisfed.org
 IB_HOST=127.0.0.1
 IB_PORT=7497                 # 7497=TWS paper, 7496=TWS live, 4002=Gateway paper
 IB_CLIENT_ID=1
+
+# IB Login Credentials (used by IBC auto-start)
+IB_USERNAME=your_ib_username
+IB_PASSWORD=your_ib_password
 ```
 
 ---
@@ -268,7 +272,25 @@ The bot will:
 6. Refresh the calendar every 6 hours
 7. Gracefully shutdown on Ctrl+C
 
-### Before a Trading Day
+### Auto-Start (Recommended)
+
+The bot can start fully unattended via a cron job + IBC (IB Controller). A startup script handles the full sequence:
+
+1. Reads IB credentials from `.env` (`IB_USERNAME`, `IB_PASSWORD`)
+2. Launches TWS via IBC with auto-login and auto-dialog dismissal
+3. Waits for the API socket to be ready
+4. Starts the forex bot
+
+**Cron**: runs at 5:00 AM MT (7:00 AM ET) on weekdays — well before the earliest US data releases.
+
+**2FA**: Paper trading accounts do **not** require 2FA, so auto-start is fully unattended. Live trading accounts will require 2FA via the IBKR Mobile app — you'll need to approve the push notification on your phone within 3 minutes (IBC auto-retries if you miss it).
+
+To run manually:
+```bash
+~/00_data_projects/forex_trading_bot/scripts/start_tws_and_bot.sh
+```
+
+### Before a Trading Day (Manual Start)
 
 1. Open TWS and log into your paper (or live) account
 2. Ensure the API socket is enabled (File → Global Configuration → API → Settings)
@@ -280,6 +302,36 @@ The bot will:
 - TWS disconnects nightly at ~11:45 PM ET
 - The bot's health check (every 5 min) detects the drop, reconnects, refreshes the calendar, and re-schedules event jobs
 - If TWS is restarted manually, the bot will reconnect on the next health check cycle
+- Pre-flight connection check runs 2 minutes before each event to ensure IB is connected
+- Event handlers retry with backoff (5s, 15s, 30s) if IB is disconnected when they fire
+
+### Managing Processes
+
+**When to kill processes:**
+- Before running the startup script if an old bot or TWS instance is still running
+- When the bot is stuck or unresponsive
+- When you want to restart with new configuration
+
+**How to kill processes:**
+
+```bash
+# Kill the forex bot
+pkill -9 -f "forex-bot run"
+
+# Kill TWS / IBC
+pkill -9 -f "java.*jts"
+
+# Verify nothing is running
+ps aux | grep -E "forex-bot|java.*jts" | grep -v grep
+
+# Check if the API socket is still open
+ss -tlnp | grep 7497
+```
+
+**Process lifecycle:**
+- `forex-bot run` — the Python trading bot process. Handles SIGTERM gracefully, but sometimes needs `kill -9`
+- `java.*jts` — the TWS Java process launched by IBC. Kill this to fully stop TWS
+- The startup script checks for existing processes and skips launch if they're already running, so kill old processes first if you want a fresh start
 
 ### Resetting the Paper Account
 
@@ -324,7 +376,7 @@ pytest tests/unit/ --cov=forex_bot --cov-report=term-missing
 pytest tests/integration/ -v -m integration
 ```
 
-42 unit tests cover: models, contracts, config loading, risk rules, circuit breaker state machine, straddle signal generation, surprise direction logic, and unemployment indicator inversion.
+59 unit tests cover: models, contracts, config loading, risk rules, circuit breaker state machine, straddle signal generation, surprise direction logic, unemployment indicator inversion, per-pair straddle overrides, and event handler retry/pre-flight logic.
 
 ---
 
