@@ -51,10 +51,11 @@ else
 
     log "Starting TWS via IBC..."
     export DISPLAY="${DISPLAY:-:0}"
+    export TWSUSERID="$IB_USERNAME"
+    export TWSPASSWORD="$IB_PASSWORD"
     "$IBC_DIR/twsstart.sh" -inline \
-        TWSUSERID="$IB_USERNAME" \
-        TWSPASSWORD="$IB_PASSWORD" \
         >> "$LOG_DIR/ibc_$(date +%Y%m%d).log" 2>&1 &
+    unset TWSUSERID TWSPASSWORD
 
     # Wait for API socket to come up
     log "Waiting for TWS API on port $API_PORT (up to ${MAX_WAIT}s)..."
