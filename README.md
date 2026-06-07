@@ -1,5 +1,7 @@
 # Forex Trading Bot
 
+**[Documentation](https://chrisselig.github.io/forex_trading_bot/)**
+
 An event-driven forex trading bot that trades major US economic news releases (NFP, CPI, FOMC, GDP, etc.) using Interactive Brokers. Built for a Canadian trader in Alberta where OANDA is not available due to provincial regulatory constraints.
 
 The bot sleeps between events, wakes up before scheduled releases, executes pre-configured strategies, enforces strict risk management, and logs everything for review.
