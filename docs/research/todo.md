@@ -23,7 +23,7 @@
 ## Do First (High Impact, Low Effort)
 
 - ~~**1-min data recording**~~ — **DONE**: Dukascopy download script (`scripts/download_dukascopy.py`) fetches 1-min and 5-min bars for all 5 pairs around all events. See [Dukascopy Data](dukascopy-data.md).
-- **Re-run MC optimization** with 1-min Dukascopy bars (data now available)
+- ~~**Re-run MC optimization**~~ — **DONE**: 1-min Dukascopy bars used. USDZAR strongest performer (walk-forward OOS E[P&L]=+47.1). See [Monte Carlo 1-min](monte-carlo-1min.md).
 
 ## Do Next (High Impact, High Effort)
 
@@ -41,6 +41,7 @@
 - OCA modeling for straddle legs
 - Multiple testing correction (Bonferroni)
 - Expand sample size (ongoing, passive)
+- **IBKR base currency trap** — Review and implement auto-conversion of residual foreign currency balances back to CAD after closing forex trades. IBKR leaves open FX balances when you trade (e.g., buying EUR/USD borrows USD to buy EUR). At small account scale, these residual balances should be swept back to CAD immediately so statements reflect true net CAD P&L. Investigate: (a) manual post-trade sweep via IB API, (b) IBKR "Virtual FX Position" setting, (c) auto-close via IdealPro conversion after each trade close.
 
 ---
 

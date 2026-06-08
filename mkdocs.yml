@@ -68,7 +68,8 @@ nav:
     - operations/auto-start.md
     - operations/process-management.md
     - operations/telegram-notifications.md
-  - Research:
+  - Analysis:
+    - research/monte-carlo-1min.md
     - research/straddle-optimization.md
     - research/dukascopy-data.md
     - research/todo.md
