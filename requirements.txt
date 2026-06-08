@@ -1,0 +1,73 @@
+# Pinned dependencies for forex-bot (Python 3.12)
+# Generated from working conda env on 2026-06-07
+# Install: pip install -r requirements.txt
+
+# Core trading
+ib_async==2.1.0
+aeventkit==2.1.0
+nest-asyncio==1.6.0
+
+# HTTP & scraping
+httpx==0.28.1
+httpcore==1.0.9
+h11==0.16.0
+beautifulsoup4==4.14.3
+soupsieve==2.8.4
+lxml==6.1.1
+requests==2.34.2
+certifi==2026.5.20
+charset-normalizer==3.4.7
+idna==3.18
+urllib3==2.7.0
+
+# Economic data
+fredapi==0.5.2
+
+# Database
+SQLAlchemy==2.0.50
+aiosqlite==0.22.1
+greenlet==3.5.1
+
+# Config & validation
+pydantic==2.13.4
+pydantic_core==2.46.4
+pydantic-settings==2.14.1
+python-dotenv==1.2.2
+PyYAML==6.0.3
+typing_extensions==4.15.0
+typing-inspection==0.4.2
+annotated-types==0.7.0
+
+# Scheduling
+APScheduler==3.11.2
+tzdata==2025.3
+tzlocal==5.3.1
+
+# CLI
+typer==0.26.7
+click==8.4.1
+shellingham==1.5.4
+rich==15.0.0
+markdown-it-py==4.2.0
+mdurl==0.1.2
+Pygments==2.20.0
+colorama==0.4.6
+
+# Logging
+loguru==0.7.3
+
+# Data analysis (for scripts)
+numpy==2.4.6
+pandas==3.0.3
+python-dateutil==2.9.0.post0
+six==1.17.0
+
+# Historical data download
+dukascopy-python==4.0.1
+
+# Async support
+anyio==4.13.0
+
+# Misc
+packaging==26.0
+platformdirs==4.10.0

@@ -32,22 +32,43 @@ python3 --version  # must be 3.11 or higher
 
 ## Install the Bot
 
+### Option A: pip + venv (recommended)
+
 ```bash
 # Clone
 git clone git@github.com:chrisselig/forex_trading_bot.git
 cd forex_trading_bot
 
-# Create conda environment
-conda create -n forex-bot python=3.12 -y
-conda activate forex-bot
+# Create virtual environment
+python3.12 -m venv .venv
+source .venv/bin/activate
 
-# Install
+# Install pinned dependencies + the bot
+pip install -r requirements.txt
 pip install -e ".[dev]"
 
 # Configure
 cp .env.example .env
-# Edit .env — set IB_PORT and FRED_API_KEY
+# Edit .env — set IB_PORT, FRED_API_KEY, and optionally Telegram credentials
 ```
+
+### Option B: conda
+
+```bash
+git clone git@github.com:chrisselig/forex_trading_bot.git
+cd forex_trading_bot
+
+conda create -n forex-bot python=3.12 -y
+conda activate forex-bot
+
+pip install -r requirements.txt
+pip install -e ".[dev]"
+
+cp .env.example .env
+```
+
+!!! tip "Why `requirements.txt`?"
+    The `pyproject.toml` lists unpinned dependencies. The `requirements.txt` has exact pinned versions from a tested environment, ensuring reproducible installs.
 
 ## Verify Installation
 
