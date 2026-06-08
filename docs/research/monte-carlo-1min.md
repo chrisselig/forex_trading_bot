@@ -54,7 +54,11 @@ The exotic pairs (USDZAR, USDTRY) were the biggest beneficiaries — the hourly 
 
 ## Walk-Forward Validation
 
-Train on 2025 data, test on 2026 data. This is the critical overfitting check.
+Walk-forward validation is the primary guard against **overfitting** — the risk that optimized parameters only look good because they were tuned to fit historical noise rather than a real, repeatable pattern.
+
+The idea is simple: split the data into two non-overlapping periods. **Train** (optimize parameters) on the first period, then **test** those exact parameters on the second period, which the optimizer has never seen. If performance holds up out-of-sample, the parameters likely capture genuine market behavior. If performance collapses, the optimizer was just curve-fitting noise.
+
+Here we train on 2025 data and test on 2026 data (roughly 12 months in-sample, 6 months out-of-sample).
 
 | Pair | Params | In-Sample E[P&L] | In-Sample Sharpe | Out-of-Sample E[P&L] | Out-of-Sample Sharpe |
 |------|--------|-------------------|------------------|----------------------|----------------------|

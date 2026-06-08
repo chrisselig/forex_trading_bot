@@ -34,7 +34,9 @@
 
 ## Walk-Forward Validation
 
-Train on 2025 data, test on 2026 data. This detects overfitting — if in-sample performance is strong but out-of-sample collapses, the parameters are overfit.
+Walk-forward validation guards against **overfitting**. We optimize parameters on one time period (in-sample), then test those exact parameters on a later period the optimizer never saw (out-of-sample). If performance holds, the edge is likely real. If it collapses, the optimizer was curve-fitting noise. See the [Monte Carlo 1-min report](monte-carlo-1min.md#walk-forward-validation) for a fuller explanation.
+
+Here: train on 2025, test on 2026.
 
 | Pair | Params | In-Sample E[P&L] | In-Sample Sharpe | Out-of-Sample E[P&L] | Out-of-Sample Sharpe |
 |------|--------|-------------------|------------------|----------------------|----------------------|
