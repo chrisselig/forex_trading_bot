@@ -49,6 +49,7 @@ nav:
   - Home: index.md
   - Forex Trading:
     - trading/index.md
+    - trading/glossary.md
     - trading/market-structure.md
     - trading/news-trading.md
     - trading/risk-management.md
