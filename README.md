@@ -262,17 +262,17 @@ forex-bot backtest         # Run historical backtest
 
 ## Active Trading Pairs
 
-Based on [Monte Carlo analysis](https://chrisselig.github.io/forex_trading_bot/research/monte-carlo-1min/) with 1-minute Dukascopy data (June 2026):
+Based on [Monte Carlo analysis](https://chrisselig.github.io/forex_trading_bot/research/monte-carlo-2020-2026/) with 6.5 years of 1-minute Dukascopy data (207 events, Jan 2020 — Jun 2026):
 
-| Pair | Status | E[P&L] | Why |
-|------|--------|--------|-----|
-| **USDZAR** | Active | +25.4 pips | Strongest performer, passed [walk-forward](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#walk-forward-validation) (OOS=+47.1) |
-| **USDTRY** | Active | +13.9 pips | Strong full-sample, [Sharpe](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#sharpe-ratio) 3.14 |
-| **GBPUSD** | Active | +6.1 pips | Promising but small sample (7 trades) |
-| GBPJPY | Disabled | — | Severely overfit in walk-forward |
-| USDCAD | Disabled | — | Marginal, [CI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#95-ci-95-confidence-interval) spans zero |
+| Pair | Status | E[P&L] | [Sharpe](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#sharpe-ratio) | Why |
+|------|--------|--------|--------|-----|
+| **USDZAR** | Active | +17.1 pips | 6.40 | [CI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#95-ci-95-confidence-interval) entirely above zero, passed [walk-forward](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#walk-forward-validation) (OOS=+21.3) |
+| **USDTRY** | Active | +13.6 pips | 6.51 | Most consistent — same params and performance across all periods (OOS=+13.9) |
+| GBPUSD | Disabled | +3.4 pips | 1.83 | Below breakeven at optimal params, fails walk-forward (OOS=-8.6) |
+| GBPJPY | Disabled | +1.4 pips | 1.88 | Marginal CI, walk-forward failure |
+| USDCAD | Disabled | +0.7 pips | 0.81 | Marginal CI, walk-forward failure (OOS=-14.3) |
 
-Pairs are only enabled when analysis supports them. See [Analysis-Driven Configuration](https://chrisselig.github.io/forex_trading_bot/research/monte-carlo-1min/#walk-forward-validation) for details.
+Pairs are only enabled when analysis supports them. See [Analysis-Driven Configuration](https://chrisselig.github.io/forex_trading_bot/research/monte-carlo-2020-2026/#recommended-settings) for details.
 
 ---
 
