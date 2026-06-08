@@ -8,9 +8,9 @@ trading:
   instruments:
     - USDZAR
     - USDTRY
-    - GBPJPY
     - GBPUSD
-    - USDCAD
+    # GBPJPY and USDCAD disabled — MC analysis (Jun 2026) shows overfit/marginal results
+    # Re-enable after re-running MC with 2020-2026 data if walk-forward passes
   default_timeframe: "5 mins"
 
 risk:
@@ -27,14 +27,7 @@ strategy:
   straddle_tp_pips: 15         # 1:1 R:R, 71.4% win rate
   straddle_sl_pips: 15         # Min 10 pips for news event spread safety
   straddle_pair_overrides:
-    USDCAD:
-      distance_pips: 10
-      tp_pips: 15
-      sl_pips: 25
-    GBPJPY:
-      distance_pips: 10
-      tp_pips: 15
-      sl_pips: 10
+    # USDCAD and GBPJPY removed — not recommended by MC analysis (Jun 2026)
     USDZAR:
       distance_pips: 45
       tp_pips: 70
