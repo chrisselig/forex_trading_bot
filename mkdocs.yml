@@ -67,6 +67,7 @@ nav:
     - operations/index.md
     - operations/auto-start.md
     - operations/process-management.md
+    - operations/telegram-notifications.md
   - Research:
     - research/straddle-optimization.md
     - research/dukascopy-data.md

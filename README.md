@@ -57,6 +57,7 @@ The bot sleeps between events, wakes up before scheduled releases, executes pre-
 4. **Risk manager** validates every signal against 5 rules + circuit breaker — no exceptions
 5. **Execution engine** places orders on IB with bracket stop-loss/take-profit
 6. **Trade journal** logs every order, fill, and close to SQLite for review
+7. **Telegram notifier** sends real-time alerts for opens, fills, closes (with P&L), risk rejections, and circuit breaker events
 
 ---
 
@@ -124,6 +125,7 @@ forex_trading_bot/
 │   ├── risk/                  # Risk rules, circuit breaker
 │   ├── execution/             # Signal → order pipeline
 │   ├── data/                  # SQLAlchemy schemas, trade journal
+│   ├── notifications/         # Telegram trade alerts
 │   ├── scheduler/             # APScheduler orchestrator
 │   └── reporting/             # Performance stats, Rich dashboard
 ├── tests/
@@ -132,7 +134,9 @@ forex_trading_bot/
 │   └── backtest/              # Historical event replay
 ├── scripts/
 │   ├── check_ib_connection.py
-│   └── fetch_historical_events.py
+│   ├── fetch_historical_events.py
+│   ├── download_dukascopy.py         # Granular historical data
+│   └── monte_carlo_straddle.py       # Parameter optimization
 ├── CLAUDE.md                  # Project conventions for AI assistance
 └── .claude/commands/          # Slash command skills
 ```
@@ -200,6 +204,10 @@ IB_CLIENT_ID=1
 # IB Login Credentials (used by IBC auto-start)
 IB_USERNAME=your_ib_username
 IB_PASSWORD=your_ib_password
+
+# Telegram Notifications (optional)
+TELEGRAM_BOT_TOKEN=          # Create via @BotFather on Telegram
+TELEGRAM_CHAT_ID=            # Your chat ID (see docs)
 ```
 
 ---

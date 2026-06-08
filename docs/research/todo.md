@@ -9,8 +9,8 @@
     High    │            │ Trump      │            │
             │            │ Strategy   │            │
    E        ├────────────┼────────────┼────────────┤
-   F        │ Multiple   │ Model Drift│ Mobile     │
-   F        │ Testing    │ Detection  │ Dashboard  │
+   F        │ Multiple   │ Model Drift│ ✓ Telegram │
+   F        │ Testing    │ Detection  │  Alerts    │
    O        │ Correction │            │            │
    R        ├────────────┼────────────┼────────────┤
    T        │ OCA        │ FOMC Split │ ✓ 1-Min   │
@@ -27,7 +27,7 @@
 
 ## Do Next (High Impact, High Effort)
 
-- **Mobile dashboard app**
+- ~~**Mobile dashboard app**~~ — **Replaced by Telegram alerts**: Real-time trade notifications (opens, fills, closes with P&L, risk rejections, circuit breaker, connection status). See [Telegram Notifications](../operations/telegram-notifications.md).
 - **Trump tweet strategy**
 
 ## Schedule (Medium Impact)
