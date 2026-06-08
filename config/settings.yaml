@@ -8,9 +8,8 @@ trading:
   instruments:
     - USDZAR
     - USDTRY
-    - GBPUSD
-    # GBPJPY and USDCAD disabled — MC analysis (Jun 2026) shows overfit/marginal results
-    # Re-enable after re-running MC with 2020-2026 data if walk-forward passes
+    # GBPUSD removed — 6.5yr MC analysis (Jun 2026) shows below breakeven, fails walk-forward
+    # GBPJPY and USDCAD also excluded — marginal CIs, walk-forward failures
   default_timeframe: "5 mins"
 
 risk:
@@ -23,13 +22,13 @@ risk:
 strategy:
   pre_event_minutes: 30
   post_event_minutes: 60
-  straddle_distance_pips: 35   # Default (GBPUSD — 1-min Monte Carlo, Jun 2026)
-  straddle_tp_pips: 15         # 1:1 R:R, 71.4% win rate
-  straddle_sl_pips: 15         # Min 10 pips for news event spread safety
+  straddle_distance_pips: 50   # Default (USDZAR/USDTRY — 6.5yr MC, Jun 2026)
+  straddle_tp_pips: 70         # 7:1 R:R, 30.7% win rate (breakeven 12.5%)
+  straddle_sl_pips: 10         # Min 10 pips for news event spread safety
   straddle_pair_overrides:
-    # USDCAD and GBPJPY removed — not recommended by MC analysis (Jun 2026)
+    # Only USDZAR and USDTRY pass walk-forward (2020-2024 train, 2025-2026 test)
     USDZAR:
-      distance_pips: 45
+      distance_pips: 50
       tp_pips: 70
       sl_pips: 10
     USDTRY:

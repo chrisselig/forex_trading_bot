@@ -1,4 +1,7 @@
-# Monte Carlo Optimization — 1-Minute Data
+# Monte Carlo Optimization — 1-Minute Data (Jan 2025 — Jun 2026)
+
+!!! warning "Superseded"
+    This analysis used only 18 months of data (47 events). It has been superseded by the [6.5-year analysis (Jan 2020 — Jun 2026)](monte-carlo-2020-2026.md) which uses 207 events and provides much more robust results. **Use the newer analysis for production decisions.**
 
 **Date**: June 7, 2026
 **Script**: `scripts/monte_carlo_dukascopy.py`

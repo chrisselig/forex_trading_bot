@@ -69,7 +69,7 @@ scripts/             # Standalone utility scripts
 - Circuit breaker HALTED state requires manual reset — never auto-reset
 
 ### Analysis-Driven Configuration (NON-NEGOTIABLE)
-- **Never enable a pair or set strategy parameters that contradict the latest Monte Carlo analysis.** The most recent analysis report lives in `docs/research/monte-carlo-1min.md`. The "Recommended Settings" and "Production recommendation" sections are the source of truth.
+- **Never enable a pair or set strategy parameters that contradict the latest Monte Carlo analysis.** The most recent analysis report lives in `docs/research/monte-carlo-2020-2026.md`. The "Recommended Settings" and "Production recommendation" sections are the source of truth.
 - If analysis says "avoid" or "do not trade" a pair, do NOT add it to `trading.instruments` or `strategy.straddle_pair_overrides` in `config/settings.yaml`.
 - If you are about to enable a pair or change parameters that the analysis warns against, **STOP and warn the user** before making the change. Explain what the analysis says and ask for explicit confirmation.
 - When a new Monte Carlo analysis is run, update `config/settings.yaml` to match — but only for pairs the analysis recommends trading.
