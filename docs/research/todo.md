@@ -34,6 +34,8 @@
 
 ## Schedule (Medium Impact)
 
+- **Carry trade strategy** — Buy high-yield currencies, sell low-yield. Exploits the forward premium puzzle: high-rate currencies don't depreciate as theory predicts, so you pocket the interest differential. Sharpe ~0.82 over 200+ years of data ([Quantpedia](https://quantpedia.com/fx-carry-value-momentum-strategies-over-their-200-year-history/)). USDZAR and USDTRY are already classic carry pairs. Hold for weeks/months, collect swap interest — IB handles rollover natively. Complements the news straddle (minutes) with an uncorrelated longer-horizon return stream. **Main risk**: periodic violent reversals during crises (2008, 2024 JPY unwind). Existing circuit breaker infrastructure could manage crash risk. Implementation: separate strategy module, weekly/monthly rebalancing.
+- **Currency momentum strategy** — Buy recent winners, sell recent losers (1-12 month look-back). Sharpe ~0.95, returns up to 10% p.a. ([BIS Working Paper 366](https://www.bis.org/publ/work366.pdf), [ScienceDirect](https://www.sciencedirect.com/science/article/abs/pii/S0304405X12001353)). Uncorrelated with carry (even -31% during crises), so combining them diversifies risk ([Kellogg/Northwestern](https://www.kellogg.northwestern.edu/faculty/rebelo/htm/carry.pdf)). Likely driven by behavioral underreaction then overreaction. Implementation: monthly rebalancing of a currency basket ranked by trailing returns. IB supports all major and exotic pairs needed.
 - Model drift detection
 - FOMC-specific parameter split
 - Spread/slippage logging and modeling
