@@ -18,8 +18,8 @@ ENV/
 .env
 
 # Data and databases
-data/
-scripts/data/dukascopy/
+/data/
+scripts/data/
 *.db
 *.sqlite3
 

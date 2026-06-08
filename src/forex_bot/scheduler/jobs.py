@@ -14,6 +14,7 @@ from forex_bot.config import Settings
 from forex_bot.execution.engine import ExecutionEngine
 from forex_bot.execution.monitor import PositionMonitor
 from forex_bot.models.events import EconomicEvent
+from forex_bot.notifications.telegram import TelegramNotifier
 from forex_bot.strategy.registry import StrategyRegistry
 
 # Retry configuration for event handlers
@@ -37,6 +38,7 @@ class JobManager:
         monitor: PositionMonitor,
         client: IBClient,
         settings: Settings,
+        notifier: TelegramNotifier | None = None,
     ):
         self._scheduler = scheduler
         self._engine = execution_engine
@@ -46,6 +48,7 @@ class JobManager:
         self._monitor = monitor
         self._client = client
         self._settings = settings
+        self._notifier = notifier
 
     def schedule_event_jobs(self, event: EconomicEvent, pre_minutes: int) -> None:
         """Schedule pre-flight, pre-event, and post-event jobs for a specific event."""
@@ -113,6 +116,8 @@ class JobManager:
             f"PRE-FLIGHT FAILED: Could not connect to IB after {_PREFLIGHT_MAX_ATTEMPTS} attempts. "
             f"Event {event.title} at {event.scheduled_at} UTC may not trade!"
         )
+        if self._notifier:
+            await self._notifier.notify_preflight_failed(event)
 
     async def _ensure_connected_with_retry(self) -> bool:
         """Ensure IB is connected, retrying with backoff. Returns True if connected."""
@@ -137,10 +142,15 @@ class JobManager:
         """Execute pre-event strategies."""
         logger.info(f"PRE-EVENT: {event.title} (scheduled {event.scheduled_at} UTC)")
 
+        if self._notifier:
+            pre_minutes = self._settings.strategy.pre_event_minutes
+            await self._notifier.notify_event_upcoming(event, pre_minutes)
+
         if not await self._ensure_connected_with_retry():
             logger.error(f"PRE-EVENT ABORTED: No IB connection for {event.title}")
             return
 
+        self._engine.set_current_event(event)
         for strategy in self._registry.all():
             for pair in self._settings.trading.instruments:
                 try:
@@ -166,6 +176,7 @@ class JobManager:
         )
         current_event = events[0] if events else event
 
+        self._engine.set_current_event(current_event)
         for strategy in self._registry.all():
             for pair in self._settings.trading.instruments:
                 try:

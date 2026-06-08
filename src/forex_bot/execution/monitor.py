@@ -9,7 +9,8 @@ from forex_bot.broker.client import IBClient
 from forex_bot.broker.orders import OrderService
 from forex_bot.config import get_settings
 from forex_bot.data.trade_journal import TradeJournal
-from forex_bot.models.orders import OrderStatus
+from forex_bot.models.orders import OrderStatus, OrderSide
+from forex_bot.notifications.telegram import TelegramNotifier
 from forex_bot.risk.circuit_breaker import CircuitBreaker
 
 
@@ -21,10 +22,12 @@ class PositionMonitor:
         client: IBClient,
         journal: TradeJournal,
         circuit_breaker: CircuitBreaker,
+        notifier: TelegramNotifier | None = None,
     ):
         self._client = client
         self._journal = journal
         self._circuit_breaker = circuit_breaker
+        self._notifier = notifier
         self._order_service = OrderService(client)
         self._max_holding = get_settings().strategy.max_holding_minutes
         self._tracked_trades: dict[int, datetime] = {}  # order_id -> opened_at
@@ -53,6 +56,13 @@ class PositionMonitor:
         if status == "Filled":
             fill_price = trade.orderStatus.avgFillPrice
             logger.info(f"Order #{order_id} FILLED at {fill_price}")
+            if self._notifier:
+                instrument = trade.contract.pair() if hasattr(trade.contract, 'pair') else str(trade.contract.symbol)
+                side = OrderSide.BUY if trade.order.action == "BUY" else OrderSide.SELL
+                quantity = float(trade.order.totalQuantity)
+                asyncio.get_event_loop().create_task(
+                    self._notifier.notify_order_filled(order_id, instrument, side, fill_price, quantity)
+                )
         elif status == "Cancelled":
             logger.info(f"Order #{order_id} CANCELLED")
 

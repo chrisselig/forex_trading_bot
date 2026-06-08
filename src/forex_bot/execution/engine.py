@@ -7,7 +7,9 @@ from forex_bot.broker.orders import OrderService
 from forex_bot.broker.contracts import get_pip_size
 from forex_bot.broker.pricing import PricingService
 from forex_bot.data.trade_journal import TradeJournal
+from forex_bot.models.events import EconomicEvent
 from forex_bot.models.orders import Order, OrderSide, OrderType, OrderStatus, Trade
+from forex_bot.notifications.telegram import TelegramNotifier
 from forex_bot.risk.manager import RiskManager
 from forex_bot.risk.circuit_breaker import CircuitBreaker
 from forex_bot.strategy.signals import Signal
@@ -26,6 +28,7 @@ class ExecutionEngine:
         risk_manager: RiskManager,
         circuit_breaker: CircuitBreaker,
         journal: TradeJournal,
+        notifier: TelegramNotifier | None = None,
     ):
         self._client = client
         self._order_service = OrderService(client)
@@ -33,6 +36,12 @@ class ExecutionEngine:
         self._risk_manager = risk_manager
         self._circuit_breaker = circuit_breaker
         self._journal = journal
+        self._notifier = notifier
+        self._current_event: EconomicEvent | None = None
+
+    def set_current_event(self, event: EconomicEvent | None) -> None:
+        """Set the current economic event context for notifications."""
+        self._current_event = event
 
     async def execute_signal(self, signal: Signal) -> Order | None:
         """Execute a trading signal through full risk validation pipeline."""
@@ -60,6 +69,10 @@ class ExecutionEngine:
         violations = await self._risk_manager.validate(signal, price)
         if violations:
             logger.warning(f"Signal rejected by risk manager: {violations}")
+            if self._notifier:
+                await self._notifier.notify_signal_rejected(
+                    signal.instrument, signal.strategy, violations, self._current_event,
+                )
             return None
 
         # Build order
@@ -106,6 +119,17 @@ class ExecutionEngine:
 
             await self._journal.update_order_status(order_id, order.status)
             logger.info(f"Order submitted: {order.side} {order.quantity} {order.instrument} (IB#{order.ib_order_id})")
+
+            if self._notifier:
+                account = await self._client.get_account_summary()
+                spread_pips = price.spread_pips(get_pip_size(signal.instrument))
+                await self._notifier.notify_trade_opened(
+                    order=order,
+                    event=self._current_event,
+                    account=account,
+                    spread_pips=spread_pips,
+                )
+
             return order
 
         except Exception as e:

@@ -22,6 +22,7 @@ from forex_bot.execution.engine import ExecutionEngine
 from forex_bot.execution.monitor import PositionMonitor
 from forex_bot.execution.reconciler import Reconciler
 from forex_bot.models.events import EconomicEvent
+from forex_bot.notifications.telegram import TelegramNotifier
 from forex_bot.risk.circuit_breaker import CircuitBreaker
 from forex_bot.risk.manager import RiskManager
 from forex_bot.scheduler.jobs import JobManager
@@ -36,15 +37,29 @@ class Orchestrator:
         self._settings = get_settings()
         self._client = IBClient()
         self._scheduler = AsyncIOScheduler(timezone="UTC")
+
+        # Telegram notifications
+        tg = self._settings.telegram
+        self._notifier = TelegramNotifier(
+            bot_token=tg.bot_token,
+            chat_id=tg.chat_id,
+            enabled=tg.enabled,
+        )
+
         self._circuit_breaker = CircuitBreaker(
             max_daily_drawdown_pct=self._settings.risk.max_daily_drawdown_pct,
+            notifier=self._notifier,
         )
-        self._journal = TradeJournal()
+        self._journal = TradeJournal(notifier=self._notifier)
         self._risk_manager = RiskManager(self._client, self._circuit_breaker, self._journal)
         self._execution_engine = ExecutionEngine(
-            self._client, self._risk_manager, self._circuit_breaker, self._journal
+            self._client, self._risk_manager, self._circuit_breaker, self._journal,
+            notifier=self._notifier,
         )
-        self._monitor = PositionMonitor(self._client, self._journal, self._circuit_breaker)
+        self._monitor = PositionMonitor(
+            self._client, self._journal, self._circuit_breaker,
+            notifier=self._notifier,
+        )
         self._reconciler = Reconciler(self._client)
         self._pricing = PricingService(self._client)
         self._scraper = ForexFactoryScraper()
@@ -60,6 +75,7 @@ class Orchestrator:
             monitor=self._monitor,
             client=self._client,
             settings=self._settings,
+            notifier=self._notifier,
         )
         self._shutdown_handler = ShutdownHandler(self._client, self._scheduler, self._monitor)
         self._running = False
@@ -97,6 +113,13 @@ class Orchestrator:
         self._scheduler.start()
         self._running = True
         logger.info("Forex Trading Bot is running. Press Ctrl+C to stop.")
+
+        # 10. Send startup notification
+        try:
+            account = await self._client.get_account_summary()
+            await self._notifier.notify_bot_started(account)
+        except Exception as e:
+            logger.warning(f"Startup notification failed: {e}")
 
     async def _refresh_calendar(self) -> None:
         """Fetch and store upcoming events."""
@@ -159,9 +182,11 @@ class Orchestrator:
         """Verify IB connection and reconnect if needed."""
         if not self._client.is_connected:
             logger.warning("IB connection lost during health check")
+            await self._notifier.notify_connection_lost()
             try:
                 await self._client.connect()
                 logger.info("IB reconnection successful")
+                await self._notifier.notify_connection_restored()
                 await self._refresh_calendar()
                 await self._schedule_event_jobs()
                 logger.info("Event jobs re-scheduled after reconnect")
@@ -182,5 +207,6 @@ class Orchestrator:
     async def stop(self) -> None:
         """Graceful shutdown."""
         self._running = False
+        await self._notifier.notify_bot_stopped()
         await self._shutdown_handler.shutdown()
         logger.info("Forex Trading Bot stopped.")

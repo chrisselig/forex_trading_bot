@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from loguru import logger
@@ -19,10 +20,12 @@ class CircuitBreaker:
         max_daily_drawdown_pct: float = 3.0,
         max_consecutive_losses: int = 5,
         cooldown_minutes: int = 30,
+        notifier: object | None = None,
     ):
         self._max_daily_drawdown_pct = max_daily_drawdown_pct
         self._max_consecutive_losses = max_consecutive_losses
         self._cooldown_minutes = cooldown_minutes
+        self._notifier = notifier
 
         self._state = CircuitState.ACTIVE
         self._consecutive_losses = 0
@@ -78,11 +81,22 @@ class CircuitBreaker:
         self._state = CircuitState.COOLDOWN
         self._cooldown_until = datetime.now(UTC) + timedelta(minutes=self._cooldown_minutes)
         logger.warning(f"Circuit breaker → COOLDOWN: {reason}")
+        self._fire_notification()
 
     def _halt(self, reason: str) -> None:
         self._state = CircuitState.HALTED
         self._halt_reason = reason
         logger.error(f"Circuit breaker → HALTED: {reason}")
+        self._fire_notification()
+
+    def _fire_notification(self) -> None:
+        """Send circuit breaker state change notification (fire-and-forget)."""
+        if self._notifier and hasattr(self._notifier, 'notify_circuit_breaker'):
+            try:
+                loop = asyncio.get_event_loop()
+                loop.create_task(self._notifier.notify_circuit_breaker(self))
+            except RuntimeError:
+                pass
 
     def reset(self) -> None:
         """Manual reset — returns to ACTIVE state."""

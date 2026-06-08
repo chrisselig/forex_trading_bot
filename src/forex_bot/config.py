@@ -85,17 +85,26 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     return {}
 
 
+class TelegramConfig(BaseModel):
+    bot_token: str = ""
+    chat_id: str = ""
+    enabled: bool = True
+
+
 class Settings(BaseSettings):
     broker: BrokerConfig = Field(default_factory=BrokerConfig)
     trading: TradingConfig = Field(default_factory=TradingConfig)
     risk: RiskConfig = Field(default_factory=RiskConfig)
     strategy: StrategyConfig = Field(default_factory=StrategyConfig)
     events: EventsConfig = Field(default_factory=EventsConfig)
+    telegram: TelegramConfig = Field(default_factory=TelegramConfig)
 
     fred_api_key: str = ""
     ib_host: str = ""
     ib_port: int = 0
     ib_client_id: int = 0
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
 
     model_config = {"env_file": str(PROJECT_ROOT / ".env"), "env_file_encoding": "utf-8", "extra": "ignore"}
 
@@ -106,6 +115,10 @@ class Settings(BaseSettings):
             self.broker.port = self.ib_port
         if self.ib_client_id:
             self.broker.client_id = self.ib_client_id
+        if self.telegram_bot_token:
+            self.telegram.bot_token = self.telegram_bot_token
+        if self.telegram_chat_id:
+            self.telegram.chat_id = self.telegram_chat_id
 
 
 def load_settings() -> Settings:
