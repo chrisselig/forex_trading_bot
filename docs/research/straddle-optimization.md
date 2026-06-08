@@ -96,7 +96,7 @@ strategy:
 
 ## Caveats
 
-1. **Hourly bar resolution** — IB paper accounts only provide 1-hour bars. Intra-hour paths cannot be observed. When both TP and SL could be hit in the same bar, SL is assumed first (pessimistic).
+1. **Hourly bar resolution** — IB paper accounts only provide 1-hour bars. Intra-hour paths cannot be observed. When both TP and SL could be hit in the same bar, SL is assumed first (pessimistic). **Update:** 1-minute data is now available via [Dukascopy](dukascopy-data.md) — a re-run with granular data is planned.
 
 2. **Small sample size** — ~48 events over 18 months. Bootstrap CIs account for sampling uncertainty, but structural regime changes are not captured.
 

@@ -69,4 +69,5 @@ nav:
     - operations/process-management.md
   - Research:
     - research/straddle-optimization.md
+    - research/dukascopy-data.md
     - research/todo.md

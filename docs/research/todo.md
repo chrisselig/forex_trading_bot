@@ -13,8 +13,8 @@
    F        │ Testing    │ Detection  │ Dashboard  │
    O        │ Correction │            │            │
    R        ├────────────┼────────────┼────────────┤
-   T        │ OCA        │ FOMC Split │ 1-Min Data │
-            │ Modeling   │ Analysis   │ Recording  │
+   T        │ OCA        │ FOMC Split │ ✓ 1-Min   │
+            │ Modeling   │ Analysis   │  Data Done │
     Low     │            │ Spread/    │ Re-run MC  │
             │            │ Slippage   │ w/ 1-min   │
             └────────────┴────────────┴────────────┘
@@ -22,8 +22,8 @@
 
 ## Do First (High Impact, Low Effort)
 
-- **1-min data recording** — unlocks better Monte Carlo
-- **Re-run MC optimization** with 1-min bars once data exists
+- ~~**1-min data recording**~~ — **DONE**: Dukascopy download script (`scripts/download_dukascopy.py`) fetches 1-min and 5-min bars for all 5 pairs around all events. See [Dukascopy Data](dukascopy-data.md).
+- **Re-run MC optimization** with 1-min Dukascopy bars (data now available)
 
 ## Do Next (High Impact, High Effort)
 

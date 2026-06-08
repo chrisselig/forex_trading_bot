@@ -19,6 +19,7 @@ ENV/
 
 # Data and databases
 data/
+scripts/data/dukascopy/
 *.db
 *.sqlite3
 
