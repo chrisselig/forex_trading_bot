@@ -19,18 +19,43 @@ ET = ZoneInfo("America/New_York")
 class TelegramNotifier:
     """Sends trade alerts and status updates via Telegram Bot API."""
 
+    # Quiet hours: suppress non-critical alerts overnight (UTC)
+    # 11:30 PM ET = 03:30 UTC, 7:00 AM ET = 11:00 UTC
+    QUIET_START_UTC = 3   # 11 PM ET (approx)
+    QUIET_END_UTC = 11    # 7 AM ET (approx)
+
     def __init__(self, bot_token: str, chat_id: str, enabled: bool = True):
         self._bot_token = bot_token
         self._chat_id = chat_id
         self._enabled = enabled and bool(bot_token) and bool(chat_id)
         self._base_url = f"https://api.telegram.org/bot{bot_token}"
+        self._connection_lost_notified = False
 
         if not self._enabled:
             logger.warning("Telegram notifications disabled (missing token or chat_id)")
 
-    async def _send(self, text: str, silent: bool = False) -> None:
-        """Send a message via Telegram. Silently logs errors — never crashes the bot."""
+    def _is_quiet_hours(self) -> bool:
+        """Check if we're in the overnight quiet period (no non-critical alerts)."""
+        hour = datetime.utcnow().hour
+        if self.QUIET_START_UTC <= self.QUIET_END_UTC:
+            return self.QUIET_START_UTC <= hour < self.QUIET_END_UTC
+        # Wraps midnight (e.g., 23:00 UTC to 11:00 UTC)
+        return hour >= self.QUIET_START_UTC or hour < self.QUIET_END_UTC
+
+    async def _send(self, text: str, silent: bool = False, critical: bool = False) -> None:
+        """Send a message via Telegram. Silently logs errors — never crashes the bot.
+
+        Args:
+            text: Message content (Markdown).
+            silent: Send without sound (disable_notification).
+            critical: If True, send even during quiet hours. If False, suppress
+                      during quiet hours (logged but not sent).
+        """
         if not self._enabled:
+            return
+
+        if not critical and self._is_quiet_hours():
+            logger.debug(f"Telegram suppressed (quiet hours): {text[:80]}...")
             return
 
         try:
@@ -148,7 +173,7 @@ class TelegramNotifier:
         lines.append(f"")
         lines.append(f"_{self._fmt_et(order.created_at)}_")
 
-        await self._send("\n".join(lines))
+        await self._send("\n".join(lines), critical=True)
 
     # ------------------------------------------------------------------
     # Trade Filled
@@ -175,7 +200,7 @@ class TelegramNotifier:
             f"_{self._fmt_et(datetime.utcnow())}_",
         ]
 
-        await self._send("\n".join(lines))
+        await self._send("\n".join(lines), critical=True)
 
     # ------------------------------------------------------------------
     # Trade Closed
@@ -250,7 +275,7 @@ class TelegramNotifier:
         lines.append(f"")
         lines.append(f"_{self._fmt_et(trade.closed_at)}_")
 
-        await self._send("\n".join(lines))
+        await self._send("\n".join(lines), critical=True)
 
     # ------------------------------------------------------------------
     # Risk Alerts
@@ -281,7 +306,7 @@ class TelegramNotifier:
         lines.append(f"")
         lines.append(f"_{self._fmt_et(datetime.utcnow())}_")
 
-        await self._send("\n".join(lines))
+        await self._send("\n".join(lines), critical=True)
 
     async def notify_circuit_breaker(self, circuit_breaker: CircuitBreaker) -> None:
         """Notify on circuit breaker state change (COOLDOWN or HALTED)."""
@@ -309,22 +334,28 @@ class TelegramNotifier:
                 f"_{self._fmt_et(datetime.utcnow())}_",
             ]
 
-        await self._send("\n".join(lines))
+        await self._send("\n".join(lines), critical=True)
 
     # ------------------------------------------------------------------
     # Connection Alerts
     # ------------------------------------------------------------------
 
     async def notify_connection_lost(self) -> None:
-        """Notify when IB connection is lost."""
+        """Notify when IB connection is lost. Only sends once until restored."""
+        if self._connection_lost_notified:
+            logger.debug("Connection still lost — suppressing duplicate alert")
+            return
+        self._connection_lost_notified = True
         await self._send(
             f"*IB CONNECTION LOST*\n\n"
-            f"Attempting reconnection...\n\n"
+            f"Attempting reconnection...\n"
+            f"Further disconnect alerts suppressed until restored.\n\n"
             f"_{self._fmt_et(datetime.utcnow())}_"
         )
 
     async def notify_connection_restored(self) -> None:
         """Notify when IB connection is restored."""
+        self._connection_lost_notified = False
         await self._send(
             f"*IB CONNECTION RESTORED*\n\n"
             f"_{self._fmt_et(datetime.utcnow())}_",
@@ -338,7 +369,8 @@ class TelegramNotifier:
             f"Could not connect to IB before *{event.title}*\n"
             f"Scheduled: {self._fmt_et(event.scheduled_at)}\n\n"
             f"*Trades may not execute!*\n\n"
-            f"_{self._fmt_et(datetime.utcnow())}_"
+            f"_{self._fmt_et(datetime.utcnow())}_",
+            critical=True,
         )
 
     # ------------------------------------------------------------------
