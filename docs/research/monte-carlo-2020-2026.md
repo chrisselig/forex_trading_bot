@@ -167,5 +167,5 @@ strategy:
 3. **Slippage not modeled**: Stop orders can gap through during fast markets.
 4. **Bid-side data only**: Dukascopy provides bid OHLCV. Ask side is approximated via spread adjustment.
 5. **Multiple testing**: 540 parameter combinations. Walk-forward validation is the primary guard.
-6. **FOMC dynamics differ**: Rate decisions move differently from data releases. Consider splitting analysis by event type.
+6. **FOMC dynamics differ**: Rate decisions move differently from data releases. However, the [event-type split analysis](event-type-split.md) shows all three event types are independently profitable with current parameters.
 7. **Exotic pair liquidity**: USDZAR and USDTRY have lower liquidity during off-hours. The strategy only trades around major US events when liquidity is highest, but slippage risk remains elevated vs majors.
