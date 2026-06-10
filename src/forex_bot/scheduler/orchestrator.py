@@ -18,6 +18,7 @@ from forex_bot.calendar.static import load_static_events
 from forex_bot.calendar.store import EventStore
 from forex_bot.config import get_settings
 from forex_bot.data.database import init_db
+from forex_bot.data.dukascopy import download_new_event_data
 from forex_bot.data.trade_journal import TradeJournal
 from forex_bot.execution.engine import ExecutionEngine
 from forex_bot.execution.monitor import PositionMonitor
@@ -177,6 +178,14 @@ class Orchestrator:
             replace_existing=True,
         )
 
+        # Nightly Dukascopy data download at 04:00 UTC (11 PM ET)
+        self._scheduler.add_job(
+            self._nightly_data_download,
+            CronTrigger(hour=4, minute=0),
+            id="nightly_dukascopy_download",
+            replace_existing=True,
+        )
+
         logger.info("Recurring jobs scheduled")
 
     async def _schedule_event_jobs(self) -> None:
@@ -188,6 +197,13 @@ class Orchestrator:
             self._job_manager.schedule_event_jobs(event, pre_minutes)
 
         logger.info(f"Scheduled jobs for {len(events)} upcoming events")
+
+    async def _nightly_data_download(self) -> None:
+        """Download Dukascopy 1-min data for any new events."""
+        try:
+            await download_new_event_data()
+        except Exception as e:
+            logger.error(f"Nightly Dukascopy download failed: {e}")
 
     async def _health_check(self) -> None:
         """Verify IB connection and reconnect if needed."""
