@@ -6,17 +6,17 @@
                         I M P A C T
                  Low          Medium          High
             ┌────────────┬────────────┬────────────┐
-    High    │            │ Trump      │            │
-            │            │ Strategy   │            │
+    High    │            │ Trump      │ Web        │
+            │            │ Strategy   │ Dashboard  │
    E        ├────────────┼────────────┼────────────┤
    F        │ Multiple   │ Model Drift│ ✓ Telegram │
    F        │ Testing    │ Detection  │  Alerts    │
    O        │ Correction │            │            │
    R        ├────────────┼────────────┼────────────┤
-   T        │ OCA        │ FOMC Split │ ✓ 1-Min   │
-            │ Modeling   │ Analysis   │  Data Done │
-    Low     │            │ Spread/    │ Re-run MC  │
-            │            │ Slippage   │ w/ 1-min   │
+   T        │ OCA        │ ✓ FOMC    │ ✓ 1-Min   │
+            │ Modeling   │  Split    │  Data Done │
+    Low     │            │ Spread/    │ ✓ Re-run  │
+            │            │ Slippage   │  MC done  │
             └────────────┴────────────┴────────────┘
 ```
 
@@ -27,6 +27,13 @@
 
 ## Do Next (High Impact, High Effort)
 
+- **Web dashboard** — Professional trading dashboard for monitoring performance and upcoming events. Must support both paper and live accounts. Key pages:
+    - **Trade journal**: All trades with entry/exit, P&L (pips and $), strategy, event, pair. Filterable by date range, pair, event type, paper/live. Running equity curve.
+    - **Performance analytics**: Sharpe ratio, win rate, profit factor, max drawdown, P&L by pair/event/strategy, monthly/weekly breakdown. Compare paper vs live.
+    - **Event schedule**: Upcoming events (FF + static calendar) with countdown timers, which pairs will trade, straddle params being used, event history with actual vs forecast.
+    - **System status**: IB connection state, circuit breaker status, last heartbeat, active positions, pending orders.
+    - **Design**: Hedge-fund-grade UI/UX — dark theme, data-dense, real-time updates, mobile-responsive. Think Bloomberg Terminal meets modern web design.
+    - **Tech**: FastAPI backend (reads from existing SQLite DB), React or Next.js frontend, WebSocket for live updates. Deployed locally or on the same machine as the bot.
 - ~~**Mobile dashboard app**~~ — **Replaced by Telegram alerts**: Real-time trade notifications (opens, fills, closes with P&L, risk rejections, circuit breaker, connection status). See [Telegram Notifications](../operations/telegram-notifications.md).
 - **Trump post strategy (stocks, not forex)** — Academic research confirms statistically significant market moves from Trump's social media posts ([ScienceDirect 2025](https://www.sciencedirect.com/science/article/abs/pii/S0261560625000786), [Warwick Business School](https://www.wbs.ac.uk/news/did-trumps-tweets-move-the-currency-markets/)). Key findings: 51% of high-impact Truth Social posts land pre-market (6–9:30 AM ET); 70% of the move is done within 2 hours; April 2025 "GREAT TIME TO BUY" post preceded S&P +9.5%, Nasdaq +12.2%. **Stocks may be a better fit than forex** — tariff posts directly name companies/sectors, S&P/Nasdaq moves are larger and more tradeable via IB, and IB already supports US equities. **Challenges**: unpredictable timing, requires real-time Truth Social monitoring, NLP/sentiment filtering (50-100+ posts/day), 3-8 minute reaction window, and a May 2026 investigation found markets moving *before* posts (front-running/information leakage). Would be a separate sub-strategy module alongside the existing forex news straddle.
 - **Add new currency pairs** — EURUSD (most liquid pair, reacts strongly to NFP/CPI/FOMC, tightest news spreads), USDJPY (very reactive to FOMC and rate differentials, carry trade dynamics), AUDUSD (risk-sensitive, sharp moves on US data surprises). Download Dukascopy data, run MC analysis, and only enable pairs that pass walk-forward validation.
