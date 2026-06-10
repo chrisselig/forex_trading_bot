@@ -70,6 +70,7 @@ nav:
     - operations/process-management.md
     - operations/telegram-notifications.md
   - Analysis:
+    - research/07-mc-eurusd-audusd.md
     - research/06-non-us-events.md
     - research/05-event-type-split.md
     - research/04-monte-carlo-6yr.md
