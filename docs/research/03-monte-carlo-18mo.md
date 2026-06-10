@@ -1,7 +1,7 @@
 # Monte Carlo Optimization — 1-Minute Data (Jan 2025 — Jun 2026)
 
 !!! warning "Superseded"
-    This analysis used only 18 months of data (47 events). It has been superseded by the [6.5-year analysis (Jan 2020 — Jun 2026)](monte-carlo-2020-2026.md) which uses 207 events and provides much more robust results. **Use the newer analysis for production decisions.**
+    This analysis used only 18 months of data (47 events). It has been superseded by the [6.5-year analysis (Jan 2020 — Jun 2026)](04-monte-carlo-6yr.md) which uses 207 events and provides much more robust results. **Use the newer analysis for production decisions.**
 
 **Date**: June 7, 2026
 **Script**: `scripts/monte_carlo_dukascopy.py`
@@ -17,7 +17,7 @@
 - **Bootstrap**: 10,000 resamples, 95% confidence intervals
 - **Runtime**: 209 seconds
 
-This replaces the [previous hourly optimization](straddle-optimization.md) which used IB paper account 1-hour bars and a pessimistic SL-first assumption.
+This replaces the [previous hourly optimization](01-straddle-hourly.md) which used IB paper account 1-hour bars and a pessimistic SL-first assumption.
 
 ## Key Finding: 1-min Data Changes Everything
 

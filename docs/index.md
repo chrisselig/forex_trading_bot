@@ -74,4 +74,4 @@ forex-bot run
 | [Trading Strategies](trading/strategies.md) | How the straddle and surprise strategies work |
 | [Architecture](architecture/index.md) | System design and IB API integration |
 | [Operations](operations/index.md) | Auto-start, process management, and daily operations |
-| [Research](research/straddle-optimization.md) | Monte Carlo optimization results and methodology |
+| [Research](research/01-straddle-hourly.md) | Monte Carlo optimization results and methodology |

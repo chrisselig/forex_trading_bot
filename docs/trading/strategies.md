@@ -38,7 +38,7 @@ If NFP is strong and EUR/USD drops to 1.0830, the sell stop triggers. Price cont
 
 If price spikes up (triggering the buy), then reverses sharply down, you get stopped out on the buy *and* the sell stop triggers and also stops out. Double loss. This is the worst case and it does happen — particularly on mixed data (strong headline, weak details).
 
-The Monte Carlo optimization accounts for this. See the [optimization report](../research/straddle-optimization.md) for the statistical analysis.
+The Monte Carlo optimization accounts for this. See the [optimization report](../research/01-straddle-hourly.md) for the statistical analysis.
 
 ### Parameters
 

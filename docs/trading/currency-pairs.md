@@ -19,4 +19,4 @@ USD/ZAR and USD/TRY offer larger moves but come with higher costs:
 - **Higher max spread setting** — the bot uses 15 pips (vs typical 3 for majors)
 - **Amplified risk** — moves of 100+ pips on a single event are common
 
-The Monte Carlo optimization uses pair-specific parameters to account for these differences. See the [optimization report](../research/straddle-optimization.md).
+The Monte Carlo optimization uses pair-specific parameters to account for these differences. See the [optimization report](../research/01-straddle-hourly.md).
