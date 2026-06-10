@@ -70,10 +70,10 @@ nav:
     - operations/process-management.md
     - operations/telegram-notifications.md
   - Analysis:
-    - research/monte-carlo-2020-2026.md
-    - research/mc-non-us-events.md
-    - research/event-type-split.md
-    - research/monte-carlo-1min.md
-    - research/straddle-optimization.md
-    - research/dukascopy-data.md
+    - research/06-non-us-events.md
+    - research/05-event-type-split.md
+    - research/04-monte-carlo-6yr.md
+    - research/03-monte-carlo-18mo.md
+    - research/02-dukascopy-data.md
+    - research/01-straddle-hourly.md
     - research/todo.md

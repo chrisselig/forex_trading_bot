@@ -34,7 +34,7 @@
 
 ## Walk-Forward Validation
 
-Walk-forward validation guards against **overfitting**. We optimize parameters on one time period (in-sample), then test those exact parameters on a later period the optimizer never saw (out-of-sample). If performance holds, the edge is likely real. If it collapses, the optimizer was curve-fitting noise. See the [Monte Carlo 1-min report](monte-carlo-1min.md#walk-forward-validation) for a fuller explanation.
+Walk-forward validation guards against **overfitting**. We optimize parameters on one time period (in-sample), then test those exact parameters on a later period the optimizer never saw (out-of-sample). If performance holds, the edge is likely real. If it collapses, the optimizer was curve-fitting noise. See the [Monte Carlo 1-min report](03-monte-carlo-18mo.md#walk-forward-validation) for a fuller explanation.
 
 Here: train on 2025, test on 2026.
 
@@ -98,7 +98,7 @@ strategy:
 
 ## Caveats
 
-1. **Hourly bar resolution** — IB paper accounts only provide 1-hour bars. Intra-hour paths cannot be observed. When both TP and SL could be hit in the same bar, SL is assumed first (pessimistic). **Update:** 1-minute data is now available via [Dukascopy](dukascopy-data.md) — a re-run with granular data is planned.
+1. **Hourly bar resolution** — IB paper accounts only provide 1-hour bars. Intra-hour paths cannot be observed. When both TP and SL could be hit in the same bar, SL is assumed first (pessimistic). **Update:** 1-minute data is now available via [Dukascopy](02-dukascopy-data.md) — a re-run with granular data is planned.
 
 2. **Small sample size** — ~48 events over 18 months. Bootstrap CIs account for sampling uncertainty, but structural regime changes are not captured.
 

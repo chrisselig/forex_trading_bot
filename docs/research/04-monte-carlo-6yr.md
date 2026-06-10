@@ -15,7 +15,7 @@
 - **Walk-forward**: Train 2020-2024 (5 years), test 2025-2026 (18 months)
 - **Runtime**: 1,295 seconds (~22 minutes)
 
-This supersedes the [previous 18-month analysis](monte-carlo-1min.md) (Jan 2025 — Jun 2026, 47 events). The 4.4x increase in sample size dramatically changes the statistical picture.
+This supersedes the [previous 18-month analysis](03-monte-carlo-18mo.md) (Jan 2025 — Jun 2026, 47 events). The 4.4x increase in sample size dramatically changes the statistical picture.
 
 ## What Changed: 18 Months vs 6.5 Years
 
@@ -167,5 +167,5 @@ strategy:
 3. **Slippage not modeled**: Stop orders can gap through during fast markets.
 4. **Bid-side data only**: Dukascopy provides bid OHLCV. Ask side is approximated via spread adjustment.
 5. **Multiple testing**: 540 parameter combinations. Walk-forward validation is the primary guard.
-6. **FOMC dynamics differ**: Rate decisions move differently from data releases. However, the [event-type split analysis](event-type-split.md) shows all three event types are independently profitable with current parameters.
+6. **FOMC dynamics differ**: Rate decisions move differently from data releases. However, the [event-type split analysis](05-event-type-split.md) shows all three event types are independently profitable with current parameters.
 7. **Exotic pair liquidity**: USDZAR and USDTRY have lower liquidity during off-hours. The strategy only trades around major US events when liquidity is highest, but slippage risk remains elevated vs majors.

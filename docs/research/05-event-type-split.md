@@ -6,7 +6,7 @@
 
 ## Why This Analysis
 
-The [6.5-year Monte Carlo report](monte-carlo-2020-2026.md) optimized parameters across all event types combined. But FOMC rate decisions are fundamentally different from data releases like NFP and CPI:
+The [6.5-year Monte Carlo report](04-monte-carlo-6yr.md) optimized parameters across all event types combined. But FOMC rate decisions are fundamentally different from data releases like NFP and CPI:
 
 - **NFP/CPI**: Scheduled data releases at 8:30 AM ET. Market reacts to the surprise (actual vs forecast). Moves are fast and directional.
 - **FOMC**: Rate decision at 2:00 PM ET, followed by a press conference at 2:30 PM. The initial move can reverse during the presser. Two-phase volatility.

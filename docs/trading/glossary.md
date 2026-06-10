@@ -150,7 +150,7 @@ A statistical adjustment for the **multiple comparisons problem**. When you test
 
 ### Walk-Forward Validation
 
-The primary guard against overfitting. Optimize parameters on older data (in-sample), then test those exact parameters on newer data the optimizer never saw (out-of-sample). If performance holds, the edge is real. If it collapses, you were curve-fitting noise. See the [Monte Carlo 1-min report](../research/monte-carlo-1min.md#walk-forward-validation) for details.
+The primary guard against overfitting. Optimize parameters on older data (in-sample), then test those exact parameters on newer data the optimizer never saw (out-of-sample). If performance holds, the edge is real. If it collapses, you were curve-fitting noise. See the [Monte Carlo 1-min report](../research/03-monte-carlo-18mo.md#walk-forward-validation) for details.
 
 ### Overfitting
 
