@@ -52,14 +52,16 @@ from monte_carlo_dukascopy import (
 PAIR_EVENTS: dict[str, list[str]] = {
     "USDCAD": ["BOC Rate Decision", "Canada CPI", "Canada Employment"],
     "USDJPY": ["BOJ Rate Decision", "Japan CPI"],
+    "USDZAR": ["SARB Rate Decision", "South Africa CPI"],
+    "USDTRY": ["TCMB Rate Decision"],
 }
 
 # Event-time half-spread in pips (conservative estimates)
-# Canada events: USDCAD spreads are tight, similar to US events
-# Japan events: USDJPY is very liquid but BOJ can spike spreads
 EVENT_SPREAD_PIPS = {
     "USDCAD": 2.5,
     "USDJPY": 2.0,
+    "USDZAR": 25.0,
+    "USDTRY": 30.0,
 }
 
 RESULTS_FILE = DATA_DIR / "optimization_results_non_us.json"
