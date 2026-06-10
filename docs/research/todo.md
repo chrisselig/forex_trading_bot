@@ -9,12 +9,12 @@
     High    │            │ Trump      │ Web        │
             │            │ Strategy   │ Dashboard  │
    E        ├────────────┼────────────┼────────────┤
-   F        │ Multiple   │ Model Drift│ ✓ Telegram │
-   F        │ Testing    │ Detection  │  Alerts    │
-   O        │ Correction │            │            │
+   F        │ ✓ Multiple│ Model Drift│ ✓ Telegram │
+   F        │  Testing  │ Detection  │  Alerts    │
+   O        │  Correct. │            │            │
    R        ├────────────┼────────────┼────────────┤
-   T        │ OCA        │ ✓ FOMC    │ ✓ 1-Min   │
-            │ Modeling   │  Split    │  Data Done │
+   T        │ ✓ OCA    │ ✓ FOMC    │ ✓ 1-Min   │
+            │  Modeling │  Split    │  Data Done │
     Low     │            │ Spread/    │ ✓ Re-run  │
             │            │ Slippage   │  MC done  │
             └────────────┴────────────┴────────────┘
@@ -54,8 +54,8 @@
 
 ## Backlog
 
-- OCA modeling for straddle legs
-- Multiple testing correction (Bonferroni)
+- ~~**OCA modeling for straddle legs**~~ — **DONE**: Straddle buy/sell stops share an `ocaGroup` so IB cancels the unfilled leg on fill. See PR #14.
+- ~~**Multiple testing correction (Bonferroni)**~~ — **DONE**: Both MC scripts report Bonferroni-adjusted CIs alongside raw 95% CIs. See PR #14.
 - Expand sample size (ongoing, passive)
 - **IBKR base currency trap** — Review and implement auto-conversion of residual foreign currency balances back to CAD after closing forex trades. IBKR leaves open FX balances when you trade (e.g., buying EUR/USD borrows USD to buy EUR). At small account scale, these residual balances should be swept back to CAD immediately so statements reflect true net CAD P&L. Investigate: (a) manual post-trade sweep via IB API, (b) IBKR "Virtual FX Position" setting, (c) auto-close via IdealPro conversion after each trade close.
 
