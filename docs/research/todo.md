@@ -50,6 +50,7 @@
 - **Currency momentum strategy** — Buy recent winners, sell recent losers (1-12 month look-back). Sharpe ~0.95, returns up to 10% p.a. ([BIS Working Paper 366](https://www.bis.org/publ/work366.pdf), [ScienceDirect](https://www.sciencedirect.com/science/article/abs/pii/S0304405X12001353)). Uncorrelated with carry (even -31% during crises), so combining them diversifies risk ([Kellogg/Northwestern](https://www.kellogg.northwestern.edu/faculty/rebelo/htm/carry.pdf)). Likely driven by behavioral underreaction then overreaction. Implementation: monthly rebalancing of a currency basket ranked by trailing returns. IB supports all major and exotic pairs needed.
 - Model drift detection
 - ~~**FOMC-specific parameter split**~~ — **DONE**: All three event types (NFP, CPI, FOMC) are independently profitable for both active pairs. FOMC optimal TP is slightly tighter (55-65 vs 70 pips) due to press conference reversal risk, but the marginal improvement doesn't justify splitting params yet. All 6 walk-forwards pass. See [Event-Type Split Analysis](05-event-type-split.md).
+- **Automatic event data download** — After each traded event, automatically download the 1-min Dukascopy data for that event's pairs and append to the local CSV files. Eliminates the manual quarterly `download_dukascopy.py` step. Could run as a post-event job in APScheduler (e.g., 2 hours after the event) or as a nightly batch. Keeps the MC dataset always up-to-date so re-runs use the latest data without manual intervention.
 - Spread/slippage logging and modeling
 
 ## Backlog
