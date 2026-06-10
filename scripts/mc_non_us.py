@@ -98,6 +98,7 @@ def run_grid_search(
     data: dict[str, dict],
     pair: str,
     years: list[int] | None = None,
+    n_comparisons: int = 1,
 ) -> list[dict]:
     """Run grid search across parameter space for one pair.
 
@@ -105,6 +106,7 @@ def run_grid_search(
         data: Event data dict (already filtered to non-US events).
         pair: Currency pair.
         years: If provided, only use events from these years.
+        n_comparisons: Number of pairs being tested (for Bonferroni correction).
     """
     pair_data = data
     if years:
@@ -144,7 +146,7 @@ def run_grid_search(
                     continue
 
                 pnl_arr = np.array(all_pnl)
-                metrics = bootstrap_metrics(pnl_arr)
+                metrics = bootstrap_metrics(pnl_arr, n_comparisons=n_comparisons)
                 results.append({
                     "pair": pair,
                     "distance": float(dist),
@@ -515,10 +517,11 @@ def main():
 
     # Phase 2: Grid Search
     t0 = time.time()
+    n_pairs = len(all_data)
     all_results: dict[str, list[dict]] = {}
     for pair, pair_data in all_data.items():
         logger.info(f"Optimizing {pair}...")
-        results = run_grid_search(pair_data, pair)
+        results = run_grid_search(pair_data, pair, n_comparisons=n_pairs)
         all_results[pair] = results
         if results:
             best = results[0]

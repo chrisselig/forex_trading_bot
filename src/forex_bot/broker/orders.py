@@ -60,8 +60,14 @@ class OrderService:
         entry_price: float,
         take_profit: float,
         stop_loss: float,
+        oca_group: str = "",
     ) -> list[IBTrade]:
-        """Place a bracket order (entry + TP + SL) with IB."""
+        """Place a bracket order (entry + TP + SL) with IB.
+
+        If oca_group is set, the parent entry order joins an OCA group so
+        that when one straddle leg fills, IB cancels the other leg's entry.
+        OCA type 1 = cancel remaining orders on first fill.
+        """
         await self._client.ensure_connected()
         contract = make_forex_contract(instrument)
         await self.ib.qualifyContractsAsync(contract)
@@ -75,9 +81,16 @@ class OrderService:
             stopLossPrice=stop_loss,
         )
 
+        # Set OCA group on the parent (entry) order only.
+        # TP and SL are children — they auto-cancel when the parent is cancelled.
+        if oca_group and bracket:
+            bracket[0].ocaGroup = oca_group
+            bracket[0].ocaType = 1  # Cancel all remaining on fill
+
         logger.info(
             f"Placing bracket {side} {quantity} {instrument} "
             f"entry={entry_price} tp={take_profit} sl={stop_loss}"
+            f"{f' OCA={oca_group}' if oca_group else ''}"
         )
 
         trades = []

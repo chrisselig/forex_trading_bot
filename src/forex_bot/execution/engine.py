@@ -86,6 +86,7 @@ class ExecutionEngine:
             take_profit=signal.take_profit,
             event_id=signal.event_id,
             strategy=signal.strategy,
+            oca_group=signal.oca_group,
         )
 
         # Log order to journal
@@ -107,6 +108,7 @@ class ExecutionEngine:
                     entry_price=order.price,
                     take_profit=order.take_profit,
                     stop_loss=order.stop_loss,
+                    oca_group=order.oca_group,
                 )
                 if trades:
                     order.ib_order_id = trades[0].order.orderId

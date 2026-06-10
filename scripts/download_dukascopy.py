@@ -44,7 +44,7 @@ UTC = timezone.utc
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "scripts" / "data" / "dukascopy"
 
-PAIRS = ["GBPUSD", "USDCAD", "GBPJPY", "USDZAR", "USDTRY", "USDJPY"]
+PAIRS = ["GBPUSD", "USDCAD", "GBPJPY", "USDZAR", "USDTRY", "USDJPY", "EURUSD", "AUDUSD"]
 
 # Map our pair names to Dukascopy instrument strings
 DUKASCOPY_INSTRUMENTS = {
@@ -54,6 +54,8 @@ DUKASCOPY_INSTRUMENTS = {
     "USDZAR": "USD/ZAR",
     "USDTRY": "USD/TRY",
     "USDJPY": "USD/JPY",
+    "EURUSD": "EUR/USD",
+    "AUDUSD": "AUD/USD",
 }
 
 # Which pairs to download for each event type

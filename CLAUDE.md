@@ -32,6 +32,12 @@ scripts/             # Standalone utility scripts
 
 ## Key Conventions
 
+### Git Workflow (NON-NEGOTIABLE)
+- **Always create a feature branch** for new features, bug fixes, and refactors. Never commit directly to `main` unless the user explicitly says "commit to main" or "push directly".
+- Branch naming: `feat/short-description`, `fix/short-description`, `docs/short-description`
+- Open a PR via `gh pr create` when the branch is ready for review/merge.
+- Small doc-only changes or config tweaks may go directly to `main` if the user requests it.
+
 ### Code Style
 - Use `from __future__ import annotations` in all modules
 - Type hints on all function signatures

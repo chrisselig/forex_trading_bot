@@ -37,6 +37,7 @@ class Order(BaseModel):
     status: OrderStatus = OrderStatus.PENDING
     event_id: int | None = None
     strategy: str = ""
+    oca_group: str = ""  # OCA group ID for straddle leg cancellation
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     filled_at: datetime | None = None
     fill_price: float | None = None

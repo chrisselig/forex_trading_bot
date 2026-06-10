@@ -65,7 +65,11 @@ The minimum win rate needed to avoid losing money, given the R:R ratio. Formula:
 
 ### OCA (One-Cancels-All)
 
-An order group where filling one order automatically cancels the others. Used for straddles — when the buy stop triggers, the sell stop is cancelled, and vice versa.
+An order group where filling one order automatically cancels the others. In IB's API, you assign the same `ocaGroup` string to multiple orders and set `ocaType=1` (cancel on fill).
+
+**Why it matters for straddles**: Without OCA, both the buy stop and sell stop are independent — if the market whipsaws through both levels, you end up with two opposing positions (a hedged mess). With OCA, as soon as one leg fills, IB automatically cancels the other. This ensures you only ever take one directional trade per event.
+
+**How it works in the bot**: The `StraddleStrategy` generates a unique OCA group ID (e.g., `straddle_USDZAR_20260605_1230_48291`) and assigns it to both the BUY and SELL stop signals. When these become bracket orders in IB, the parent entry orders share the OCA group. When one entry fills, IB cancels the other entry — and since TP/SL are children of the cancelled entry, they're cancelled too.
 
 ---
 
@@ -134,6 +138,16 @@ A technique that uses random resampling to estimate the range of possible outcom
 
 The specific Monte Carlo method used here. Take the set of historical trade results, randomly draw N trades (with replacement) to create a "synthetic" history, calculate the mean P&L, repeat 10,000 times. The distribution of those 10,000 means gives you the confidence interval.
 
+### Bonferroni Correction
+
+A statistical adjustment for the **multiple comparisons problem**. When you test many hypotheses simultaneously (e.g., "is this strategy profitable on GBPUSD? on USDCAD? on USDZAR? ..."), the chance that *at least one* looks significant by pure luck increases with the number of tests. With 7 pairs at 95% confidence, there's a ~30% chance of at least one false positive.
+
+**The fix**: Divide the significance level (alpha) by the number of comparisons. Testing 7 pairs at 95% confidence? The Bonferroni-adjusted CI uses alpha = 0.025/7 ≈ 0.36% per tail instead of 2.5% per tail. This widens the confidence interval, making it harder for a pair to appear significant — but any pair that still passes has survived a much stricter test.
+
+**In the MC reports**: You'll see two CI columns — the raw 95% CI and the Bonferroni-adjusted CI. A pair that passes the Bonferroni CI is very unlikely to be a false positive. A pair that passes raw CI but fails Bonferroni (e.g., USDJPY) deserves paper trading and further monitoring but not immediate production.
+
+**Limitation**: Bonferroni is conservative — it controls the probability of *any* false positive (family-wise error rate). It can make real edges look insignificant, especially with many comparisons. Walk-forward validation is the complementary guard: even if a CI is borderline, a pair that passes walk-forward on held-out data is showing a real out-of-sample edge.
+
 ### Walk-Forward Validation
 
 The primary guard against overfitting. Optimize parameters on older data (in-sample), then test those exact parameters on newer data the optimizer never saw (out-of-sample). If performance holds, the edge is real. If it collapses, you were curve-fitting noise. See the [Monte Carlo 1-min report](../research/monte-carlo-1min.md#walk-forward-validation) for details.
@@ -189,6 +203,7 @@ Canada's investment industry self-regulatory body. Sets leverage limits and trad
 
 | Abbreviation | Meaning |
 |-------------|---------|
+| Bonf. CI | Bonferroni-adjusted Confidence Interval |
 | CI | Confidence Interval |
 | CPI | Consumer Price Index |
 | CVaR | Conditional Value at Risk |
