@@ -58,6 +58,7 @@ def event():
         id=1,
         title="Non-Farm Employment Change",
         scheduled_at=datetime(2026, 6, 5, 12, 30, 0),
+        target_pairs=["EURUSD"],
     )
 
 

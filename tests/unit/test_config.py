@@ -53,9 +53,13 @@ def test_straddle_pair_overrides():
 def test_straddle_pair_overrides_loaded_from_yaml():
     settings = load_settings()
     overrides = settings.strategy.straddle_pair_overrides
-    assert "GBPJPY" in overrides
-    assert overrides["GBPJPY"].distance_pips == 45
-    assert overrides["GBPJPY"].tp_pips == 35
+    assert "USDZAR" in overrides
+    assert overrides["USDZAR"].distance_pips == 50
+    assert overrides["USDZAR"].tp_pips == 70
+    assert overrides["USDZAR"].sl_pips == 10
+    assert "USDJPY" in overrides
+    assert overrides["USDJPY"].distance_pips == 25
+    assert overrides["USDJPY"].tp_pips == 15
 
 
 def test_events_config_loaded():

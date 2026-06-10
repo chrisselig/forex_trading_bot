@@ -1,58 +1,67 @@
 target_events:
+  # --- US Events ---
   - name: "Non-Farm Employment Change"
     aliases: ["NFP", "Non-Farm Payrolls", "Nonfarm Payrolls"]
     fred_series: "PAYEMS"
-    pairs: ["EURUSD", "GBPUSD", "USDJPY", "USDCAD"]
+    pairs: ["USDZAR", "USDTRY"]
     impact: "high"
 
   - name: "CPI m/m"
     aliases: ["Consumer Price Index", "CPI"]
     fred_series: "CPIAUCSL"
-    pairs: ["EURUSD", "GBPUSD", "USDJPY"]
+    pairs: ["USDZAR", "USDTRY"]
     impact: "high"
 
   - name: "Federal Funds Rate"
     aliases: ["FOMC", "Fed Interest Rate Decision", "FOMC Statement"]
     fred_series: "FEDFUNDS"
-    pairs: ["EURUSD", "GBPUSD", "USDJPY", "USDCAD"]
+    pairs: ["USDZAR", "USDTRY"]
     impact: "high"
 
   - name: "GDP q/q"
     aliases: ["Gross Domestic Product", "Advance GDP", "Preliminary GDP", "Final GDP"]
     fred_series: "GDP"
-    pairs: ["EURUSD", "USDJPY"]
+    pairs: ["USDZAR", "USDTRY"]
     impact: "high"
 
   - name: "Unemployment Claims"
     aliases: ["Initial Jobless Claims", "Jobless Claims"]
     fred_series: "ICSA"
-    pairs: ["EURUSD", "USDJPY"]
+    pairs: ["USDZAR", "USDTRY"]
     impact: "high"
 
   - name: "ISM Manufacturing PMI"
     aliases: ["ISM Manufacturing", "ISM PMI"]
     fred_series: "MANEMP"
-    pairs: ["EURUSD", "USDJPY"]
+    pairs: ["USDZAR", "USDTRY"]
     impact: "high"
 
   - name: "PPI m/m"
     aliases: ["Producer Price Index", "PPI"]
     fred_series: "PPIACO"
-    pairs: ["EURUSD", "GBPUSD"]
+    pairs: ["USDZAR", "USDTRY"]
     impact: "high"
 
   - name: "Retail Sales m/m"
     aliases: ["Core Retail Sales", "Retail Sales"]
     fred_series: "RSAFS"
-    pairs: ["EURUSD", "USDJPY"]
+    pairs: ["USDZAR", "USDTRY"]
     impact: "high"
 
   - name: "Unemployment Rate"
     aliases: ["Unemployment"]
     fred_series: "UNRATE"
-    pairs: ["EURUSD", "GBPUSD", "USDJPY", "USDCAD"]
+    pairs: ["USDZAR", "USDTRY"]
+    impact: "high"
+
+  # --- Japan Events (paper-trade USDJPY) ---
+  - name: "BOJ Policy Rate"
+    aliases: ["BOJ Rate", "BOJ Interest Rate Decision", "BOJ Rate Decision", "Monetary Policy Statement"]
+    pairs: ["USDJPY"]
     impact: "high"
 
 filters:
-  country: "USD"
+  country:
+    - "USD"
+    - "JPY"
   min_impact: "high"

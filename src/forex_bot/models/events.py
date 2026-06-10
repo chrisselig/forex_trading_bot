@@ -21,6 +21,7 @@ class EconomicEvent(BaseModel):
     previous: str | None = None
     source_url: str = ""
     fred_series: str = ""
+    target_pairs: list[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @property

@@ -69,7 +69,7 @@ class EventTarget(BaseModel):
 
 
 class EventFilters(BaseModel):
-    country: str = "USD"
+    country: str | list[str] = "USD"
     min_impact: str = "high"
 
 

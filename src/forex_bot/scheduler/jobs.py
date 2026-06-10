@@ -50,6 +50,24 @@ class JobManager:
         self._settings = settings
         self._notifier = notifier
 
+    def _pairs_for_event(self, event: EconomicEvent) -> list[str]:
+        """Return instruments to trade for this event.
+
+        If the event has target_pairs set (from events.yaml), only trade the
+        intersection of target_pairs and trading.instruments. Otherwise fall
+        back to all trading.instruments.
+        """
+        all_instruments = self._settings.trading.instruments
+        if event.target_pairs:
+            pairs = [p for p in all_instruments if p in event.target_pairs]
+            if not pairs:
+                logger.warning(
+                    f"No instrument overlap for {event.title}: "
+                    f"target_pairs={event.target_pairs}, instruments={all_instruments}"
+                )
+            return pairs
+        return all_instruments
+
     def schedule_event_jobs(self, event: EconomicEvent, pre_minutes: int) -> None:
         """Schedule pre-flight, pre-event, and post-event jobs for a specific event."""
         now = datetime.now(UTC).replace(tzinfo=None)
@@ -151,8 +169,9 @@ class JobManager:
             return
 
         self._engine.set_current_event(event)
+        pairs = self._pairs_for_event(event)
         for strategy in self._registry.all():
-            for pair in self._settings.trading.instruments:
+            for pair in pairs:
                 try:
                     price = await self._pricing.get_snapshot(pair)
                     signals = await strategy.evaluate_pre_event(event, price)
@@ -177,8 +196,9 @@ class JobManager:
         current_event = events[0] if events else event
 
         self._engine.set_current_event(current_event)
+        pairs = self._pairs_for_event(current_event)
         for strategy in self._registry.all():
-            for pair in self._settings.trading.instruments:
+            for pair in pairs:
                 try:
                     price = await self._pricing.get_snapshot(pair)
                     signals = await strategy.evaluate_post_event(current_event, price)

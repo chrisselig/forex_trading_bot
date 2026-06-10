@@ -8,6 +8,7 @@ trading:
   instruments:
     - USDZAR
     - USDTRY
+    - USDJPY  # Paper-trade only: BOJ events (25/15/15), borderline CI — re-evaluate end of 2026
     # GBPUSD removed — 6.5yr MC analysis (Jun 2026) shows below breakeven, fails walk-forward
     # GBPJPY and USDCAD also excluded — marginal CIs, walk-forward failures
   default_timeframe: "5 mins"
@@ -35,6 +36,10 @@ strategy:
       distance_pips: 50
       tp_pips: 70
       sl_pips: 10
+    USDJPY:
+      distance_pips: 25
+      tp_pips: 15
+      sl_pips: 15
   surprise_threshold_pct: 10.0
   surprise_entry_delay_seconds: 5
   surprise_tp_pips: 25

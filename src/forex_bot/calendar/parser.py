@@ -29,14 +29,18 @@ class EventParser:
             target = self._match_target(event)
             if target:
                 event.fred_series = target.fred_series
+                event.target_pairs = target.pairs
                 filtered.append(event)
         logger.info(f"Filtered {len(events)} events down to {len(filtered)} matching targets")
         return filtered
 
     def _matches_filters(self, event: EconomicEvent) -> bool:
         """Check if event matches base filters (country, impact)."""
-        if self._filters.country and event.country != self._filters.country:
-            return False
+        country_filter = self._filters.country
+        if country_filter:
+            allowed = [country_filter] if isinstance(country_filter, str) else country_filter
+            if event.country not in allowed:
+                return False
         if self._filters.min_impact == "high" and event.impact != EventImpact.HIGH:
             return False
         return True
