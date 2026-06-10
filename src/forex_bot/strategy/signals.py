@@ -18,6 +18,7 @@ class Signal(BaseModel):
     event_id: int | None = None
     strategy: str = ""
     reason: str = ""
+    oca_group: str = ""  # OCA group ID — IB cancels other orders in the group when one fills
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 

@@ -87,6 +87,23 @@ class TestStraddleStrategy:
             assert OrderSide.SELL in sides
 
     @pytest.mark.asyncio
+    async def test_straddle_signals_share_oca_group(self, event, price):
+        """Both straddle legs should share the same OCA group ID."""
+        with patch("forex_bot.strategy.straddle.get_settings") as mock_settings:
+            mock_settings.return_value = _make_strategy_settings(
+                straddle_distance_pips=20,
+                straddle_tp_pips=30,
+                straddle_sl_pips=15,
+            )
+            from forex_bot.strategy.straddle import StraddleStrategy
+            strategy = StraddleStrategy()
+            signals = await strategy.evaluate_pre_event(event, price)
+            assert len(signals) == 2
+            assert signals[0].oca_group != ""
+            assert signals[0].oca_group == signals[1].oca_group
+            assert "straddle_EURUSD_" in signals[0].oca_group
+
+    @pytest.mark.asyncio
     async def test_no_post_event_signals(self, event, price):
         with patch("forex_bot.strategy.straddle.get_settings") as mock_settings:
             mock_settings.return_value = _make_strategy_settings(

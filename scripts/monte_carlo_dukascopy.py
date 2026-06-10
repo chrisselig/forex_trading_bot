@@ -57,17 +57,19 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 RESULTS_FILE = DATA_DIR / "optimization_results_1min.json"
 REPORT_FILE = DATA_DIR / "STRADDLE_OPTIMIZATION_REPORT_1MIN.md"
 
-PAIRS = ["GBPUSD", "USDCAD", "GBPJPY", "USDZAR", "USDTRY"]
+PAIRS = ["GBPUSD", "USDCAD", "GBPJPY", "USDZAR", "USDTRY", "EURUSD", "AUDUSD"]
 
 PIP_SIZES = {
     "EURUSD": 0.0001, "GBPUSD": 0.0001, "USDCAD": 0.0001,
+    "AUDUSD": 0.0001,
     "GBPJPY": 0.01, "USDJPY": 0.01, "EURJPY": 0.01,
     "USDZAR": 0.0001, "USDTRY": 0.0001,
 }
 
 # Typical event-time half-spread in pips (conservative estimates)
 EVENT_SPREAD_PIPS = {
-    "GBPUSD": 2.0, "USDCAD": 2.5, "GBPJPY": 4.0,
+    "EURUSD": 1.5, "GBPUSD": 2.0, "USDCAD": 2.5, "AUDUSD": 2.0,
+    "GBPJPY": 4.0,
     "USDZAR": 25.0, "USDTRY": 30.0,
 }
 
@@ -410,6 +412,7 @@ def bootstrap_metrics(
     pnl_array: np.ndarray,
     n_bootstrap: int = N_BOOTSTRAP,
     confidence: float = CONFIDENCE_LEVEL,
+    n_comparisons: int = 1,
 ) -> dict:
     """Bootstrap resample P&L to get distribution of key metrics."""
     n = len(pnl_array)
@@ -441,6 +444,10 @@ def bootstrap_metrics(
 
     alpha = (1 - confidence) / 2
 
+    # Bonferroni-adjusted CI: widen the CI to account for multiple comparisons
+    # Uses Bonferroni correction: alpha_adj = alpha / n_comparisons
+    alpha_bonf = alpha / n_comparisons if n_comparisons > 1 else alpha
+
     # CVaR at 5th percentile
     sorted_pnl = np.sort(pnl_array)
     cvar_idx = max(1, int(0.05 * n))
@@ -457,6 +464,8 @@ def bootstrap_metrics(
         "std_pnl": float(np.std(pnl_array, ddof=1)),
         "ci_low": float(np.percentile(boot_means, alpha * 100)),
         "ci_high": float(np.percentile(boot_means, (1 - alpha) * 100)),
+        "ci_low_bonf": float(np.percentile(boot_means, alpha_bonf * 100)),
+        "ci_high_bonf": float(np.percentile(boot_means, (1 - alpha_bonf) * 100)),
         "sharpe": float(np.mean(boot_sharpes)),
         "sharpe_ci_low": float(np.percentile(boot_sharpes, alpha * 100)),
         "sharpe_ci_high": float(np.percentile(boot_sharpes, (1 - alpha) * 100)),
@@ -466,6 +475,7 @@ def bootstrap_metrics(
         "max_dd_95": float(np.percentile(boot_max_dd, 95)),
         "cvar_5": cvar_5,
         "n_trades": n,
+        "n_comparisons": n_comparisons,
     }
 
 
@@ -477,8 +487,12 @@ def run_grid_search(
     all_data: dict[str, dict],
     pair: str,
     year_filter: int | None = None,
+    n_comparisons: int = 1,
 ) -> list[dict]:
-    """Run grid search across parameter space for one pair."""
+    """Run grid search across parameter space for one pair.
+
+    n_comparisons: number of pairs being tested simultaneously (for Bonferroni).
+    """
     pair_data = {k: v for k, v in all_data.items() if v["pair"] == pair}
     if year_filter:
         pair_data = {k: v for k, v in pair_data.items()
@@ -517,7 +531,7 @@ def run_grid_search(
                     continue
 
                 pnl_arr = np.array(all_pnl)
-                metrics = bootstrap_metrics(pnl_arr)
+                metrics = bootstrap_metrics(pnl_arr, n_comparisons=n_comparisons)
                 score = metrics["ci_low"]
 
                 results.append({
@@ -823,8 +837,9 @@ def generate_report(
         "3. Grid search over distance (10-50), TP (15-70), SL (10-30) — all in pips",
         "4. Bootstrap resampled 10,000x to build confidence intervals",
         "5. Scored on pessimistic metric: lower bound of 95% CI on mean P&L",
-        "6. Walk-forward validation: train on 2020-2024, test on 2025-2026",
-        "7. Spread modeled as fixed cost (conservative event-time estimates)",
+        "6. Bonferroni correction applied: CIs widened for the number of pairs tested simultaneously",
+        "7. Walk-forward validation: train on 2020-2024, test on 2025-2026",
+        "8. Spread modeled as fixed cost (conservative event-time estimates)",
         "",
         "### Improvement over hourly data",
         "",
@@ -837,8 +852,8 @@ def generate_report(
         "",
         "## Optimal Parameters by Pair",
         "",
-        "| Pair | Distance | TP | SL | E[P&L] | 95% CI | Win Rate | Sharpe | Profit Factor | CVaR(5%) | N |",
-        "|------|----------|----|----|--------|--------|----------|--------|---------------|----------|---|",
+        "| Pair | Distance | TP | SL | E[P&L] | 95% CI | Bonferroni CI | Win Rate | Sharpe | PF | N |",
+        "|------|----------|----|----|--------|--------|---------------|----------|--------|----|---|",
     ]
 
     recommendations = {}
@@ -853,8 +868,9 @@ def generate_report(
         lines.append(
             f"| **{pair}** | {best['distance']:.0f} | {best['tp']:.0f} | {best['sl']:.0f} | "
             f"{best['mean_pnl']:+.1f} | [{best['ci_low']:+.1f}, {best['ci_high']:+.1f}] | "
+            f"[{best.get('ci_low_bonf', best['ci_low']):+.1f}, {best.get('ci_high_bonf', best['ci_high']):+.1f}] | "
             f"{best['win_rate']*100:.1f}% | {best['sharpe']:.2f} | "
-            f"{best['profit_factor']:.2f} | {best['cvar_5']:+.1f} | {best['n_trades']} |"
+            f"{best['profit_factor']:.2f} | {best['n_trades']} |"
         )
 
     lines += [
@@ -959,8 +975,9 @@ def generate_report(
         "4. **Bid-side data only**: Dukascopy data is bid OHLCV. The ask side is",
         "   approximated via the spread adjustment.",
         "",
-        "5. **Multiple testing**: Grid search over ~540 combos inflates spurious results.",
-        "   Walk-forward validation is the primary guard.",
+        "5. **Multiple testing**: Grid search over ~540 combos across N pairs inflates false",
+        "   positives. Bonferroni correction adjusts CIs by the number of pairs tested.",
+        "   Walk-forward validation provides an additional out-of-sample guard.",
         "",
         "6. **FOMC dynamics differ**: Rate decisions move differently from data releases.",
         "",
@@ -998,10 +1015,11 @@ def main():
     # Phase 2: Grid Search Optimization
     logger.info("Starting grid search optimization...")
     t0 = time.time()
+    n_pairs = len(args.pairs)
     all_results: dict[str, list[dict]] = {}
     for pair in args.pairs:
         logger.info(f"Optimizing {pair}...")
-        results = run_grid_search(all_data, pair)
+        results = run_grid_search(all_data, pair, n_comparisons=n_pairs)
         all_results[pair] = results
         if results:
             best = results[0]
