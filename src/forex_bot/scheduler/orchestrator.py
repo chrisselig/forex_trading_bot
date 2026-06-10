@@ -14,6 +14,7 @@ from forex_bot.broker.client import IBClient
 from forex_bot.broker.pricing import PricingService
 from forex_bot.calendar.scraper import ForexFactoryScraper
 from forex_bot.calendar.parser import EventParser
+from forex_bot.calendar.static import load_static_events
 from forex_bot.calendar.store import EventStore
 from forex_bot.config import get_settings
 from forex_bot.data.database import init_db
@@ -122,13 +123,23 @@ class Orchestrator:
             logger.warning(f"Startup notification failed: {e}")
 
     async def _refresh_calendar(self) -> None:
-        """Fetch and store upcoming events."""
+        """Fetch and store upcoming events from Forex Factory + static calendar."""
         try:
+            # Forex Factory events (USD, JPY majors)
             events = await self._scraper.fetch_week()
             filtered = self._parser.filter_events(events)
             await self._event_store.save_events(filtered)
             await self._event_store.update_actuals(events)
-            logger.info(f"Calendar refreshed: {len(filtered)} target events")
+
+            # Static events (SARB, TCMB, SA CPI, BOJ — not on Forex Factory)
+            static = load_static_events()
+            static_filtered = self._parser.filter_events(static)
+            await self._event_store.save_events(static_filtered)
+
+            total = len(filtered) + len(static_filtered)
+            logger.info(
+                f"Calendar refreshed: {len(filtered)} FF + {len(static_filtered)} static = {total} events"
+            )
         except Exception as e:
             logger.error(f"Calendar refresh failed: {e}")
 

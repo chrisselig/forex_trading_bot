@@ -33,10 +33,14 @@ class RiskConfig(BaseModel):
     max_spread_pips: float = 3.0
 
 
-class StraddlePairOverride(BaseModel):
+class StraddleParams(BaseModel):
     distance_pips: float
     tp_pips: float
     sl_pips: float
+
+
+class StraddlePairOverride(StraddleParams):
+    event_overrides: dict[str, StraddleParams] = Field(default_factory=dict)
 
 
 class StrategyConfig(BaseModel):
@@ -52,10 +56,21 @@ class StrategyConfig(BaseModel):
     surprise_sl_pips: float = 15.0
     max_holding_minutes: int = 120
 
-    def get_straddle_params(self, instrument: str) -> tuple[float, float, float]:
-        """Return (distance, tp, sl) in pips for the given instrument."""
+    def get_straddle_params(
+        self, instrument: str, event_title: str = ""
+    ) -> tuple[float, float, float]:
+        """Return (distance, tp, sl) in pips for the given instrument and event.
+
+        Checks event_overrides first (substring match on event title),
+        then falls back to the pair-level override, then global defaults.
+        """
         override = self.straddle_pair_overrides.get(instrument)
         if override:
+            if event_title and override.event_overrides:
+                title_lower = event_title.lower()
+                for key, params in override.event_overrides.items():
+                    if key.lower() in title_lower:
+                        return params.distance_pips, params.tp_pips, params.sl_pips
             return override.distance_pips, override.tp_pips, override.sl_pips
         return self.straddle_distance_pips, self.straddle_tp_pips, self.straddle_sl_pips
 
@@ -66,6 +81,7 @@ class EventTarget(BaseModel):
     fred_series: str = ""
     pairs: list[str] = Field(default_factory=list)
     impact: str = "high"
+    country: str = ""  # If set, only match events from this country
 
 
 class EventFilters(BaseModel):

@@ -62,6 +62,42 @@ def test_straddle_pair_overrides_loaded_from_yaml():
     assert overrides["USDJPY"].tp_pips == 15
 
 
+def test_event_overrides():
+    """USDTRY uses 50/70/10 for US events but 20/60/10 for TCMB."""
+    config = StrategyConfig(
+        straddle_pair_overrides={
+            "USDTRY": {
+                "distance_pips": 50,
+                "tp_pips": 70,
+                "sl_pips": 10,
+                "event_overrides": {
+                    "TCMB": {"distance_pips": 20, "tp_pips": 60, "sl_pips": 10},
+                },
+            },
+        },
+    )
+    # US event — uses pair-level defaults
+    d, tp, sl = config.get_straddle_params("USDTRY", "Non-Farm Employment Change")
+    assert (d, tp, sl) == (50, 70, 10)
+
+    # TCMB event — uses event override
+    d, tp, sl = config.get_straddle_params("USDTRY", "TCMB Interest Rate Decision")
+    assert (d, tp, sl) == (20, 60, 10)
+
+    # No event title — uses pair-level defaults
+    d, tp, sl = config.get_straddle_params("USDTRY")
+    assert (d, tp, sl) == (50, 70, 10)
+
+
+def test_event_overrides_loaded_from_yaml():
+    settings = load_settings()
+    usdtry = settings.strategy.straddle_pair_overrides["USDTRY"]
+    assert "TCMB" in usdtry.event_overrides
+    assert usdtry.event_overrides["TCMB"].distance_pips == 20
+    assert usdtry.event_overrides["TCMB"].tp_pips == 60
+    assert usdtry.event_overrides["TCMB"].sl_pips == 10
+
+
 def test_events_config_loaded():
     settings = load_settings()
     assert len(settings.events.target_events) > 0

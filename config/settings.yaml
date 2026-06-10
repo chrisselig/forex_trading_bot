@@ -33,9 +33,14 @@ strategy:
       tp_pips: 70
       sl_pips: 10
     USDTRY:
-      distance_pips: 50
+      distance_pips: 50        # US events (NFP/CPI/FOMC) — 6.5yr MC
       tp_pips: 70
       sl_pips: 10
+      event_overrides:
+        TCMB:                   # TCMB Rate Decision — non-US MC (Jun 2026)
+          distance_pips: 20     # Tighter: TCMB moves are faster and more contained
+          tp_pips: 60
+          sl_pips: 10
     USDJPY:
       distance_pips: 25
       tp_pips: 15

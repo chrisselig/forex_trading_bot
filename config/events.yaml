@@ -7,7 +7,7 @@ target_events:
     impact: "high"
 
   - name: "CPI m/m"
-    aliases: ["Consumer Price Index", "CPI"]
+    aliases: ["Consumer Price Index"]
     fred_series: "CPIAUCSL"
     pairs: ["USDZAR", "USDTRY"]
     impact: "high"
@@ -57,11 +57,34 @@ target_events:
   # --- Japan Events (paper-trade USDJPY) ---
   - name: "BOJ Policy Rate"
     aliases: ["BOJ Rate", "BOJ Interest Rate Decision", "BOJ Rate Decision", "Monetary Policy Statement"]
+    country: "JPY"
     pairs: ["USDJPY"]
+    impact: "high"
+
+  # --- South Africa Events (USDZAR — same 50/70/10 as US events) ---
+  - name: "SARB Interest Rate Decision"
+    aliases: ["SARB Rate", "South African Reserve Bank", "Repo Rate"]
+    country: "ZAR"
+    pairs: ["USDZAR"]
+    impact: "high"
+
+  - name: "CPI y/y"
+    aliases: ["South Africa CPI", "SA CPI"]
+    country: "ZAR"
+    pairs: ["USDZAR"]
+    impact: "high"
+
+  # --- Turkey Events (USDTRY — uses 20/60/10 via event_overrides) ---
+  - name: "TCMB Interest Rate Decision"
+    aliases: ["TCMB Rate", "One-Week Repo Rate", "Turkish Central Bank"]
+    country: "TRY"
+    pairs: ["USDTRY"]
     impact: "high"
 
 filters:
   country:
     - "USD"
     - "JPY"
+    - "ZAR"
+    - "TRY"
   min_impact: "high"

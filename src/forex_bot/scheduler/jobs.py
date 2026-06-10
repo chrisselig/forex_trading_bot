@@ -10,7 +10,7 @@ from loguru import logger
 from forex_bot.broker.client import IBClient
 from forex_bot.broker.pricing import PricingService
 from forex_bot.calendar.store import EventStore
-from forex_bot.config import Settings
+from forex_bot.config import EventTarget, Settings
 from forex_bot.execution.engine import ExecutionEngine
 from forex_bot.execution.monitor import PositionMonitor
 from forex_bot.models.events import EconomicEvent
@@ -53,20 +53,31 @@ class JobManager:
     def _pairs_for_event(self, event: EconomicEvent) -> list[str]:
         """Return instruments to trade for this event.
 
-        If the event has target_pairs set (from events.yaml), only trade the
-        intersection of target_pairs and trading.instruments. Otherwise fall
-        back to all trading.instruments.
+        Uses target_pairs from the event if set, otherwise looks up the
+        matching EventTarget in config. Falls back to all instruments.
         """
         all_instruments = self._settings.trading.instruments
-        if event.target_pairs:
-            pairs = [p for p in all_instruments if p in event.target_pairs]
+        target_pairs = event.target_pairs or self._lookup_target_pairs(event)
+        if target_pairs:
+            pairs = [p for p in all_instruments if p in target_pairs]
             if not pairs:
                 logger.warning(
                     f"No instrument overlap for {event.title}: "
-                    f"target_pairs={event.target_pairs}, instruments={all_instruments}"
+                    f"target_pairs={target_pairs}, instruments={all_instruments}"
                 )
             return pairs
         return all_instruments
+
+    def _lookup_target_pairs(self, event: EconomicEvent) -> list[str]:
+        """Look up target pairs from events config by matching event title."""
+        title_lower = event.title.lower().strip()
+        for target in self._settings.events.target_events:
+            if target.name.lower() in title_lower:
+                return target.pairs
+            for alias in target.aliases:
+                if alias.lower() in title_lower:
+                    return target.pairs
+        return []
 
     def schedule_event_jobs(self, event: EconomicEvent, pre_minutes: int) -> None:
         """Schedule pre-flight, pre-event, and post-event jobs for a specific event."""

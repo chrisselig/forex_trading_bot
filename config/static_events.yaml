@@ -1,0 +1,61 @@
+# Static event calendar for releases not covered by Forex Factory.
+# Forex Factory only covers major economies (USD, EUR, GBP, JPY, AUD, CAD, NZD, CNY).
+# South Africa (ZAR) and Turkey (TRY) events must be scheduled statically.
+#
+# Format: Each event has a title, country, impact, and list of dates in UTC.
+# Dates use ISO 8601 format: "YYYY-MM-DDTHH:MM"
+#
+# Update this file before each quarter with newly announced dates.
+# Sources:
+#   SARB: https://www.resbank.co.za/en/home/publications/scheduled-publications
+#   TCMB: https://www.tcmb.gov.tr/wps/wcm/connect/EN/TCMB+EN/Main+Menu/Announcements/Press+Releases
+#   SA CPI: Stats SA release calendar
+#   BOJ: https://www.boj.or.jp/en/mopo/mpmdeci/index.htm
+
+static_events:
+  # --- SARB Interest Rate Decisions (3 PM SAST = 1 PM UTC) ---
+  - title: "SARB Interest Rate Decision"
+    country: "ZAR"
+    impact: "high"
+    dates:
+      - "2026-07-23T13:00"
+      - "2026-09-24T13:00"
+      - "2026-11-19T13:00"
+
+  # --- South Africa CPI (10 AM SAST = 8 AM UTC, monthly) ---
+  - title: "CPI y/y"
+    country: "ZAR"
+    impact: "high"
+    dates:
+      - "2026-07-22T08:00"
+      - "2026-08-19T08:00"
+      - "2026-09-23T08:00"
+      - "2026-10-21T08:00"
+      - "2026-11-18T08:00"
+      - "2026-12-16T08:00"
+
+  # --- TCMB Interest Rate Decisions (2 PM TRT = 11 AM UTC) ---
+  - title: "TCMB Interest Rate Decision"
+    country: "TRY"
+    impact: "high"
+    dates:
+      - "2026-06-19T11:00"
+      - "2026-07-24T11:00"
+      - "2026-08-21T11:00"
+      - "2026-09-18T11:00"
+      - "2026-10-23T11:00"
+      - "2026-11-20T11:00"
+      - "2026-12-25T11:00"
+
+  # --- BOJ Policy Rate Decisions (~12 PM JST = 3 AM UTC) ---
+  # BOJ timing is approximate — announcements come after meeting concludes.
+  # Using 3 AM UTC (12 PM JST) as best estimate.
+  - title: "BOJ Policy Rate"
+    country: "JPY"
+    impact: "high"
+    dates:
+      - "2026-06-18T03:00"
+      - "2026-07-31T03:00"
+      - "2026-09-17T03:00"
+      - "2026-10-30T03:00"
+      - "2026-12-18T03:00"

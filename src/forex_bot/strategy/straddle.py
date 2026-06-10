@@ -26,7 +26,7 @@ class StraddleStrategy(BaseStrategy):
     ) -> list[Signal]:
         """Place buy stop above and sell stop below current mid price."""
         distance_pips, tp_pips, sl_pips = self._settings.strategy.get_straddle_params(
-            price.instrument
+            price.instrument, event.title
         )
         pip = get_pip_size(price.instrument)
         mid = price.mid

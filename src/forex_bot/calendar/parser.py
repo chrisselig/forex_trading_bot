@@ -49,6 +49,9 @@ class EventParser:
         """Check if event title matches any configured target event."""
         title_lower = event.title.lower().strip()
         for target in self._targets:
+            # Skip if target is country-specific and event is from a different country
+            if target.country and target.country != event.country:
+                continue
             # Check exact name match
             if target.name.lower() in title_lower:
                 return target
