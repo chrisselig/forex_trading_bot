@@ -71,6 +71,7 @@ nav:
     - operations/telegram-notifications.md
   - Analysis:
     - research/monte-carlo-2020-2026.md
+    - research/mc-non-us-events.md
     - research/event-type-split.md
     - research/monte-carlo-1min.md
     - research/straddle-optimization.md

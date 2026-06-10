@@ -32,11 +32,9 @@
 - **Add new currency pairs** — EURUSD (most liquid pair, reacts strongly to NFP/CPI/FOMC, tightest news spreads), USDJPY (very reactive to FOMC and rate differentials, carry trade dynamics), AUDUSD (risk-sensitive, sharp moves on US data surprises). Download Dukascopy data, run MC analysis, and only enable pairs that pass walk-forward validation.
 - **Add new US event types** — PCE (Fed's preferred inflation gauge, increasingly more important than CPI), Retail Sales (consumer spending = 70% of US GDP, regular 30-50 pip moves), GDP Advance (quarterly, large moves on first estimate), ISM Manufacturing PMI (leading indicator, sharp moves near 50 threshold). Requires adding event dates to download script, calendar scraper, and re-running MC.
 - ~~**Non-US event dates in download script**~~ — **DONE**: Added BOC, Canada CPI, Canada Employment, BOJ, Japan CPI, SARB, TCMB, South Africa CPI event dates (2020-2026) to `scripts/download_dukascopy.py`. Added USDJPY to pairs. Event-pair mapping ensures only relevant pairs download for each event. Use `--group canada,japan` to download specific groups.
-- **Non-US event MC analysis (priority: Canada, Japan)** — Download Dukascopy data for non-US events and run Monte Carlo optimization. Priority order:
-    1. **BOC + Canada CPI + Employment → USDCAD**: ~212 events (56 BOC + 78 CPI + 78 employment). USDCAD failed walk-forward on US events, but BOC decisions move USDCAD differently — worth testing independently.
-    2. **BOJ + Japan CPI → USDJPY**: ~135 events (57 BOJ + 78 CPI). New pair, no prior analysis. BOJ rate decisions have been highly volatile since 2022 YCC changes.
-    3. **SARB + SA CPI → USDZAR**: ~121 events (43 SARB + 78 CPI). Already trading USDZAR on US events — SARB events would add ~14 trading days/year.
-    4. **TCMB → USDTRY**: ~77 events. Already trading USDTRY on US events — TCMB events would add ~8-12 trading days/year.
+- ~~**Non-US event MC analysis (Canada, Japan)**~~ — **DONE**: See [Non-US Events Analysis](mc-non-us-events.md). Results: **USDCAD fails** (CI spans zero on all Canadian events, WF OOS=-10.6). **USDJPY is promising but borderline** — WF passes (OOS=+6.4, Sharpe 2.45) but CI barely touches zero [-0.3, +5.3]. BOJ Rate decisions are the strongest non-US event (E[P&L]=+3.4, 62% WR). Recommendation: paper-trade USDJPY on BOJ events, re-evaluate end of 2026.
+- **SARB + SA CPI → USDZAR MC analysis** — ~121 events (43 SARB + 78 CPI). Already trading USDZAR on US events — SARB events could add ~14 trading days/year. Download data with `--group south_africa` and run MC.
+- **TCMB → USDTRY MC analysis** — ~77 events. Already trading USDTRY on US events — TCMB events could add ~8-12 trading days/year. Download data with `--group turkey` and run MC.
 
 ## Schedule (Medium Impact)
 

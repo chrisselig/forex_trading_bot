@@ -339,13 +339,16 @@ def _boj_rate_dates() -> list[dict]:
         # 2026
         "2026-01-23", "2026-03-19", "2026-04-28", "2026-06-16",
     ]
-    return [{"name": "BOJ Rate Decision", "date": d, "time": "03:00", "tz": "UTC"} for d in dates]
+    return [{"name": "BOJ Rate Decision", "date": d, "time": "12:00", "tz": "JST"} for d in dates]
 
 
 def _japan_cpi_dates() -> list[dict]:
-    """Japan National CPI — 8:30 AM JST / 23:30 UTC (prior day in UTC)."""
-    # Date is the JST release date; time 23:30 is UTC of the prior calendar day.
-    # We store the JST date and handle the UTC conversion in get_all_events().
+    """Japan National CPI — 8:30 AM JST = 23:30 UTC the prior calendar day.
+
+    Dates listed are JST release dates. Since 8:30 AM JST = 23:30 UTC the
+    previous day, we use tz="JST" and time="08:30" so get_all_events() can
+    convert correctly (JST = UTC+9).
+    """
     dates = [
         # 2020
         "2020-01-24", "2020-02-21", "2020-03-19", "2020-04-24", "2020-05-22",
@@ -375,7 +378,7 @@ def _japan_cpi_dates() -> list[dict]:
         "2026-01-23", "2026-02-20", "2026-03-24", "2026-04-24", "2026-05-22",
         "2026-06-19",
     ]
-    return [{"name": "Japan CPI", "date": d, "time": "23:30", "tz": "UTC"} for d in dates]
+    return [{"name": "Japan CPI", "date": d, "time": "08:30", "tz": "JST"} for d in dates]
 
 
 # ---------------------------------------------------------------------------
@@ -511,17 +514,18 @@ def get_all_events(groups: list[str] | None = None) -> list[dict]:
     for fn in event_fns.values():
         events.extend(fn())
 
+    JST = ZoneInfo("Asia/Tokyo")
+
     for e in events:
         tz = e.get("tz", "ET")
+        local_dt = datetime.strptime(f"{e['date']} {e['time']}", "%Y-%m-%d %H:%M")
         if tz == "UTC":
-            # Already in UTC — parse directly
-            utc_dt = datetime.strptime(f"{e['date']} {e['time']}", "%Y-%m-%d %H:%M")
-            utc_dt = utc_dt.replace(tzinfo=UTC)
+            utc_dt = local_dt.replace(tzinfo=UTC)
+        elif tz == "JST":
+            utc_dt = local_dt.replace(tzinfo=JST).astimezone(UTC)
         else:
-            # Eastern Time — convert to UTC
-            local_dt = datetime.strptime(f"{e['date']} {e['time']}", "%Y-%m-%d %H:%M")
-            local_dt = local_dt.replace(tzinfo=ET)
-            utc_dt = local_dt.astimezone(UTC)
+            # Eastern Time
+            utc_dt = local_dt.replace(tzinfo=ET).astimezone(UTC)
         e["utc_dt"] = utc_dt.replace(tzinfo=None)
         e["year"] = int(e["date"][:4])
 
