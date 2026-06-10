@@ -2,6 +2,9 @@
 
 An event-driven forex trading bot that trades major US economic news releases using Interactive Brokers.
 
+!!! warning "Disclaimer"
+    This software is provided for **educational and informational purposes only** and does not constitute financial advice, investment advice, or a recommendation to trade. Foreign exchange trading carries a high level of risk and may not be suitable for all investors. Past performance, including backtested or simulated results, is not indicative of future results. You could sustain a loss of some or all of your investment. Use this software entirely at your own risk. The author accepts no liability for any financial losses incurred through its use.
+
 ---
 
 ## What This Bot Does
