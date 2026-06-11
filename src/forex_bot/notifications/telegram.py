@@ -14,15 +14,17 @@ from forex_bot.reporting.performance import PerformanceStats
 from forex_bot.risk.circuit_breaker import CircuitBreaker, CircuitState
 
 ET = ZoneInfo("America/New_York")
+MT = ZoneInfo("America/Edmonton")
+
+# Quiet hours in Mountain Time — ALL alerts suppressed (no exceptions)
+QUIET_START_HOUR = 20   # 8:30 PM MT
+QUIET_START_MINUTE = 30
+QUIET_END_HOUR = 5      # 5:00 AM MT (bot cron starts at 5 AM MT)
+QUIET_END_MINUTE = 0
 
 
 class TelegramNotifier:
     """Sends trade alerts and status updates via Telegram Bot API."""
-
-    # Quiet hours: suppress non-critical alerts overnight (UTC)
-    # 11:30 PM ET = 03:30 UTC, 7:00 AM ET = 11:00 UTC
-    QUIET_START_UTC = 3   # 11 PM ET (approx)
-    QUIET_END_UTC = 11    # 7 AM ET (approx)
 
     def __init__(self, bot_token: str, chat_id: str, enabled: bool = True):
         self._bot_token = bot_token
@@ -35,12 +37,17 @@ class TelegramNotifier:
             logger.warning("Telegram notifications disabled (missing token or chat_id)")
 
     def _is_quiet_hours(self) -> bool:
-        """Check if we're in the overnight quiet period (no non-critical alerts)."""
-        hour = datetime.utcnow().hour
-        if self.QUIET_START_UTC <= self.QUIET_END_UTC:
-            return self.QUIET_START_UTC <= hour < self.QUIET_END_UTC
-        # Wraps midnight (e.g., 23:00 UTC to 11:00 UTC)
-        return hour >= self.QUIET_START_UTC or hour < self.QUIET_END_UTC
+        """Check if we're in the overnight quiet period (all alerts suppressed).
+
+        Uses Mountain Time (America/Edmonton) with proper DST handling.
+        Quiet window: 8:30 PM MT to 5:00 AM MT.
+        """
+        now_mt = datetime.now(MT)
+        current = now_mt.hour * 60 + now_mt.minute
+        start = QUIET_START_HOUR * 60 + QUIET_START_MINUTE
+        end = QUIET_END_HOUR * 60 + QUIET_END_MINUTE
+        # Window wraps midnight (20:30 -> 05:00)
+        return current >= start or current < end
 
     async def _send(self, text: str, silent: bool = False, critical: bool = False) -> None:
         """Send a message via Telegram. Silently logs errors — never crashes the bot.
@@ -48,13 +55,12 @@ class TelegramNotifier:
         Args:
             text: Message content (Markdown).
             silent: Send without sound (disable_notification).
-            critical: If True, send even during quiet hours. If False, suppress
-                      during quiet hours (logged but not sent).
+            critical: Unused — all alerts suppressed during quiet hours (8:30 PM - 5:00 AM MT).
         """
         if not self._enabled:
             return
 
-        if not critical and self._is_quiet_hours():
+        if self._is_quiet_hours():
             logger.debug(f"Telegram suppressed (quiet hours): {text[:80]}...")
             return
 
