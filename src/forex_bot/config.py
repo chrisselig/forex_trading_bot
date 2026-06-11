@@ -31,6 +31,7 @@ class RiskConfig(BaseModel):
     max_concurrent_positions: int = 3
     mandatory_stop_loss: bool = True
     max_spread_pips: float = 3.0
+    max_spread_overrides: dict[str, float] = {}
 
 
 class StraddleParams(BaseModel):

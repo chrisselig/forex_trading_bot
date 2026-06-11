@@ -18,7 +18,11 @@ risk:
   max_daily_drawdown_pct: 3.0
   max_concurrent_positions: 3
   mandatory_stop_loss: true
-  max_spread_pips: 15.0
+  max_spread_pips: 15.0          # Default for majors
+  max_spread_overrides:           # Per-pair overrides for exotics
+    USDZAR: 60.0                  # Event-time spreads routinely 25-50 pips
+    USDTRY: 80.0                  # Event-time spreads routinely 30-60 pips
+    USDJPY: 20.0                  # Wider than majors during BOJ
 
 strategy:
   pre_event_minutes: 30

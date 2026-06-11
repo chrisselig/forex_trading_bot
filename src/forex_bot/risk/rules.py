@@ -67,13 +67,15 @@ class MandatoryStopLoss(RiskRule):
 
 
 class MaxSpread(RiskRule):
-    def __init__(self, max_pips: float = 3.0):
+    def __init__(self, max_pips: float = 3.0, overrides: dict[str, float] | None = None):
         self.max_pips = max_pips
+        self._overrides = overrides or {}
 
     def validate(self, signal, account, price=None, open_position_count=0, daily_pnl=0.0):
         if price is None:
             return None
+        limit = self._overrides.get(signal.instrument, self.max_pips)
         spread_pips = price.spread_pips()
-        if spread_pips > self.max_pips:
-            return f"Spread {spread_pips:.1f} pips exceeds max {self.max_pips} pips"
+        if spread_pips > limit:
+            return f"Spread {spread_pips:.1f} pips exceeds max {limit:.0f} pips for {signal.instrument}"
         return None

@@ -33,7 +33,7 @@ class RiskManager:
             MaxRiskPerTrade(settings.risk.max_risk_per_trade_pct),
             MaxDailyDrawdown(settings.risk.max_daily_drawdown_pct),
             MaxConcurrentPositions(settings.risk.max_concurrent_positions),
-            MaxSpread(settings.risk.max_spread_pips),
+            MaxSpread(settings.risk.max_spread_pips, settings.risk.max_spread_overrides),
         ]
         self._rules = [r for r in self._rules if r is not None]
 
