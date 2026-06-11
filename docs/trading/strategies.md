@@ -19,37 +19,38 @@ Before a data release, the bot places two pending orders — a buy stop above an
 
 ### Example
 
-EUR/USD is at 1.0850 before NFP:
+USD/ZAR is at 18.5000 before NFP:
 
 | Order | Entry | Take Profit | Stop Loss |
 |-------|-------|-------------|-----------|
-| Buy stop | 1.0870 (+20 pips) | 1.0900 (+30 pips from entry) | 1.0855 (-15 pips from entry) |
-| Sell stop | 1.0830 (-20 pips) | 1.0800 (-30 pips from entry) | 1.0845 (+15 pips from entry) |
+| Buy stop | 18.5050 (+50 pips) | 18.5120 (+70 pips from entry) | 18.5040 (-10 pips from entry) |
+| Sell stop | 18.4950 (-50 pips) | 18.4880 (-70 pips from entry) | 18.4960 (+10 pips from entry) |
 
-If NFP is strong and EUR/USD drops to 1.0830, the sell stop triggers. Price continues to 1.0800 → take profit hit → +30 pips.
+If NFP is strong and USD/ZAR spikes to 18.5050, the buy stop triggers. Price continues to 18.5120 → take profit hit → +70 pips.
 
 ### Why It Works
 
 - News releases reliably produce volatility — the event is scheduled, the move is not
 - No directional bias needed — you profit from the *magnitude* of the move
-- Default reward:risk ratio is 2:1 (30 pip TP vs 15 pip SL)
+- Default reward:risk ratio is 7:1 (70 pip TP vs 10 pip SL)
+- Both straddle legs share an OCA (One-Cancels-All) group — IB automatically cancels the unfilled leg when one triggers
 
 ### The Risk: Whipsaw
 
-If price spikes up (triggering the buy), then reverses sharply down, you get stopped out on the buy *and* the sell stop triggers and also stops out. Double loss. This is the worst case and it does happen — particularly on mixed data (strong headline, weak details).
+If price spikes up (triggering the buy), then reverses sharply down, you get stopped out for -10 pips. With OCA groups, the other leg is cancelled automatically so double-loss is avoided.
 
-The Monte Carlo optimization accounts for this. See the [optimization report](../research/01-straddle-hourly.md) for the statistical analysis.
+The Monte Carlo optimization accounts for whipsaw events. See the [6.5-year optimization report](../research/04-monte-carlo-6yr.md) for the statistical analysis across 207+ events.
 
 ### Parameters
 
 | Setting | Default | Controls |
 |---------|---------|----------|
-| `straddle_distance_pips` | 20 | How far from current price the orders are placed |
-| `straddle_tp_pips` | 30 | Take profit distance |
-| `straddle_sl_pips` | 15 | Stop loss distance |
+| `straddle_distance_pips` | 50 | How far from current price the orders are placed |
+| `straddle_tp_pips` | 70 | Take profit distance |
+| `straddle_sl_pips` | 10 | Stop loss distance |
 | `pre_event_minutes` | 30 | How early before the event the orders are placed |
 
-Per-pair overrides are supported — see `config/settings.yaml`.
+These defaults are from the [6.5-year Monte Carlo analysis](../research/04-monte-carlo-6yr.md). Per-pair and per-event overrides are supported — see `config/settings.yaml`. For example, TCMB events on USDTRY use 20/60/10 instead of the default 50/70/10.
 
 ---
 
