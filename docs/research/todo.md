@@ -58,7 +58,7 @@
 - ~~**OCA modeling for straddle legs**~~ — **DONE**: Straddle buy/sell stops share an `ocaGroup` so IB cancels the unfilled leg on fill. See PR #14.
 - ~~**Multiple testing correction (Bonferroni)**~~ — **DONE**: Both MC scripts report Bonferroni-adjusted CIs alongside raw 95% CIs. See PR #14.
 - Expand sample size (ongoing, passive)
-- **IBKR base currency trap** — Review and implement auto-conversion of residual foreign currency balances back to CAD after closing forex trades. IBKR leaves open FX balances when you trade (e.g., buying EUR/USD borrows USD to buy EUR). At small account scale, these residual balances should be swept back to CAD immediately so statements reflect true net CAD P&L. Investigate: (a) manual post-trade sweep via IB API, (b) IBKR "Virtual FX Position" setting, (c) auto-close via IdealPro conversion after each trade close.
+- ~~**IBKR base currency trap**~~ — **DONE**: Nightly currency sweep at 03:30 UTC (10:30 PM ET) converts all non-CAD residual cash balances back to CAD via IdealPro market orders. Handles majors (USD, JPY, EUR, GBP, AUD) directly, exotics (ZAR, TRY) via two-leg conversion through USD. See `src/forex_bot/broker/sweep.py`.
 
 ---
 
