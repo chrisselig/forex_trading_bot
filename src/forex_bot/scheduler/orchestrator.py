@@ -14,7 +14,7 @@ from forex_bot.broker.client import IBClient
 from forex_bot.broker.pricing import PricingService
 from forex_bot.calendar.scraper import ForexFactoryScraper
 from forex_bot.calendar.parser import EventParser
-from forex_bot.calendar.static import load_static_events
+from forex_bot.calendar.static import load_static_events, validate_static_calendar
 from forex_bot.calendar.store import EventStore
 from forex_bot.config import get_settings
 from forex_bot.broker.sweep import sweep_to_cad
@@ -100,24 +100,35 @@ class Orchestrator:
         # 4. Start position monitoring
         self._monitor.start_monitoring()
 
-        # 5. Refresh calendar
+        # 5. Validate static calendar against master event list
+        missing = validate_static_calendar()
+        if missing:
+            await self._notifier.send_raw(
+                f"*STATIC CALENDAR WARNING*\n\n"
+                f"{len(missing)} event(s) missing from static\\_events.yaml "
+                f"(next {30} days):\n\n"
+                + "\n".join(f"• {m}" for m in missing)
+                + "\n\n_Update config/static\\_events.yaml to avoid missed trades._"
+            )
+
+        # 6. Refresh calendar
         await self._refresh_calendar()
 
-        # 6. Schedule recurring jobs
+        # 7. Schedule recurring jobs
         self._schedule_recurring_jobs()
 
-        # 7. Schedule upcoming event jobs
+        # 8. Schedule upcoming event jobs
         await self._schedule_event_jobs()
 
-        # 8. Register shutdown handlers
+        # 9. Register shutdown handlers
         self._shutdown_handler.register()
 
-        # 9. Start scheduler
+        # 10. Start scheduler
         self._scheduler.start()
         self._running = True
         logger.info("Forex Trading Bot is running. Press Ctrl+C to stop.")
 
-        # 10. Send startup notification
+        # 11. Send startup notification
         try:
             account = await self._client.get_account_summary()
             await self._notifier.notify_bot_started(account)
