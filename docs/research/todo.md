@@ -27,7 +27,7 @@
 
 ## Do Next (High Impact, High Effort)
 
-- **Generate tradeable events calendar for web dashboard** — Bot should export a JSON/API-readable calendar of upcoming tradeable events (next 30 days) that the web dashboard can consume. Combines Forex Factory scraper + static calendar. Include: event name, datetime (UTC), pair(s), straddle params, event source (FF/static). Dashboard reads this to show event schedule with countdown timers.
+- ~~**Generate tradeable events calendar for web dashboard**~~ — **DONE**: `forex-bot calendar` CLI command + auto-export every 6 hours to `~/00_data_projects/trading_dashboard/data/calendar.json`. JSON includes event name, datetime (UTC+ET), pairs, straddle params (with per-event overrides), source (FF/static), forecast/previous. See `src/forex_bot/calendar/export.py`.
 - **Web dashboard** — Professional trading dashboard for monitoring performance and upcoming events. Must support both paper and live accounts. Key pages:
     - **Trade journal**: All trades with entry/exit, P&L (pips and $), strategy, event, pair. Filterable by date range, pair, event type, paper/live. Running equity curve.
     - **Performance analytics**: Sharpe ratio, win rate, profit factor, max drawdown, P&L by pair/event/strategy, monthly/weekly breakdown. Compare paper vs live.
