@@ -347,26 +347,16 @@ class TelegramNotifier:
     # ------------------------------------------------------------------
 
     async def notify_connection_lost(self) -> None:
-        """Notify when IB connection is lost. Only sends once until restored."""
+        """Log when IB connection is lost. No Telegram alert (too noisy from daily TWS restart)."""
         if self._connection_lost_notified:
-            logger.debug("Connection still lost — suppressing duplicate alert")
             return
         self._connection_lost_notified = True
-        await self._send(
-            f"*IB CONNECTION LOST*\n\n"
-            f"Attempting reconnection...\n"
-            f"Further disconnect alerts suppressed until restored.\n\n"
-            f"_{self._fmt_et(datetime.utcnow())}_"
-        )
+        logger.warning("IB connection lost — attempting reconnection")
 
     async def notify_connection_restored(self) -> None:
-        """Notify when IB connection is restored."""
+        """Log when IB connection is restored. No Telegram alert."""
         self._connection_lost_notified = False
-        await self._send(
-            f"*IB CONNECTION RESTORED*\n\n"
-            f"_{self._fmt_et(datetime.utcnow())}_",
-            silent=True,
-        )
+        logger.info("IB connection restored")
 
     async def notify_preflight_failed(self, event: EconomicEvent) -> None:
         """Notify when pre-flight connection check fails before an event."""
