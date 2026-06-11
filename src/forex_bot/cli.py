@@ -159,9 +159,16 @@ def calendar(
     async def _calendar():
         from pathlib import Path
 
-        from forex_bot.calendar.export import export_calendar_json
+        from forex_bot.calendar.export import DEFAULT_CALENDAR_PATH, export_calendar_json
 
-        out_path = Path(output) if output else None
+        if output:
+            out_path = Path(output)
+        elif output is None:
+            # No --output flag: print to stdout, don't write file
+            out_path = None
+        else:
+            out_path = DEFAULT_CALENDAR_PATH
+
         json_str = await export_calendar_json(output_path=out_path, days=days)
 
         if out_path:

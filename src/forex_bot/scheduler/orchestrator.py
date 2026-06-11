@@ -12,6 +12,7 @@ from loguru import logger
 
 from forex_bot.broker.client import IBClient
 from forex_bot.broker.pricing import PricingService
+from forex_bot.calendar.export import export_calendar_json
 from forex_bot.calendar.scraper import ForexFactoryScraper
 from forex_bot.calendar.parser import EventParser
 from forex_bot.calendar.static import load_static_events, validate_static_calendar
@@ -153,8 +154,18 @@ class Orchestrator:
             logger.info(
                 f"Calendar refreshed: {len(filtered)} FF + {len(static_filtered)} static = {total} events"
             )
+
+            # Export calendar JSON for web dashboard
+            await self._export_calendar()
         except Exception as e:
             logger.error(f"Calendar refresh failed: {e}")
+
+    async def _export_calendar(self) -> None:
+        """Export tradeable events calendar JSON for the web dashboard."""
+        try:
+            await export_calendar_json()
+        except Exception as e:
+            logger.error(f"Calendar export failed: {e}")
 
     def _schedule_recurring_jobs(self) -> None:
         """Set up periodic jobs."""
