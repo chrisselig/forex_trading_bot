@@ -11,10 +11,13 @@ from loguru import logger
 from forex_bot.calendar.parser import EventParser
 from forex_bot.calendar.scraper import ForexFactoryScraper
 from forex_bot.calendar.static import load_static_events
-from forex_bot.config import get_settings
+from forex_bot.config import PROJECT_ROOT, get_settings
 from forex_bot.models.events import EconomicEvent
 
 ET = ZoneInfo("America/New_York")
+
+# Default output path for the web dashboard to consume
+DEFAULT_CALENDAR_PATH = Path.home() / "00_data_projects" / "trading_dashboard" / "data" / "calendar.json"
 
 
 async def build_calendar(days: int = 30) -> list[dict]:
@@ -109,11 +112,12 @@ def _resolve_pairs(
 
 
 async def export_calendar_json(
-    output_path: Path | None = None, days: int = 30
+    output_path: Path | None = DEFAULT_CALENDAR_PATH, days: int = 30
 ) -> str:
     """Build the calendar and write/return as JSON.
 
-    If output_path is given, writes to that file.
+    Writes to output_path (defaults to data/calendar.json).
+    Pass output_path=None to skip file writing.
     Always returns the JSON string.
     """
     calendar = await build_calendar(days=days)
