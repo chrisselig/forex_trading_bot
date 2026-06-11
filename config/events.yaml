@@ -24,15 +24,26 @@ target_events:
     pairs: ["USDZAR", "USDTRY"]
     impact: "high"
 
+  - name: "GDP q/q"
+    aliases: ["Gross Domestic Product", "Advance GDP", "Preliminary GDP", "Final GDP"]
+    fred_series: "GDP"
+    pairs: ["USDZAR", "USDTRY"]
+    impact: "high"
+
+  - name: "Core PCE Price Index m/m"
+    aliases: ["PCE", "Personal Consumption Expenditures", "PCE Price Index"]
+    fred_series: "PCEPI"
+    pairs: ["USDTRY"]    # USDZAR fails walk-forward (OOS=-0.7)
+    impact: "high"
+
   # --- DISABLED: Awaiting Monte Carlo validation ---
   # See docs/research/todo.md for tracking.
   # Do NOT re-enable without passing MC walk-forward analysis.
   #
-  # - name: "GDP q/q"                    # MC analysis pending
-  # - name: "Unemployment Claims"        # MC analysis pending
-  # - name: "ISM Manufacturing PMI"      # MC analysis pending
-  # - name: "Retail Sales m/m"           # MC analysis pending
-  # - name: "Unemployment Rate"          # MC analysis pending
+  # - name: "Unemployment Claims"        # Need correct release dates (weekly, not on FRED)
+  # - name: "ISM Manufacturing PMI"      # Need correct release dates (ISM, not on FRED)
+  # - name: "Retail Sales m/m"           # Need correct release dates (Census, wrong FRED rid)
+  # - name: "Unemployment Rate"          # REDUNDANT — same release as NFP (Employment Situation)
 
   # --- Japan Events (paper-trade USDJPY) ---
   - name: "BOJ Policy Rate"

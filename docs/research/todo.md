@@ -40,13 +40,13 @@
 - ~~**Add new currency pairs (EURUSD, AUDUSD)**~~ — **DONE (both fail)**: See [EURUSD & AUDUSD MC Analysis](07-mc-eurusd-audusd.md). EURUSD: E[P&L]=+0.4, CI spans zero [-1.3, +2.1], walk-forward fails (OOS=-2.0). AUDUSD: E[P&L]=+4.8 but N=19 (too few trades), CI spans zero. Neither pair passes — the straddle edge exists only in exotic pairs (USDZAR, USDTRY) where news-driven moves are larger relative to spreads. USDJPY on BOJ events is already being paper-traded separately.
 - **MC-validate additional US event types** — These events are in `config/events.yaml` but **DISABLED** pending MC walk-forward analysis. Do NOT re-enable without a passing result:
     - ~~**PPI m/m**~~ — **DONE (PASSES)**: See [PPI MC Analysis](08-mc-ppi.md). E[P&L]=+17.1 (USDZAR), +11.1 (USDTRY). Both CIs above zero, both walk-forwards pass. Same 50/70/10 params. Re-enabled in events.yaml. Adds ~12 trading days/year.
-    - **GDP q/q** — Quarterly, large moves on first (Advance) estimate. ~24 events in sample.
-    - **Unemployment Claims** — Weekly, high frequency but smaller moves. ~300+ events but may lack edge.
-    - **ISM Manufacturing PMI** — Monthly, sharp moves near 50 threshold. Leading indicator.
-    - **Retail Sales m/m** — Monthly, consumer spending = 70% of US GDP, regular 30-50 pip moves.
-    - **Unemployment Rate** — Monthly (released with NFP). May be redundant since NFP already captures the same window.
-    - **PCE** — Fed's preferred inflation gauge, increasingly more important than CPI. Not yet in events.yaml.
-    - Each requires: (1) add dates to download script, (2) download Dukascopy data, (3) run MC, (4) walk-forward validate, (5) re-enable in events.yaml if passes.
+    - ~~**GDP q/q**~~ — **DONE (PASSES)**: See [GDP & PCE MC Analysis](09-mc-gdp-pce.md). Both pairs pass. USDZAR E[P&L]=+15.8 CI=[+9.4,+22.3] WF OOS=+11.1. USDTRY E[P&L]=+8.5 CI=[+1.4,+15.5] WF OOS=+13.9. Adds ~12 trading days/year.
+    - ~~**PCE**~~ — **DONE (PARTIAL)**: See [GDP & PCE MC Analysis](09-mc-gdp-pce.md). USDTRY passes (E[P&L]=+14.5, WF OOS=+11.1). **USDZAR fails walk-forward** (OOS=-0.7). Enabled for USDTRY only.
+    - ~~**Unemployment Rate**~~ — **SKIPPED (redundant)**: Same BLS "Employment Situation" release as NFP. Straddle already triggers at identical time.
+    - **Unemployment Claims** — Need to manually compile ~300+ weekly release dates from DOL (not available via FRED release API).
+    - **ISM Manufacturing PMI** — Need to manually compile dates from ISM (private org, not on FRED).
+    - **Retail Sales m/m** — Need correct Census Bureau release dates (FRED rid=63 returns revision dates, not monthly Advance release).
+    - Each remaining event requires: (1) manual date compilation, (2) add to download script, (3) download Dukascopy data, (4) run MC, (5) walk-forward validate, (6) re-enable in events.yaml if passes.
 - ~~**Non-US event dates in download script**~~ — **DONE**: Added BOC, Canada CPI, Canada Employment, BOJ, Japan CPI, SARB, TCMB, South Africa CPI event dates (2020-2026) to `scripts/download_dukascopy.py`. Added USDJPY to pairs. Event-pair mapping ensures only relevant pairs download for each event. Use `--group canada,japan` to download specific groups.
 - ~~**Non-US event MC analysis (Canada, Japan)**~~ — **DONE**: See [Non-US Events Analysis](06-non-us-events.md). Results: **USDCAD fails** (CI spans zero on all Canadian events, WF OOS=-10.6). **USDJPY is promising but borderline** — WF passes (OOS=+6.4, Sharpe 2.45) but CI barely touches zero [-0.3, +5.3]. BOJ Rate decisions are the strongest non-US event (E[P&L]=+3.4, 62% WR). Recommendation: paper-trade USDJPY on BOJ events, re-evaluate end of 2026.
 - ~~**SARB + SA CPI → USDZAR MC analysis**~~ — **DONE**: See [Non-US Events Analysis](06-non-us-events.md). Results: **USDZAR passes** — E[P&L]=+17.3, CI=[+12.5, +22.4], Sharpe 6.75, WF OOS=+8.3. Same 50/70/10 params as US events. Both SARB Rate (+16.3) and SA CPI (+17.8) independently profitable. Adds ~14 trading days/year.
@@ -61,7 +61,7 @@
 - Model drift detection
 - ~~**FOMC-specific parameter split**~~ — **DONE**: All three event types (NFP, CPI, FOMC) are independently profitable for both active pairs. FOMC optimal TP is slightly tighter (55-65 vs 70 pips) due to press conference reversal risk, but the marginal improvement doesn't justify splitting params yet. All 6 walk-forwards pass. See [Event-Type Split Analysis](05-event-type-split.md).
 - ~~**Automatic event data download**~~ — **DONE**: Nightly cron job at 04:00 UTC (11 PM ET) runs `download_dukascopy.py --skip-existing --timeframe 1min` via `asyncio.create_subprocess_exec`. Appends new event data to existing CSVs automatically. See `src/forex_bot/data/dukascopy.py`.
-- **Remove Telegram alerts for IB connect/disconnect** — Connection lost/restored notifications are noisy (daily TWS restart at ~11:45 PM ET triggers them every night). Remove or demote to log-only.
+- ~~**Remove Telegram alerts for IB connect/disconnect**~~ — **DONE**: Demoted to log-only. Daily TWS restart no longer sends Telegram alerts.
 - Spread/slippage logging and modeling
 
 ## Backlog
