@@ -6,6 +6,7 @@ from loguru import logger
 from ib_async import Trade as IBTrade
 
 from forex_bot.broker.client import IBClient
+from forex_bot.broker.contracts import get_pip_size
 from forex_bot.broker.orders import OrderService
 from forex_bot.config import get_settings
 from forex_bot.data.trade_journal import TradeJournal
@@ -56,10 +57,33 @@ class PositionMonitor:
         if status == "Filled":
             fill_price = trade.orderStatus.avgFillPrice
             logger.info(f"Order #{order_id} FILLED at {fill_price}")
+
+            # Calculate slippage: fill_price vs planned entry price
+            instrument = trade.contract.pair() if hasattr(trade.contract, 'pair') else str(trade.contract.symbol)
+            side = OrderSide.BUY if trade.order.action == "BUY" else OrderSide.SELL
+            quantity = float(trade.order.totalQuantity)
+            planned_price = trade.order.lmtPrice or trade.order.auxPrice or None
+            slippage_pips = None
+            if planned_price and planned_price > 0:
+                pip_size = get_pip_size(instrument)
+                raw_slip = (fill_price - planned_price) / pip_size
+                # Positive slippage = unfavorable for buys, favorable for sells
+                slippage_pips = raw_slip if side == OrderSide.BUY else -raw_slip
+                logger.info(
+                    f"Order #{order_id} slippage: {slippage_pips:+.1f} pips "
+                    f"(planned={planned_price:.5f}, filled={fill_price:.5f})"
+                )
+
+            # Persist fill price and slippage to database
+            asyncio.get_event_loop().create_task(
+                self._journal.update_order_status(
+                    order_id, OrderStatus.FILLED,
+                    fill_price=fill_price,
+                    slippage_pips=slippage_pips,
+                )
+            )
+
             if self._notifier:
-                instrument = trade.contract.pair() if hasattr(trade.contract, 'pair') else str(trade.contract.symbol)
-                side = OrderSide.BUY if trade.order.action == "BUY" else OrderSide.SELL
-                quantity = float(trade.order.totalQuantity)
                 asyncio.get_event_loop().create_task(
                     self._notifier.notify_order_filled(order_id, instrument, side, fill_price, quantity)
                 )

@@ -4,6 +4,8 @@ import math
 from dataclasses import dataclass
 from loguru import logger
 
+from forex_bot.data.database import get_session
+from forex_bot.data.schemas import OrderRecord
 from forex_bot.data.trade_journal import TradeJournal
 from forex_bot.models.orders import Trade
 
@@ -21,6 +23,9 @@ class PerformanceStats:
     profit_factor: float = 0.0
     sharpe_ratio: float = 0.0
     avg_pnl_pips: float = 0.0
+    avg_spread_pips: float = 0.0
+    avg_slippage_pips: float = 0.0
+    total_slippage_pips: float = 0.0
 
 
 class PerformanceTracker:
@@ -64,6 +69,9 @@ class PerformanceTracker:
 
         pips = [t.pnl_pips for t in closed if t.pnl_pips is not None]
 
+        # Spread/slippage stats from order records (active data flow)
+        spread_stats = await self._get_spread_slippage_stats()
+
         return PerformanceStats(
             total_trades=len(closed),
             winning_trades=len(wins),
@@ -76,7 +84,29 @@ class PerformanceTracker:
             profit_factor=total_wins / total_losses if total_losses > 0 else float("inf"),
             sharpe_ratio=sharpe,
             avg_pnl_pips=sum(pips) / len(pips) if pips else 0,
+            avg_spread_pips=spread_stats["avg_spread"],
+            avg_slippage_pips=spread_stats["avg_slippage"],
+            total_slippage_pips=spread_stats["total_slippage"],
         )
+
+    async def _get_spread_slippage_stats(self) -> dict[str, float]:
+        """Get spread and slippage averages from filled orders."""
+        from sqlalchemy import select
+
+        async with get_session() as session:
+            result = await session.execute(
+                select(OrderRecord).where(OrderRecord.status == "FILLED")
+            )
+            records = result.scalars().all()
+
+        spreads = [r.entry_spread_pips for r in records if r.entry_spread_pips is not None]
+        slippages = [r.slippage_pips for r in records if r.slippage_pips is not None]
+
+        return {
+            "avg_spread": sum(spreads) / len(spreads) if spreads else 0.0,
+            "avg_slippage": sum(slippages) / len(slippages) if slippages else 0.0,
+            "total_slippage": sum(slippages) if slippages else 0.0,
+        }
 
     async def get_stats_by_strategy(self) -> dict[str, PerformanceStats]:
         """Get performance stats broken down by strategy."""
