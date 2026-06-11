@@ -151,6 +151,28 @@ def test_connection():
 
 
 @app.command()
+def calendar(
+    days: int = typer.Option(30, help="Days ahead to include"),
+    output: Optional[str] = typer.Option(None, help="Write JSON to this file path"),
+):
+    """Export upcoming tradeable events as JSON for the web dashboard."""
+    async def _calendar():
+        from pathlib import Path
+
+        from forex_bot.calendar.export import export_calendar_json
+
+        out_path = Path(output) if output else None
+        json_str = await export_calendar_json(output_path=out_path, days=days)
+
+        if out_path:
+            console.print(f"[green]Calendar exported to {out_path}[/green]")
+        else:
+            console.print(json_str)
+
+    asyncio.run(_calendar())
+
+
+@app.command()
 def backtest(
     months: int = typer.Option(6, help="Months of history to backtest"),
     strategy_name: Optional[str] = typer.Option(None, help="Strategy to backtest"),
