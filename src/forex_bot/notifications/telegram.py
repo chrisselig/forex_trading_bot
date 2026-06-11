@@ -477,6 +477,10 @@ class TelegramNotifier:
 
         await self._send("\n".join(lines))
 
+    async def send_raw(self, text: str) -> None:
+        """Send an arbitrary message. Used for one-off warnings like calendar validation."""
+        await self._send(text)
+
     async def notify_bot_stopped(self, reason: str = "normal shutdown") -> None:
         """Notify that the trading bot has stopped."""
         await self._send(

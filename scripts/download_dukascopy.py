@@ -64,6 +64,7 @@ EVENT_PAIRS: dict[str, list[str]] = {
     "NFP": PAIRS,
     "CPI": PAIRS,
     "FOMC": PAIRS,
+    "PPI": PAIRS,
     # Canada events — primarily moves USDCAD
     "BOC Rate Decision": ["USDCAD"],
     "Canada CPI": ["USDCAD"],
@@ -80,7 +81,7 @@ EVENT_PAIRS: dict[str, list[str]] = {
 
 # Event groups for CLI filtering
 EVENT_GROUPS: dict[str, list[str]] = {
-    "us": ["NFP", "CPI", "FOMC"],
+    "us": ["NFP", "CPI", "FOMC", "PPI"],
     "canada": ["BOC Rate Decision", "Canada CPI", "Canada Employment"],
     "japan": ["BOJ Rate Decision", "Japan CPI"],
     "south_africa": ["SARB Rate Decision", "South Africa CPI"],
@@ -210,6 +211,41 @@ def _fomc_dates() -> list[dict]:
         "2026-01-28", "2026-03-18", "2026-05-06", "2026-06-17",
     ]
     return [{"name": "FOMC", "date": d, "time": "14:00", "tz": "ET"} for d in dates]
+
+
+def _ppi_dates() -> list[dict]:
+    """PPI m/m — monthly, 8:30 AM ET. Dates from FRED release calendar (rid=46)."""
+    dates = [
+        # 2020
+        "2020-01-15", "2020-02-14", "2020-03-12", "2020-04-09", "2020-05-13",
+        "2020-06-11", "2020-07-10", "2020-08-11", "2020-09-10", "2020-10-14",
+        "2020-11-13", "2020-12-11",
+        # 2021
+        "2021-01-15", "2021-02-12", "2021-03-12", "2021-04-09", "2021-05-13",
+        "2021-06-15", "2021-07-14", "2021-08-12", "2021-09-10", "2021-10-14",
+        "2021-11-09", "2021-12-14",
+        # 2022
+        "2022-01-13", "2022-02-11", "2022-03-15", "2022-04-13", "2022-05-12",
+        "2022-06-14", "2022-07-14", "2022-08-11", "2022-09-14", "2022-10-12",
+        "2022-11-15", "2022-12-09",
+        # 2023
+        "2023-01-18", "2023-02-14", "2023-03-15", "2023-04-13", "2023-05-11",
+        "2023-06-14", "2023-07-13", "2023-08-11", "2023-09-14", "2023-10-11",
+        "2023-11-15", "2023-12-13",
+        # 2024
+        "2024-01-12", "2024-02-14", "2024-03-14", "2024-04-11", "2024-05-14",
+        "2024-06-13", "2024-07-12", "2024-08-13", "2024-09-12", "2024-10-11",
+        "2024-11-14", "2024-12-12",
+        # 2025
+        "2025-01-14", "2025-02-13", "2025-03-13", "2025-04-11", "2025-05-15",
+        "2025-06-12", "2025-07-16", "2025-08-14", "2025-09-10",
+        # NOTE: Oct-Nov 2025 disrupted by government shutdown
+        "2025-11-25",
+        # 2026
+        "2026-01-14", "2026-02-27", "2026-03-18", "2026-04-14", "2026-05-13",
+        "2026-06-11",
+    ]
+    return [{"name": "PPI", "date": d, "time": "08:30", "tz": "ET"} for d in dates]
 
 
 # ---------------------------------------------------------------------------
@@ -493,6 +529,7 @@ def get_all_events(groups: list[str] | None = None) -> list[dict]:
         "NFP": _nfp_dates,
         "CPI": _cpi_dates,
         "FOMC": _fomc_dates,
+        "PPI": _ppi_dates,
         "BOC Rate Decision": _boc_rate_dates,
         "Canada CPI": _canada_cpi_dates,
         "Canada Employment": _canada_employment_dates,

@@ -18,41 +18,21 @@ target_events:
     pairs: ["USDZAR", "USDTRY"]
     impact: "high"
 
-  - name: "GDP q/q"
-    aliases: ["Gross Domestic Product", "Advance GDP", "Preliminary GDP", "Final GDP"]
-    fred_series: "GDP"
-    pairs: ["USDZAR", "USDTRY"]
-    impact: "high"
-
-  - name: "Unemployment Claims"
-    aliases: ["Initial Jobless Claims", "Jobless Claims"]
-    fred_series: "ICSA"
-    pairs: ["USDZAR", "USDTRY"]
-    impact: "high"
-
-  - name: "ISM Manufacturing PMI"
-    aliases: ["ISM Manufacturing", "ISM PMI"]
-    fred_series: "MANEMP"
-    pairs: ["USDZAR", "USDTRY"]
-    impact: "high"
-
   - name: "PPI m/m"
     aliases: ["Producer Price Index", "PPI"]
     fred_series: "PPIACO"
     pairs: ["USDZAR", "USDTRY"]
     impact: "high"
 
-  - name: "Retail Sales m/m"
-    aliases: ["Core Retail Sales", "Retail Sales"]
-    fred_series: "RSAFS"
-    pairs: ["USDZAR", "USDTRY"]
-    impact: "high"
-
-  - name: "Unemployment Rate"
-    aliases: ["Unemployment"]
-    fred_series: "UNRATE"
-    pairs: ["USDZAR", "USDTRY"]
-    impact: "high"
+  # --- DISABLED: Awaiting Monte Carlo validation ---
+  # See docs/research/todo.md for tracking.
+  # Do NOT re-enable without passing MC walk-forward analysis.
+  #
+  # - name: "GDP q/q"                    # MC analysis pending
+  # - name: "Unemployment Claims"        # MC analysis pending
+  # - name: "ISM Manufacturing PMI"      # MC analysis pending
+  # - name: "Retail Sales m/m"           # MC analysis pending
+  # - name: "Unemployment Rate"          # MC analysis pending
 
   # --- Japan Events (paper-trade USDJPY) ---
   - name: "BOJ Policy Rate"

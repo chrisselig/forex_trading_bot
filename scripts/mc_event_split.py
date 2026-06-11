@@ -154,7 +154,7 @@ def main():
     args = parser.parse_args()
 
     events = get_all_events()
-    event_types = ["NFP", "CPI", "FOMC"]
+    event_types = ["NFP", "CPI", "FOMC", "PPI"]
     train_years = [2020, 2021, 2022, 2023, 2024]
     test_years = [2025, 2026]
 
