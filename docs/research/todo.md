@@ -63,6 +63,13 @@
 - ~~**Automatic event data download**~~ — **DONE**: Nightly cron job at 04:00 UTC (11 PM ET) runs `download_dukascopy.py --skip-existing --timeframe 1min` via `asyncio.create_subprocess_exec`. Appends new event data to existing CSVs automatically. See `src/forex_bot/data/dukascopy.py`.
 - ~~**Remove Telegram alerts for IB connect/disconnect**~~ — **DONE**: Demoted to log-only. Daily TWS restart no longer sends Telegram alerts.
 - ~~**Spread/slippage logging and modeling**~~ — **DONE**: `entry_spread_pips`, `fill_price`, `slippage_pips` tracked on every order. Spread captured at submission, slippage calculated on IB fill. Performance dashboard shows avg spread, avg slippage, total slippage. Auto-migrates existing SQLite DB.
+    - **How to use this data**:
+        - **Validate MC assumptions**: The Monte Carlo sims use fixed 50/70/10 pip params — if real slippage averages +3 pips, actual R:R is worse than modeled. Adjust MC sim to include avg slippage as a cost.
+        - **Per-pair spread profiles**: Compare avg entry spreads for USDZAR vs USDTRY vs USDJPY. If one pair consistently has wider spreads at event time, tighten its straddle distance or widen the spread limit.
+        - **Event-type spread analysis**: Do FOMC events have wider spreads than NFP? If so, FOMC may need different straddle params (the event-type split analysis already hinted at this).
+        - **Time-of-day patterns**: BOJ events (3 AM UTC) may have different liquidity profiles than US 8:30 AM ET events. Spread data confirms or refutes this.
+        - **Slippage budget**: Once you have 50+ fills, calculate the 95th percentile slippage. If it exceeds 5 pips, the straddle SL of 10 pips is getting eaten — consider widening SL or tightening straddle distance.
+        - **Live vs paper comparison**: When switching to live, compare slippage distributions. Paper fills are instant and perfect; live fills have real market impact. This data quantifies the difference.
 
 ## Backlog
 
