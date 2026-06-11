@@ -532,7 +532,7 @@ def _sarb_rate_dates() -> list[dict]:
         "2025-07-31", "2025-09-18", "2025-11-20",
         # 2026 (SARB website; matches static_events.yaml)
         "2026-01-29", "2026-03-26", "2026-05-28",
-        "2026-07-23", "2026-09-24", "2026-11-19",
+        "2026-07-23", "2026-09-23", "2026-11-19",
     ]
     return [{"name": "SARB Rate Decision", "date": d, "time": "09:00", "tz": "ET"} for d in dates]
 
@@ -563,10 +563,9 @@ def _tcmb_rate_dates() -> list[dict]:
         # 2025
         "2025-01-23", "2025-03-06", "2025-03-20", "2025-04-17",
         "2025-06-19", "2025-07-24", "2025-09-11", "2025-10-23", "2025-12-11",
-        # 2026 (TCMB website; matches static_events.yaml)
+        # 2026 (TCMB MPC schedule — 8 meetings, first date of each pair is rate decision)
         "2026-01-22", "2026-03-12", "2026-04-22", "2026-06-11",
-        "2026-06-19", "2026-07-24", "2026-08-21", "2026-09-18",
-        "2026-10-23", "2026-11-20", "2026-12-25",
+        "2026-07-23", "2026-09-10", "2026-10-22", "2026-12-10",
     ]
     return [{"name": "TCMB Rate Decision", "date": d, "time": "07:00", "tz": "ET"} for d in dates]
 

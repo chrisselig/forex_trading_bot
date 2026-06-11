@@ -19,7 +19,7 @@ static_events:
     impact: "high"
     dates:
       - "2026-07-23T13:00"
-      - "2026-09-24T13:00"
+      - "2026-09-23T13:00"
       - "2026-11-19T13:00"
 
   # --- South Africa CPI (10 AM SAST = 8 AM UTC, monthly) ---
@@ -36,17 +36,16 @@ static_events:
       - "2026-12-16T08:00"
 
   # --- TCMB Interest Rate Decisions (2 PM TRT = 11 AM UTC) ---
+  # TCMB page lists pairs: rate decision + summary (~1 week later).
+  # Only the first date of each pair is the actual rate decision.
   - title: "TCMB Interest Rate Decision"
     country: "TRY"
     impact: "high"
     dates:
-      - "2026-06-19T11:00"
-      - "2026-07-24T11:00"
-      - "2026-08-21T11:00"
-      - "2026-09-18T11:00"
-      - "2026-10-23T11:00"
-      - "2026-11-20T11:00"
-      - "2026-12-25T11:00"
+      - "2026-07-23T11:00"
+      - "2026-09-10T11:00"
+      - "2026-10-22T11:00"
+      - "2026-12-10T11:00"
 
   # --- BOJ Policy Rate Decisions (~12 PM JST = 3 AM UTC) ---
   # BOJ timing is approximate — announcements come after meeting concludes.
