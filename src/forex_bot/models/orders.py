@@ -55,6 +55,9 @@ class Trade(BaseModel):
     take_profit: float | None = None
     pnl: float | None = None
     pnl_pips: float | None = None
+    entry_spread_pips: float | None = None
+    fill_price: float | None = None
+    slippage_pips: float | None = None
     event_id: int | None = None
     strategy: str = ""
     opened_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

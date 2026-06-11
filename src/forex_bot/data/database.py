@@ -39,11 +39,38 @@ def _get_session_factory() -> async_sessionmaker[AsyncSession]:
 
 
 async def init_db() -> None:
-    """Create all database tables."""
+    """Create all database tables and add any missing columns."""
     engine = _get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_add_missing_columns)
     logger.info(f"Database initialized at {DB_PATH}")
+
+
+def _add_missing_columns(connection) -> None:
+    """Add columns that were added after initial schema creation.
+
+    SQLAlchemy create_all does NOT alter existing tables. This handles
+    schema evolution for SQLite without requiring Alembic.
+    """
+    migrations = [
+        ("trades", "entry_spread_pips", "FLOAT"),
+        ("trades", "fill_price", "FLOAT"),
+        ("trades", "slippage_pips", "FLOAT"),
+        ("orders", "entry_spread_pips", "FLOAT"),
+        ("orders", "slippage_pips", "FLOAT"),
+    ]
+    for table, column, col_type in migrations:
+        try:
+            connection.execute(
+                __import__("sqlalchemy").text(
+                    f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"
+                )
+            )
+            logger.info(f"Added column {table}.{column}")
+        except Exception:
+            # Column already exists — expected on subsequent runs
+            pass
 
 
 @asynccontextmanager

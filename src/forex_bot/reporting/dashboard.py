@@ -76,6 +76,9 @@ class Dashboard:
         table.add_row("Max Drawdown", f"${stats.max_drawdown:,.2f}")
         table.add_row("Sharpe Ratio", f"{stats.sharpe_ratio:.2f}")
         table.add_row("Avg P&L (pips)", f"{stats.avg_pnl_pips:.1f}")
+        table.add_row("Avg Spread (pips)", f"{stats.avg_spread_pips:.1f}")
+        table.add_row("Avg Slippage (pips)", f"{stats.avg_slippage_pips:+.1f}")
+        table.add_row("Total Slippage (pips)", f"{stats.total_slippage_pips:+.1f}")
         self.console.print(table)
 
     def show_circuit_breaker(self, cb: CircuitBreaker) -> None:

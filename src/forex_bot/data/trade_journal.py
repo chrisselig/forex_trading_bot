@@ -20,7 +20,7 @@ class TradeJournal:
     def __init__(self, notifier: TelegramNotifier | None = None):
         self._notifier = notifier
 
-    async def log_order(self, order: Order) -> int:
+    async def log_order(self, order: Order, entry_spread_pips: float | None = None) -> int:
         """Log an order and return its database ID."""
         async with get_session() as session:
             record = OrderRecord(
@@ -35,19 +35,29 @@ class TradeJournal:
                 status=order.status.value,
                 event_id=order.event_id,
                 strategy=order.strategy,
+                entry_spread_pips=entry_spread_pips,
             )
             session.add(record)
             await session.commit()
-            logger.info(f"Logged order #{record.id}: {order.side} {order.quantity} {order.instrument}")
+            spread_str = f" (spread={entry_spread_pips:.1f} pips)" if entry_spread_pips is not None else ""
+            logger.info(f"Logged order #{record.id}: {order.side} {order.quantity} {order.instrument}{spread_str}")
             return record.id
 
-    async def update_order_status(self, order_id: int, status: OrderStatus, fill_price: float | None = None) -> None:
+    async def update_order_status(
+        self,
+        order_id: int,
+        status: OrderStatus,
+        fill_price: float | None = None,
+        slippage_pips: float | None = None,
+    ) -> None:
         """Update an order's status in the journal."""
         async with get_session() as session:
             values: dict = {"status": status.value}
             if fill_price is not None:
                 values["fill_price"] = fill_price
                 values["filled_at"] = datetime.utcnow()
+            if slippage_pips is not None:
+                values["slippage_pips"] = slippage_pips
             await session.execute(
                 update(OrderRecord).where(OrderRecord.id == order_id).values(**values)
             )
@@ -64,13 +74,32 @@ class TradeJournal:
                 entry_price=trade.entry_price,
                 stop_loss=trade.stop_loss,
                 take_profit=trade.take_profit,
+                entry_spread_pips=trade.entry_spread_pips,
                 event_id=trade.event_id,
                 strategy=trade.strategy,
             )
             session.add(record)
             await session.commit()
-            logger.info(f"Logged trade #{record.id}: {trade.side} {trade.quantity} {trade.instrument} @ {trade.entry_price}")
+            logger.info(f"Logged trade #{record.id}: {trade.side} {trade.quantity} {trade.instrument} @ {trade.entry_price} (spread={trade.entry_spread_pips:.1f} pips)" if trade.entry_spread_pips else f"Logged trade #{record.id}: {trade.side} {trade.quantity} {trade.instrument} @ {trade.entry_price}")
             return record.id
+
+    async def update_fill(self, order_id: int, fill_price: float, slippage_pips: float) -> None:
+        """Update a trade's fill price and slippage after IB fill."""
+        async with get_session() as session:
+            result = await session.execute(
+                select(TradeRecord).where(TradeRecord.order_id == order_id)
+            )
+            record = result.scalar_one_or_none()
+            if record is None:
+                logger.debug(f"No trade found for order #{order_id} (may be bracket child)")
+                return
+            record.fill_price = fill_price
+            record.slippage_pips = slippage_pips
+            await session.commit()
+            logger.info(
+                f"Trade #{record.id} filled at {fill_price} "
+                f"(slippage={slippage_pips:+.1f} pips)"
+            )
 
     async def close_trade(self, trade_id: int, exit_price: float, pnl: float, pnl_pips: float) -> None:
         """Record trade exit."""
@@ -137,6 +166,9 @@ class TradeJournal:
             take_profit=record.take_profit,
             pnl=record.pnl,
             pnl_pips=record.pnl_pips,
+            entry_spread_pips=record.entry_spread_pips,
+            fill_price=record.fill_price,
+            slippage_pips=record.slippage_pips,
             event_id=record.event_id,
             strategy=record.strategy,
             opened_at=record.opened_at,

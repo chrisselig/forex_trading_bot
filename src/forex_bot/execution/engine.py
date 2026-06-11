@@ -89,8 +89,12 @@ class ExecutionEngine:
             oca_group=signal.oca_group,
         )
 
-        # Log order to journal
-        order_id = await self._journal.log_order(order)
+        # Capture spread at submission time for slippage tracking
+        pip_size = get_pip_size(signal.instrument)
+        entry_spread_pips = price.spread_pips(pip_size)
+
+        # Log order to journal with spread at submission
+        order_id = await self._journal.log_order(order, entry_spread_pips=entry_spread_pips)
 
         # Enforce stop loss at execution boundary (defense in depth)
         if order.stop_loss is None:
@@ -124,12 +128,11 @@ class ExecutionEngine:
 
             if self._notifier:
                 account = await self._client.get_account_summary()
-                spread_pips = price.spread_pips(get_pip_size(signal.instrument))
                 await self._notifier.notify_trade_opened(
                     order=order,
                     event=self._current_event,
                     account=account,
-                    spread_pips=spread_pips,
+                    spread_pips=entry_spread_pips,
                 )
 
             return order
