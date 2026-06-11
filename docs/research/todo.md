@@ -62,7 +62,7 @@
 - ~~**FOMC-specific parameter split**~~ — **DONE**: All three event types (NFP, CPI, FOMC) are independently profitable for both active pairs. FOMC optimal TP is slightly tighter (55-65 vs 70 pips) due to press conference reversal risk, but the marginal improvement doesn't justify splitting params yet. All 6 walk-forwards pass. See [Event-Type Split Analysis](05-event-type-split.md).
 - ~~**Automatic event data download**~~ — **DONE**: Nightly cron job at 04:00 UTC (11 PM ET) runs `download_dukascopy.py --skip-existing --timeframe 1min` via `asyncio.create_subprocess_exec`. Appends new event data to existing CSVs automatically. See `src/forex_bot/data/dukascopy.py`.
 - ~~**Remove Telegram alerts for IB connect/disconnect**~~ — **DONE**: Demoted to log-only. Daily TWS restart no longer sends Telegram alerts.
-- Spread/slippage logging and modeling
+- ~~**Spread/slippage logging and modeling**~~ — **DONE**: `entry_spread_pips`, `fill_price`, `slippage_pips` tracked on every order. Spread captured at submission, slippage calculated on IB fill. Performance dashboard shows avg spread, avg slippage, total slippage. Auto-migrates existing SQLite DB.
 
 ## Backlog
 
