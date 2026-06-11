@@ -17,6 +17,7 @@ from forex_bot.calendar.parser import EventParser
 from forex_bot.calendar.static import load_static_events
 from forex_bot.calendar.store import EventStore
 from forex_bot.config import get_settings
+from forex_bot.broker.sweep import sweep_to_cad
 from forex_bot.data.database import init_db
 from forex_bot.data.dukascopy import download_new_event_data
 from forex_bot.data.trade_journal import TradeJournal
@@ -178,6 +179,14 @@ class Orchestrator:
             replace_existing=True,
         )
 
+        # Nightly currency sweep at 03:30 UTC (10:30 PM ET)
+        self._scheduler.add_job(
+            self._nightly_currency_sweep,
+            CronTrigger(hour=3, minute=30),
+            id="nightly_currency_sweep",
+            replace_existing=True,
+        )
+
         # Nightly Dukascopy data download at 04:00 UTC (11 PM ET)
         self._scheduler.add_job(
             self._nightly_data_download,
@@ -197,6 +206,18 @@ class Orchestrator:
             self._job_manager.schedule_event_jobs(event, pre_minutes)
 
         logger.info(f"Scheduled jobs for {len(events)} upcoming events")
+
+    async def _nightly_currency_sweep(self) -> None:
+        """Sweep residual non-CAD cash balances back to CAD."""
+        try:
+            if not self._client.is_connected:
+                logger.warning("Currency sweep skipped: IB not connected")
+                return
+            results = await sweep_to_cad(self._client)
+            if results:
+                logger.info(f"Currency sweep completed: {len(results)} conversion(s)")
+        except Exception as e:
+            logger.error(f"Currency sweep failed: {e}")
 
     async def _nightly_data_download(self) -> None:
         """Download Dukascopy 1-min data for any new events."""
