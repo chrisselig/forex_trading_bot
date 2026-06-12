@@ -3,37 +3,37 @@ target_events:
   - name: "Non-Farm Employment Change"
     aliases: ["NFP", "Non-Farm Payrolls", "Nonfarm Payrolls"]
     fred_series: "PAYEMS"
-    pairs: ["USDZAR", "USDTRY"]
+    pairs: ["USDZAR", "USDTRY", "AUDUSD"]
     impact: "high"
 
   - name: "CPI m/m"
     aliases: ["Consumer Price Index"]
     fred_series: "CPIAUCSL"
-    pairs: ["USDZAR", "USDTRY"]
+    pairs: ["USDZAR", "USDTRY", "AUDUSD"]
     impact: "high"
 
   - name: "Federal Funds Rate"
     aliases: ["FOMC", "Fed Interest Rate Decision", "FOMC Statement"]
     fred_series: "FEDFUNDS"
-    pairs: ["USDZAR", "USDTRY"]
+    pairs: ["USDZAR", "USDTRY", "AUDUSD"]
     impact: "high"
 
   - name: "PPI m/m"
     aliases: ["Producer Price Index", "PPI"]
     fred_series: "PPIACO"
-    pairs: ["USDZAR", "USDTRY"]
+    pairs: ["USDZAR", "USDTRY", "AUDUSD"]
     impact: "high"
 
   - name: "GDP q/q"
     aliases: ["Gross Domestic Product", "Advance GDP", "Preliminary GDP", "Final GDP"]
     fred_series: "GDP"
-    pairs: ["USDZAR", "USDTRY"]
+    pairs: ["USDZAR", "USDTRY", "AUDUSD"]
     impact: "high"
 
   - name: "Core PCE Price Index m/m"
     aliases: ["PCE", "Personal Consumption Expenditures", "PCE Price Index"]
     fred_series: "PCEPI"
-    pairs: ["USDTRY"]    # USDZAR fails walk-forward (OOS=-0.7)
+    pairs: ["USDTRY", "AUDUSD"]    # USDZAR fails walk-forward (OOS=-0.7)
     impact: "high"
 
   # --- DISABLED: Awaiting Monte Carlo validation ---
@@ -44,6 +44,25 @@ target_events:
   # - name: "ISM Manufacturing PMI"      # Need correct release dates (ISM, not on FRED)
   # - name: "Retail Sales m/m"           # Need correct release dates (Census, wrong FRED rid)
   # - name: "Unemployment Rate"          # REDUNDANT — same release as NFP (Employment Situation)
+
+  # --- Australia Events (paper-trade AUDUSD — 40/70/30, see 11-mc-audusd-australia.md) ---
+  - name: "RBA Rate Decision"
+    aliases: ["RBA Interest Rate Decision", "RBA Cash Rate", "Reserve Bank of Australia"]
+    country: "AUD"
+    pairs: ["AUDUSD"]
+    impact: "high"
+
+  - name: "Australia CPI"
+    aliases: ["AU CPI", "Australian CPI", "CPI q/q"]
+    country: "AUD"
+    pairs: ["AUDUSD"]
+    impact: "high"
+
+  - name: "Australia Employment"
+    aliases: ["AU Employment Change", "Australian Employment", "Employment Change"]
+    country: "AUD"
+    pairs: ["AUDUSD"]
+    impact: "high"
 
   # --- Japan Events (paper-trade USDJPY) ---
   - name: "BOJ Policy Rate"
@@ -75,6 +94,7 @@ target_events:
 filters:
   country:
     - "USD"
+    - "AUD"
     - "JPY"
     - "ZAR"
     - "TRY"
