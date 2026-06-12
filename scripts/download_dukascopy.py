@@ -80,6 +80,10 @@ EVENT_PAIRS: dict[str, list[str]] = {
     # Japan events — USDJPY + CADJPY (JPY cross)
     "BOJ Rate Decision": ["USDJPY", "CADJPY"],
     "Japan CPI": ["USDJPY", "CADJPY"],
+    # Australia events — primarily moves AUDUSD
+    "RBA Rate Decision": ["AUDUSD"],
+    "Australia CPI": ["AUDUSD"],
+    "Australia Employment": ["AUDUSD"],
     # South Africa events — primarily moves USDZAR
     "SARB Rate Decision": ["USDZAR"],
     "South Africa CPI": ["USDZAR"],
@@ -92,6 +96,7 @@ EVENT_GROUPS: dict[str, list[str]] = {
     "us": ["NFP", "CPI", "FOMC", "PPI", "GDP", "PCE"],
     "canada": ["BOC Rate Decision", "Canada CPI", "Canada Employment"],
     "japan": ["BOJ Rate Decision", "Japan CPI"],
+    "australia": ["RBA Rate Decision", "Australia CPI", "Australia Employment"],
     "south_africa": ["SARB Rate Decision", "South Africa CPI"],
     "turkey": ["TCMB Rate Decision"],
 }
@@ -511,6 +516,117 @@ def _japan_cpi_dates() -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Australia Events (times in AEST/AEDT — releases at 11:30 AM Sydney time)
+#
+# AEST = UTC+10, AEDT = UTC+11 (DST: first Sunday in October to first Sunday in April)
+# 11:30 AM AEST = 01:30 UTC; 11:30 AM AEDT = 00:30 UTC
+# RBA decision at 2:30 PM AEST/AEDT = 04:30 UTC / 03:30 UTC
+# ---------------------------------------------------------------------------
+
+
+def _rba_rate_dates() -> list[dict]:
+    """RBA Rate Decision — 2:30 PM AEST/AEDT.
+
+    2020-2023: 11 meetings/year (first Tuesday of month, except Jan).
+    2024+: 8 meetings/year (two-day meetings, decision on day 2).
+    Dates from rba.gov.au/monetary-policy/int-rate-decisions/.
+    """
+    dates = [
+        # 2020 (includes emergency COVID meetings Mar 3 and Mar 19)
+        "2020-02-04", "2020-03-03", "2020-03-19", "2020-04-07", "2020-05-05",
+        "2020-06-02", "2020-07-07", "2020-08-04", "2020-09-01", "2020-10-06",
+        "2020-11-03", "2020-12-01",
+        # 2021
+        "2021-02-02", "2021-03-02", "2021-04-06", "2021-05-04", "2021-06-01",
+        "2021-07-06", "2021-08-03", "2021-09-07", "2021-10-05", "2021-11-02",
+        "2021-12-07",
+        # 2022
+        "2022-02-01", "2022-03-01", "2022-04-05", "2022-05-03", "2022-06-07",
+        "2022-07-05", "2022-08-02", "2022-09-06", "2022-10-04", "2022-11-01",
+        "2022-12-06",
+        # 2023
+        "2023-02-07", "2023-03-07", "2023-04-04", "2023-05-02", "2023-06-06",
+        "2023-07-04", "2023-08-01", "2023-09-05", "2023-10-03", "2023-11-07",
+        "2023-12-05",
+        # 2024 (8 meetings/year from here)
+        "2024-02-06", "2024-03-19", "2024-05-07", "2024-06-18",
+        "2024-08-06", "2024-09-24", "2024-11-05", "2024-12-10",
+        # 2025
+        "2025-02-18", "2025-04-01", "2025-05-20", "2025-07-08",
+        "2025-08-12", "2025-09-30", "2025-11-04", "2025-12-09",
+        # 2026 (rba.gov.au/media-releases/2025/mr-25-02.html)
+        "2026-02-03", "2026-03-17", "2026-05-05", "2026-06-16",
+        "2026-08-11", "2026-09-29", "2026-11-03", "2026-12-08",
+    ]
+    return [{"name": "RBA Rate Decision", "date": d, "time": "14:30", "tz": "AEST"} for d in dates]
+
+
+def _australia_cpi_dates() -> list[dict]:
+    """Australia CPI — quarterly until Q3 2025, then monthly from Nov 2025.
+
+    Quarterly CPI released ~last Wednesday of month after quarter end,
+    at 11:30 AM AEST/AEDT. Dates from mql5.com and ABS release schedule.
+    """
+    dates = [
+        # 2020 (quarterly: Q4 2019 in Jan, then Q1-Q3 in Apr/Jul/Oct)
+        "2020-01-29", "2020-04-29", "2020-07-29", "2020-10-28",
+        # 2021
+        "2021-01-27", "2021-04-28", "2021-07-28", "2021-09-29",
+        # 2022
+        "2022-01-26", "2022-04-27", "2022-07-27", "2022-10-26",
+        # 2023
+        "2023-01-25", "2023-04-26", "2023-07-26", "2023-10-25",
+        # 2024
+        "2024-01-31", "2024-04-24", "2024-07-31", "2024-10-30",
+        # 2025 (quarterly through Sep, then monthly from Nov)
+        "2025-01-29", "2025-04-30", "2025-07-30", "2025-09-24",
+        "2025-10-29", "2025-11-26",
+        # 2026 (monthly, last Wednesday of month — ABS release schedule)
+        "2026-01-07", "2026-01-28", "2026-02-25", "2026-03-25",
+        "2026-04-29", "2026-05-27",
+    ]
+    return [{"name": "Australia CPI", "date": d, "time": "11:30", "tz": "AEST"} for d in dates]
+
+
+def _australia_employment_dates() -> list[dict]:
+    """Australia Employment (Labour Force Survey) — 11:30 AM AEST/AEDT, monthly.
+
+    Usually second Thursday of the month. Confirmed dates from mql5.com for
+    2024-2026; estimated second Thursday for 2020-2023.
+    """
+    dates = [
+        # 2020 (estimated second Thursday)
+        "2020-01-09", "2020-02-13", "2020-03-12", "2020-04-09", "2020-05-14",
+        "2020-06-11", "2020-07-09", "2020-08-13", "2020-09-10", "2020-10-08",
+        "2020-11-12", "2020-12-10",
+        # 2021
+        "2021-01-14", "2021-02-11", "2021-03-11", "2021-04-08", "2021-05-13",
+        "2021-06-10", "2021-07-08", "2021-08-12", "2021-09-09", "2021-10-14",
+        "2021-11-11", "2021-12-09",
+        # 2022
+        "2022-01-13", "2022-02-10", "2022-03-10", "2022-04-14", "2022-05-12",
+        "2022-06-09", "2022-07-14", "2022-08-11", "2022-09-08", "2022-10-13",
+        "2022-11-10", "2022-12-08",
+        # 2023
+        "2023-01-12", "2023-02-09", "2023-03-09", "2023-04-13", "2023-05-11",
+        "2023-06-08", "2023-07-13", "2023-08-10", "2023-09-14", "2023-10-12",
+        "2023-11-09", "2023-12-14",
+        # 2024 (confirmed from mql5.com)
+        "2024-01-11", "2024-02-08", "2024-03-14", "2024-04-11", "2024-06-13",
+        "2024-07-11", "2024-08-08", "2024-09-12", "2024-10-10", "2024-11-14",
+        "2024-12-12",
+        # 2025 (confirmed from mql5.com)
+        "2025-01-09", "2025-02-12", "2025-03-12", "2025-05-08", "2025-06-12",
+        "2025-07-10", "2025-08-07", "2025-09-11", "2025-10-09", "2025-11-13",
+        "2025-12-11",
+        # 2026 (confirmed from mql5.com; May-Jun estimated)
+        "2026-01-09", "2026-02-12", "2026-03-12", "2026-04-09",
+        "2026-05-21", "2026-06-25",
+    ]
+    return [{"name": "Australia Employment", "date": d, "time": "11:30", "tz": "AEST"} for d in dates]
+
+
+# ---------------------------------------------------------------------------
 # Emerging Market Events
 # ---------------------------------------------------------------------------
 
@@ -616,7 +732,7 @@ def get_all_events(groups: list[str] | None = None) -> list[dict]:
 
     Args:
         groups: Optional list of event group names to include.
-                Valid groups: us, canada, japan, south_africa, turkey.
+                Valid groups: us, canada, japan, australia, south_africa, turkey.
                 If None, includes all groups.
     """
     all_event_fns = {
@@ -631,6 +747,9 @@ def get_all_events(groups: list[str] | None = None) -> list[dict]:
         "Canada Employment": _canada_employment_dates,
         "BOJ Rate Decision": _boj_rate_dates,
         "Japan CPI": _japan_cpi_dates,
+        "RBA Rate Decision": _rba_rate_dates,
+        "Australia CPI": _australia_cpi_dates,
+        "Australia Employment": _australia_employment_dates,
         "SARB Rate Decision": _sarb_rate_dates,
         "TCMB Rate Decision": _tcmb_rate_dates,
         "South Africa CPI": _sa_cpi_dates,
@@ -650,6 +769,7 @@ def get_all_events(groups: list[str] | None = None) -> list[dict]:
         events.extend(fn())
 
     JST = ZoneInfo("Asia/Tokyo")
+    AEST = ZoneInfo("Australia/Sydney")
 
     for e in events:
         tz = e.get("tz", "ET")
@@ -658,6 +778,8 @@ def get_all_events(groups: list[str] | None = None) -> list[dict]:
             utc_dt = local_dt.replace(tzinfo=UTC)
         elif tz == "JST":
             utc_dt = local_dt.replace(tzinfo=JST).astimezone(UTC)
+        elif tz == "AEST":
+            utc_dt = local_dt.replace(tzinfo=AEST).astimezone(UTC)
         else:
             # Eastern Time
             utc_dt = local_dt.replace(tzinfo=ET).astimezone(UTC)
