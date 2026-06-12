@@ -44,7 +44,10 @@ UTC = timezone.utc
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "scripts" / "data" / "dukascopy"
 
-PAIRS = ["GBPUSD", "USDCAD", "GBPJPY", "USDZAR", "USDTRY", "USDJPY", "EURUSD", "AUDUSD"]
+PAIRS = [
+    "GBPUSD", "USDCAD", "GBPJPY", "USDZAR", "USDTRY", "USDJPY",
+    "EURUSD", "AUDUSD", "CADJPY", "EURCAD", "GBPCAD",
+]
 
 # Map our pair names to Dukascopy instrument strings
 DUKASCOPY_INSTRUMENTS = {
@@ -56,6 +59,9 @@ DUKASCOPY_INSTRUMENTS = {
     "USDJPY": "USD/JPY",
     "EURUSD": "EUR/USD",
     "AUDUSD": "AUD/USD",
+    "CADJPY": "CAD/JPY",
+    "EURCAD": "EUR/CAD",
+    "GBPCAD": "GBP/CAD",
 }
 
 # Which pairs to download for each event type
@@ -67,13 +73,13 @@ EVENT_PAIRS: dict[str, list[str]] = {
     "PPI": PAIRS,
     "GDP": PAIRS,
     "PCE": PAIRS,
-    # Canada events — primarily moves USDCAD
-    "BOC Rate Decision": ["USDCAD"],
-    "Canada CPI": ["USDCAD"],
-    "Canada Employment": ["USDCAD"],
-    # Japan events — primarily moves USDJPY
-    "BOJ Rate Decision": ["USDJPY"],
-    "Japan CPI": ["USDJPY"],
+    # Canada events — USDCAD + CAD crosses
+    "BOC Rate Decision": ["USDCAD", "CADJPY", "EURCAD", "GBPCAD"],
+    "Canada CPI": ["USDCAD", "CADJPY", "EURCAD", "GBPCAD"],
+    "Canada Employment": ["USDCAD", "CADJPY", "EURCAD", "GBPCAD"],
+    # Japan events — USDJPY + CADJPY (JPY cross)
+    "BOJ Rate Decision": ["USDJPY", "CADJPY"],
+    "Japan CPI": ["USDJPY", "CADJPY"],
     # South Africa events — primarily moves USDZAR
     "SARB Rate Decision": ["USDZAR"],
     "South Africa CPI": ["USDZAR"],
