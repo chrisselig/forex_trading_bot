@@ -8,6 +8,12 @@
 #   IB_USERNAME=your_username
 #   IB_PASSWORD=your_password
 #
+# Cron schedule (MT = America/Edmonton):
+#   Mon-Fri 5:00 AM MT (7:00 AM ET) — before US events (earliest 8:15 AM ET)
+#   Sunday  3:00 PM MT (5:00 PM ET) — forex market open, for Monday AEST AU events
+#
+# The script is idempotent: if TWS and the bot are already running, it exits cleanly.
+#
 # Usage:
 #   ./start_tws_and_bot.sh          # Normal start (skips if already running)
 #   ./start_tws_and_bot.sh --fresh  # Kill everything and start from scratch
