@@ -70,6 +70,7 @@ nav:
     - operations/process-management.md
     - operations/telegram-notifications.md
   - Analysis:
+    - research/12-mc-remaining-us.md
     - research/11-mc-audusd-australia.md
     - research/10-mc-cad-pairs.md
     - research/09-mc-gdp-pce.md

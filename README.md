@@ -4,7 +4,7 @@
 
 **[Documentation](https://chrisselig.github.io/forex_trading_bot/)** | [Glossary](https://chrisselig.github.io/forex_trading_bot/trading/glossary/) | [Strategies](https://chrisselig.github.io/forex_trading_bot/trading/strategies/) | [Risk Management](https://chrisselig.github.io/forex_trading_bot/trading/risk-management/) | [Monte Carlo Analysis](https://chrisselig.github.io/forex_trading_bot/research/04-monte-carlo-6yr/) | [Roadmap](https://chrisselig.github.io/forex_trading_bot/research/todo/)
 
-An event-driven forex trading bot that automatically trades major economic news releases — [NFP](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#nfp-non-farm-payrolls), [CPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#cpi-consumer-price-index), [FOMC](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#fomc-federal-open-market-committee), [PPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#ppi-producer-price-index), GDP, PCE, plus non-US events (SARB, TCMB, SA CPI, BOJ, RBA, AU CPI, AU Employment) — using [Interactive Brokers](https://www.interactivebrokers.com). The bot sleeps between events, wakes up before scheduled releases, places [straddle](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#straddle) orders with OCA groups, enforces strict risk management, sends real-time [Telegram alerts](https://chrisselig.github.io/forex_trading_bot/operations/telegram-notifications/) to your phone, and logs everything to a trade journal.
+An event-driven forex trading bot that automatically trades major economic news releases — [NFP](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#nfp-non-farm-payrolls), [CPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#cpi-consumer-price-index), [FOMC](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#fomc-federal-open-market-committee), [PPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#ppi-producer-price-index), GDP, PCE, Unemployment Claims, ISM Manufacturing PMI, Retail Sales, plus non-US events (SARB, TCMB, SA CPI, BOJ, RBA, AU CPI, AU Employment) — using [Interactive Brokers](https://www.interactivebrokers.com). The bot sleeps between events, wakes up before scheduled releases, places [straddle](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#straddle) orders with OCA groups, enforces strict risk management, sends real-time [Telegram alerts](https://chrisselig.github.io/forex_trading_bot/operations/telegram-notifications/) to your phone, and logs everything to a trade journal.
 
 Built for a Canadian trader in Alberta where OANDA is not available due to provincial regulatory constraints.
 
@@ -266,12 +266,12 @@ forex-bot backtest         # Run historical backtest
 
 Based on Monte Carlo walk-forward analysis with 6.5 years of 1-minute Dukascopy data (819+ event/pair combos, Jan 2020 — Jun 2026). Only pairs that pass out-of-sample walk-forward validation are enabled.
 
-**Active pairs** trade 6 US events (NFP, CPI, FOMC, PPI, GDP, PCE) plus non-US domestic events:
+**Active pairs** trade up to 9 US events (NFP, CPI, FOMC, PPI, GDP, PCE, Unemployment Claims, ISM Manufacturing PMI, Retail Sales) plus non-US domestic events:
 
 | Pair | Events | E[P&L] | [Sharpe](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#sharpe-ratio) | Params | MC Report |
 |------|--------|--------|--------|--------|-----------|
 | **USDZAR** | US (6) + SARB + SA CPI | +17.1 pips | 6.40 | 50/70/10 | [6.5yr MC](https://chrisselig.github.io/forex_trading_bot/research/04-monte-carlo-6yr/) |
-| **USDTRY** | US (6) + TCMB | +13.6 pips | 6.51 | 50/70/10 (TCMB: 20/60/10) | [6.5yr MC](https://chrisselig.github.io/forex_trading_bot/research/04-monte-carlo-6yr/) |
+| **USDTRY** | US (9) + TCMB | +13.6 pips | 6.51 | 50/70/10 (TCMB: 20/60/10) | [6.5yr MC](https://chrisselig.github.io/forex_trading_bot/research/04-monte-carlo-6yr/) |
 | **USDJPY** | BOJ only (paper-trade) | +3.4 pips | 2.45 | 25/15/15 | [Non-US](https://chrisselig.github.io/forex_trading_bot/research/06-non-us-events/) |
 | **AUDUSD** | US + AU (paper-trade) | +12.5 pips | 3.93 | 40/70/30 | [AUDUSD + AU](https://chrisselig.github.io/forex_trading_bot/research/11-mc-audusd-australia/) |
 
@@ -317,7 +317,7 @@ See [Risk Management](https://chrisselig.github.io/forex_trading_bot/trading/ris
 forex_trading_bot/
 ├── config/
 │   ├── settings.yaml          # Trading params, risk limits, IB config
-│   ├── events.yaml            # Target events (6 US + 7 non-US)
+│   ├── events.yaml            # Target events (9 US + 7 non-US)
 │   └── static_events.yaml    # Non-US event calendar (SARB, TCMB, BOJ, SA CPI)
 ├── src/forex_bot/
 │   ├── cli.py                 # Typer CLI (7 commands)
@@ -405,6 +405,7 @@ The full documentation is at **[chrisselig.github.io/forex_trading_bot](https://
 - [GDP & PCE Analysis](https://chrisselig.github.io/forex_trading_bot/research/09-mc-gdp-pce/) — GDP and PCE MC validation
 - [CAD Pairs](https://chrisselig.github.io/forex_trading_bot/research/10-mc-cad-pairs/) — CADJPY, EURCAD, GBPCAD exploration (all fail)
 - [AUDUSD + Australian Events](https://chrisselig.github.io/forex_trading_bot/research/11-mc-audusd-australia/) — AUDUSD MC analysis with AU events (paper-trade candidate)
+- [Remaining US Events](https://chrisselig.github.io/forex_trading_bot/research/12-mc-remaining-us/) — UC, ISM PMI, Retail Sales analysis (USDTRY only)
 - [Dukascopy Data](https://chrisselig.github.io/forex_trading_bot/research/dukascopy-data/) — Historical data source
 - [Roadmap](https://chrisselig.github.io/forex_trading_bot/research/todo/) — What's planned next
 

@@ -36,13 +36,23 @@ target_events:
     pairs: ["USDTRY", "AUDUSD"]    # USDZAR fails walk-forward (OOS=-0.7)
     impact: "high"
 
-  # --- DISABLED: Awaiting Monte Carlo validation ---
-  # See docs/research/todo.md for tracking.
-  # Do NOT re-enable without passing MC walk-forward analysis.
-  #
-  # - name: "Unemployment Claims"        # Need correct release dates (weekly, not on FRED)
-  # - name: "ISM Manufacturing PMI"      # Need correct release dates (ISM, not on FRED)
-  # - name: "Retail Sales m/m"           # Need correct release dates (Census, wrong FRED rid)
+  # --- US Events (USDTRY only — see docs/research/12-mc-remaining-us.md) ---
+  - name: "Unemployment Claims"
+    aliases: ["Initial Claims", "Initial Jobless Claims", "Jobless Claims"]
+    pairs: ["USDTRY"]    # USDZAR/AUDUSD fail (no edge)
+    impact: "high"
+
+  - name: "ISM Manufacturing PMI"
+    aliases: ["ISM Manufacturing", "ISM PMI", "Manufacturing PMI"]
+    pairs: ["USDTRY"]    # USDZAR/AUDUSD fail (no edge)
+    impact: "high"
+
+  - name: "Retail Sales m/m"
+    aliases: ["Retail Sales", "Advance Retail Sales", "Core Retail Sales"]
+    pairs: ["USDTRY"]    # USDZAR/AUDUSD fail (no edge)
+    impact: "high"
+
+  # --- DISABLED (redundant) ---
   # - name: "Unemployment Rate"          # REDUNDANT — same release as NFP (Employment Situation)
 
   # --- Australia Events (paper-trade AUDUSD — 40/70/30, see 11-mc-audusd-australia.md) ---
