@@ -19,20 +19,16 @@ from __future__ import annotations
 import argparse
 import json
 import time
-from pathlib import Path
 
 import numpy as np
-import pandas as pd
 from loguru import logger
 
 # Reuse everything from the main MC script
 from monte_carlo_dukascopy import (
-    PAIRS,
     EVENT_SPREAD_PIPS,
     DISTANCE_RANGE,
     TP_RANGE,
     SL_RANGE,
-    N_BOOTSTRAP,
     DATA_DIR,
     load_dukascopy_data,
     simulate_straddle,
@@ -153,7 +149,7 @@ def main():
                         help="Pairs to analyze (default: active pairs)")
     args = parser.parse_args()
 
-    events = get_all_events()
+    get_all_events()  # Validate events load correctly
     event_types = ["NFP", "CPI", "FOMC", "PPI", "GDP", "PCE"]
     train_years = [2020, 2021, 2022, 2023, 2024]
     test_years = [2025, 2026]
@@ -293,7 +289,7 @@ def main():
         print(f"{'─' * 60}")
 
         # Current params by event type
-        print(f"\n  Current params (50/70/10) by event type:")
+        print("\n  Current params (50/70/10) by event type:")
         print(f"  {'Event':<8} {'E[P&L]':>8} {'95% CI':>20} {'WR':>8} {'Sharpe':>8} {'PF':>8} {'N':>5}")
         print(f"  {'─'*65}")
         for evt in event_types:
@@ -303,7 +299,7 @@ def main():
                       f"{r['win_rate']*100:>7.1f}% {r['sharpe']:>8.2f} {r['profit_factor']:>8.2f} {r['n_trades']:>5}")
 
         # Optimal per event type
-        print(f"\n  Optimal params per event type:")
+        print("\n  Optimal params per event type:")
         print(f"  {'Event':<8} {'Params':>12} {'E[P&L]':>8} {'95% CI':>20} {'WR':>8} {'Sharpe':>8} {'N':>5}")
         print(f"  {'─'*71}")
         for evt in event_types:
@@ -314,7 +310,7 @@ def main():
                       f"{r['win_rate']*100:>7.1f}% {r['sharpe']:>8.2f} {r['n_trades']:>5}")
 
         # Walk-forward per event type
-        print(f"\n  Walk-forward (train 2020-2024, test 2025-2026):")
+        print("\n  Walk-forward (train 2020-2024, test 2025-2026):")
         print(f"  {'Event':<8} {'Params':>12} {'IS E[P&L]':>10} {'IS Sharpe':>10} {'OOS E[P&L]':>11} {'OOS Sharpe':>11}")
         print(f"  {'─'*68}")
         for evt in event_types:

@@ -51,10 +51,9 @@ class FredClient:
 
     def get_release_dates(self, series_id: str) -> list[datetime]:
         """Get historical release dates for a series."""
-        info = self._fred.get_series_info(series_id)
         # The release dates can be fetched via the releases endpoint
         try:
-            releases = self._fred.search(series_id)
+            self._fred.search(series_id)
             return []  # FRED API doesn't directly expose this simply
         except Exception:
             return []

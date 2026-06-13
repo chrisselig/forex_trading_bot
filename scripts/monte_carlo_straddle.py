@@ -29,11 +29,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import csv
 import json
 import sys
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -435,8 +434,6 @@ def bootstrap_metrics(
     boot_sharpes = boot_means / boot_stds * np.sqrt(n)
     # Clip extreme Sharpe values for numerical stability
     boot_sharpes = np.clip(boot_sharpes, -10, 10)
-    boot_win_rates = (boot_samples > 0).mean(axis=1)
-
     # Cumulative P&L for max drawdown
     boot_cumsum = np.cumsum(boot_samples, axis=1)
     boot_running_max = np.maximum.accumulate(boot_cumsum, axis=1)
@@ -755,7 +752,7 @@ def generate_report(
         "",
         "## Executive Summary",
         "",
-        f"- **Analysis period**: January 2025 — June 2026",
+        "- **Analysis period**: January 2025 — June 2026",
         f"- **Events analyzed**: {n_events} (NFP: {len(_nfp_dates())}, CPI: {len(_cpi_dates())}, FOMC: {len(_fomc_dates())})",
         f"- **Data points cached**: {n_cached} (event × pair combinations)",
         f"- **Pairs**: {', '.join(pairs)}",

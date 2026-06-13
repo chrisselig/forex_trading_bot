@@ -131,7 +131,7 @@ async def sweep_to_cad(client: IBClient, dry_run: bool = False) -> list[str]:
 
             order = MarketOrder(action=actual_action, totalQuantity=usd_qty)
             order.tif = "IOC"  # Immediate or cancel
-            trade = client.ib.placeOrder(contract, order)
+            client.ib.placeOrder(contract, order)
             logger.info(f"Sweep: {actual_action} {usd_qty} {pair_str} (converting {currency} {balance:.2f})")
             results.append(msg)
             usd_from_exotics += usd_qty if actual_action == "BUY" else -usd_qty
@@ -189,7 +189,7 @@ async def sweep_to_cad(client: IBClient, dry_run: bool = False) -> list[str]:
 
             order = MarketOrder(action=actual_action, totalQuantity=qty)
             order.tif = "IOC"
-            trade = client.ib.placeOrder(contract, order)
+            client.ib.placeOrder(contract, order)
             logger.info(f"Sweep: {actual_action} {qty} {pair_str} (converting {currency} {balance:.2f} to CAD)")
             results.append(msg)
 

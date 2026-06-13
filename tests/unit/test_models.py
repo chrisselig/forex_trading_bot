@@ -1,10 +1,12 @@
 """Unit tests for Pydantic data models."""
 
 from datetime import UTC, datetime
-from forex_bot.models.events import EconomicEvent, EventImpact
-from forex_bot.models.market import PriceSnapshot, Candle
+
+import pytest
+
+from forex_bot.models.events import EconomicEvent
+from forex_bot.models.market import PriceSnapshot
 from forex_bot.models.orders import Order, OrderSide, OrderType, OrderStatus
-from forex_bot.models.account import AccountSummary
 
 
 class TestEconomicEvent:
@@ -99,6 +101,3 @@ class TestOrder:
             quantity=10000,
         )
         assert order.status == OrderStatus.PENDING
-
-
-import pytest

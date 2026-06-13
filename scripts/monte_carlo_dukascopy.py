@@ -433,12 +433,12 @@ def simulate_straddle(
 
         # Phase 1: wait for trigger
         for i in range(pre_idx, max_bar):
-            o, h, l, c = bar_values[i]
+            o, h, lo, c = bar_values[i]
             if leg == "BUY" and h >= entry:
                 triggered = True
                 trigger_idx = i
                 break
-            elif leg == "SELL" and l <= entry:
+            elif leg == "SELL" and lo <= entry:
                 triggered = True
                 trigger_idx = i
                 break
@@ -456,10 +456,10 @@ def simulate_straddle(
         exit_price = bar_values[exit_idx][3]  # close of last bar
 
         for i in range(trigger_idx + 1, min(n_bars, trigger_idx + MAX_HOLDING_MINUTES)):
-            o, h, l, c = bar_values[i]
+            o, h, lo, c = bar_values[i]
 
             if leg == "BUY":
-                hit_sl = l <= sl
+                hit_sl = lo <= sl
                 hit_tp = h >= tp
 
                 if hit_sl and hit_tp:
@@ -484,7 +484,7 @@ def simulate_straddle(
                     break
             else:  # SELL
                 hit_sl = h >= sl
-                hit_tp = l <= tp
+                hit_tp = lo <= tp
 
                 if hit_sl and hit_tp:
                     if abs(o - sl) <= abs(o - tp):
@@ -678,20 +678,10 @@ def walk_forward_validate(
     # Filter data for train period
     train_data = {k: v for k, v in all_data.items()
                   if v["pair"] == pair and int(v["event_date"][:4]) in train_years}
-    test_data = {k: v for k, v in all_data.items()
-                 if v["pair"] == pair and int(v["event_date"][:4]) in test_years}
-
     if len(train_data) < 5:
         return {"pair": pair, "status": "insufficient_train_data"}
 
     # Build a temporary all_data with only train data for grid search
-    train_results = run_grid_search(all_data, pair, year_filter=None)
-    # Re-run grid search on just train data
-    train_only_data = {k: v for k, v in all_data.items()
-                       if v["pair"] == pair and int(v["event_date"][:4]) in train_years}
-    # Temporarily replace all_data for train search
-    train_all = dict(all_data)
-    # Actually, use a simpler approach: filter in grid search
     train_results = _run_grid_search_filtered(all_data, pair, train_years)
     if not train_results:
         return {"pair": pair, "status": "insufficient_train_data"}
@@ -937,11 +927,11 @@ def generate_report(
         "",
         "## Executive Summary",
         "",
-        f"- **Analysis period**: January 2020 — June 2026",
+        "- **Analysis period**: January 2020 — June 2026",
         f"- **Events analyzed**: {n_events} (NFP: {len(_nfp_dates())}, CPI: {len(_cpi_dates())}, FOMC: {len(_fomc_dates())})",
         f"- **Data points loaded**: {n_data} (event x pair combinations)",
         f"- **Pairs**: {', '.join(pairs)}",
-        f"- **Data source**: Dukascopy Bank SA (1-minute OHLCV bars)",
+        "- **Data source**: Dukascopy Bank SA (1-minute OHLCV bars)",
         f"- **Monte Carlo iterations**: {N_BOOTSTRAP:,}",
         f"- **Confidence level**: {CONFIDENCE_LEVEL*100:.0f}%",
         "",
@@ -1008,8 +998,6 @@ def generate_report(
         p = wf.get("optimal_params", {})
         is_data = wf.get("in_sample", {})
         os_data = wf.get("out_of_sample", {})
-        is_years = is_data.get("years", [])
-        os_years = os_data.get("years", [])
         lines.append(
             f"| **{pair}** | {p.get('distance', 0):.0f}/{p.get('tp', 0):.0f}/{p.get('sl', 0):.0f} | "
             f"{is_data.get('mean_pnl', 0):+.1f} | {is_data.get('sharpe', 0):.2f} | "

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from loguru import logger
@@ -9,7 +9,7 @@ from forex_bot.config import get_settings
 from forex_bot.models.events import EconomicEvent, EventImpact
 
 ET = ZoneInfo("America/New_York")
-UTC = ZoneInfo("UTC")
+UTC = timezone.utc
 
 
 class EventParser:

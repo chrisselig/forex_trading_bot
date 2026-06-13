@@ -123,6 +123,13 @@ forex-bot performance
 
 ## Alberta/Canada Notes
 
+- User is based in Alberta, Canada (Mountain Time)
 - OANDA is NOT available in Alberta — never suggest it
 - IBKR is IIROC registered, available in all Canadian provinces
 - IIROC enforces leverage caps — IB handles this automatically
+
+## Data Integrity
+
+- For central bank meeting dates (FOMC, BOC, BOJ, SARB, TCMB, RBA, etc.), always verify against the official central bank calendar — **never extrapolate or invent dates**
+- Cross-reference at least two sources when compiling event date lists
+- Do not mix up different event types from the same institution (e.g., rate decisions vs. summary publications)
