@@ -1,5 +1,10 @@
 # Forex Trading Bot — Project Instructions
 
+## General Rules
+
+- When the user asks you to create specific files (CLAUDE.md, skills, configs), create them in the same session — do not defer or forget. Treat explicit file creation requests as hard requirements.
+- When the user asks "how do I access X" or "where is X deployed", give the direct URL or command first, then explain details only if asked.
+
 ## Project Overview
 
 Event-driven forex trading bot for major US economic news releases. Uses Interactive Brokers (IBKR) via `ib_async`. Runs on paper trading (port 4002) or live (port 4001).
