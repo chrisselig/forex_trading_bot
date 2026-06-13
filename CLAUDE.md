@@ -139,6 +139,16 @@ forex-bot performance
 - Cross-reference at least two sources when compiling event date lists
 - Do not mix up different event types from the same institution (e.g., rate decisions vs. summary publications)
 
+## Testing & Linting
+
+Before pushing any changes, always run this validation loop autonomously:
+
+1. Run `~/anaconda3/envs/forex-bot/bin/ruff check . --fix` and fix any remaining lint errors
+2. Run `~/anaconda3/envs/forex-bot/bin/python -m pytest tests/unit/ --tb=short -q` and fix any failing tests
+3. For any new dependencies, verify they are in `requirements.txt` and `pyproject.toml`
+4. Repeat until all checks pass with zero errors. Only then create the commit and push.
+5. If any step fails more than 3 times, stop and explain the root cause before continuing.
+
 ## CI/CD
 
 - When modifying CI/CD configs, always verify all dependencies (ruff, pytest, etc.) are included in requirements files
