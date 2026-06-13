@@ -138,3 +138,8 @@ forex-bot performance
 - For central bank meeting dates (FOMC, BOC, BOJ, SARB, TCMB, RBA, etc.), always verify against the official central bank calendar — **never extrapolate or invent dates**
 - Cross-reference at least two sources when compiling event date lists
 - Do not mix up different event types from the same institution (e.g., rate decisions vs. summary publications)
+
+## CI/CD
+
+- When modifying CI/CD configs, always verify all dependencies (ruff, pytest, etc.) are included in requirements files
+- Build-time env vars must be handled gracefully with fallbacks — never crash the build if an optional env var is missing
