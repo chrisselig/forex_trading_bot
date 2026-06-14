@@ -1,17 +1,24 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
+
 from loguru import logger
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from forex_bot.data.database import get_session
 from forex_bot.data.schemas import EventRecord
 from forex_bot.models.events import EconomicEvent, EventImpact
 
+if TYPE_CHECKING:
+    from forex_bot.data.turso_sync import TursoSyncer
+
 
 class EventStore:
     """Persists and queries economic events in SQLite."""
+
+    def __init__(self, turso: TursoSyncer | None = None):
+        self._turso = turso
 
     async def save_events(self, events: list[EconomicEvent]) -> int:
         """Save events to the database, deduplicating by title + scheduled_at."""
@@ -38,6 +45,20 @@ class EventStore:
                     fred_series=event.fred_series,
                 )
                 session.add(record)
+                await session.flush()  # Assign record.id before Turso push
+                if self._turso:
+                    await self._turso.push_event(
+                        event_id=record.id,
+                        title=record.title,
+                        country=record.country,
+                        impact=record.impact,
+                        scheduled_at=record.scheduled_at,
+                        actual=record.actual,
+                        forecast=record.forecast,
+                        previous=record.previous,
+                        fred_series=record.fred_series,
+                        created_at=record.created_at,
+                    )
                 saved += 1
             await session.commit()
 
@@ -60,6 +81,11 @@ class EventStore:
                 record = result.scalar_one_or_none()
                 if record and not record.actual:
                     record.actual = event.actual
+                    if self._turso:
+                        await self._turso.push_event_actual(
+                            event_id=record.id,
+                            actual=event.actual,
+                        )
                     updated += 1
             await session.commit()
 

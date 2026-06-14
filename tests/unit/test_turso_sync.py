@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -163,6 +163,40 @@ class TestTursoSyncerEnabled:
         )
         params = mock_conn.execute.call_args[0][1]
         assert params[-1] == "live"
+
+
+    @pytest.mark.asyncio
+    async def test_push_event_executes_insert(self):
+        syncer, mock_conn = self._make_syncer()
+        await syncer.push_event(
+            event_id=1, title="Non-Farm Payrolls", country="USD",
+            impact="high", scheduled_at=datetime(2026, 6, 13, 12, 30),
+            actual="200K", forecast="180K", previous="175K",
+            fred_series="PAYEMS", created_at=datetime(2026, 6, 13, 10, 0),
+        )
+        mock_conn.execute.assert_called_once()
+        mock_conn.commit.assert_called_once()
+        sql = mock_conn.execute.call_args[0][0]
+        assert "INSERT OR REPLACE INTO events" in sql
+
+    @pytest.mark.asyncio
+    async def test_push_event_actual_executes_update(self):
+        syncer, mock_conn = self._make_syncer()
+        await syncer.push_event_actual(event_id=1, actual="200K")
+        mock_conn.execute.assert_called_once()
+        sql = mock_conn.execute.call_args[0][0]
+        assert "UPDATE events SET actual" in sql
+
+    @pytest.mark.asyncio
+    async def test_push_event_noop_when_disabled(self):
+        syncer = TursoSyncer(database_url="", auth_token="")
+        await syncer.push_event(
+            event_id=1, title="NFP", country="USD", impact="high",
+            scheduled_at=datetime(2026, 6, 13, 12, 30),
+            actual=None, forecast="180K", previous="175K",
+            fred_series="", created_at=datetime(2026, 6, 13, 10, 0),
+        )
+        # No exception, no connection attempted
 
 
 class TestBrokerConfigAccountType:
