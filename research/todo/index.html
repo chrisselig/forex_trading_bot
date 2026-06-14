@@ -1,0 +1,1925 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Event-driven forex trading bot for major US economic news releases">
+      
+      
+        <meta name="author" content="Chris Selig">
+      
+      
+      
+        <link rel="prev" href="../01-straddle-hourly/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Roadmap - Forex Trading Bot</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#roadmap" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Forex Trading Bot" class="md-header__button md-logo" aria-label="Forex Trading Bot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Forex Trading Bot
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Roadmap
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/chrisselig/forex_trading_bot" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chrisselig/forex_trading_bot
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Forex Trading Bot" class="md-nav__button md-logo" aria-label="Forex Trading Bot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Forex Trading Bot
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/chrisselig/forex_trading_bot" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chrisselig/forex_trading_bot
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forex Trading
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Forex Trading
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forex Trading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/market-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/news-trading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Trading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/risk-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risk Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trading Strategies
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Trading Strategies
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trading Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/target-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Target Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/currency-pairs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Currency Pairs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/ib-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IB API Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/auto-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/process-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Process Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/telegram-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram Notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-mc-remaining-us/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — Remaining US Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-mc-audusd-australia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — AUDUSD + Australian Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-mc-cad-pairs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — CAD Pair Exploration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-mc-gdp-pce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GDP &amp; PCE Monte Carlo Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-mc-ppi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PPI m/m Monte Carlo Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mc-eurusd-audusd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — EURUSD &amp; AUDUSD on US Events (Jan 2020 — Jun 2026)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-non-us-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — Non-US Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-event-type-split/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event-Type Split Analysis — NFP vs CPI vs FOMC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-monte-carlo-6yr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — January 2020 to June 2026
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-monte-carlo-18mo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — 1-Minute Data (Jan 2025 — Jun 2026)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-dukascopy-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dukascopy Historical Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-straddle-hourly/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Straddle Parameter Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#priority-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#do-first-high-impact-low-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Do First (High Impact, Low Effort)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#do-next-high-impact-high-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Do Next (High Impact, High Effort)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#schedule-medium-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schedule (Medium Impact)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backlog
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#live-trading-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live Trading Readiness
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Live Trading Readiness">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#2fa-testing-required-before-going-live" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2FA Testing Required Before Going Live
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#priority-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#do-first-high-impact-low-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Do First (High Impact, Low Effort)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#do-next-high-impact-high-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Do Next (High Impact, High Effort)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#schedule-medium-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schedule (Medium Impact)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backlog
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#live-trading-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live Trading Readiness
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Live Trading Readiness">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#2fa-testing-required-before-going-live" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2FA Testing Required Before Going Live
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="roadmap">Roadmap<a class="headerlink" href="#roadmap" title="Permanent link">&para;</a></h1>
+<h2 id="priority-matrix">Priority Matrix<a class="headerlink" href="#priority-matrix" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>                        I M P A C T
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                 Low          Medium          High
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>            ┌────────────┬────────────┬────────────┐
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    High    │            │ Trump      │ Web        │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>            │            │ Strategy   │ Dashboard  │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>   E        ├────────────┼────────────┼────────────┤
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>   F        │ ✓ Multiple│ Model Drift│ ✓ Telegram │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>   F        │  Testing  │ Detection  │  Alerts    │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>   O        │  Correct. │            │            │
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>   R        ├────────────┼────────────┼────────────┤
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>   T        │ ✓ OCA    │ ✓ FOMC    │ ✓ 1-Min   │
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>            │  Modeling │  Split    │  Data Done │
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    Low     │            │ Spread/    │ ✓ Re-run  │
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>            │            │ Slippage   │  MC done  │
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>            └────────────┴────────────┴────────────┘
+</code></pre></div>
+<h2 id="do-first-high-impact-low-effort">Do First (High Impact, Low Effort)<a class="headerlink" href="#do-first-high-impact-low-effort" title="Permanent link">&para;</a></h2>
+<ul>
+<li>~~<strong>1-min data recording</strong>~~ — <strong>DONE</strong>: Dukascopy download script (<code>scripts/download_dukascopy.py</code>) fetches 1-min and 5-min bars for all 5 pairs around all events. See <a href="../02-dukascopy-data/">Dukascopy Data</a>.</li>
+<li>~~<strong>Re-run MC optimization</strong>~~ — <strong>DONE</strong>: 1-min Dukascopy bars used. USDZAR strongest performer (walk-forward OOS E[P&amp;L]=+47.1). See <a href="../03-monte-carlo-18mo/">Monte Carlo 1-min</a>.</li>
+</ul>
+<h2 id="do-next-high-impact-high-effort">Do Next (High Impact, High Effort)<a class="headerlink" href="#do-next-high-impact-high-effort" title="Permanent link">&para;</a></h2>
+<ul>
+<li>~~<strong>Generate tradeable events calendar for web dashboard</strong>~~ — <strong>DONE</strong>: <code>forex-bot calendar</code> CLI command + auto-export every 6 hours to <code>~/00_data_projects/trading_dashboard/data/calendar.json</code>. JSON includes event name, datetime (UTC+ET), pairs, straddle params (with per-event overrides), source (FF/static), forecast/previous. See <code>src/forex_bot/calendar/export.py</code>.</li>
+<li>~~<strong>Web dashboard</strong>~~ — <strong>Moved to separate repo</strong> (<code>trading_dashboard</code>).</li>
+<li>~~<strong>Mobile dashboard app</strong>~~ — <strong>Replaced by Telegram alerts</strong>: Real-time trade notifications (opens, fills, closes with P&amp;L, risk rejections, circuit breaker, connection status). See <a href="../../operations/telegram-notifications/">Telegram Notifications</a>.</li>
+<li><strong>Trump post strategy (stocks, not forex)</strong> — Academic research confirms statistically significant market moves from Trump's social media posts (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0261560625000786">ScienceDirect 2025</a>, <a href="https://www.wbs.ac.uk/news/did-trumps-tweets-move-the-currency-markets/">Warwick Business School</a>). Key findings: 51% of high-impact Truth Social posts land pre-market (6–9:30 AM ET); 70% of the move is done within 2 hours; April 2025 "GREAT TIME TO BUY" post preceded S&amp;P +9.5%, Nasdaq +12.2%. <strong>Stocks may be a better fit than forex</strong> — tariff posts directly name companies/sectors, S&amp;P/Nasdaq moves are larger and more tradeable via IB, and IB already supports US equities. <strong>Challenges</strong>: unpredictable timing, requires real-time Truth Social monitoring, NLP/sentiment filtering (50-100+ posts/day), 3-8 minute reaction window, and a May 2026 investigation found markets moving <em>before</em> posts (front-running/information leakage). Would be a separate sub-strategy module alongside the existing forex news straddle.</li>
+<li>~~<strong>Add new currency pairs (EURUSD, AUDUSD)</strong>~~ — <strong>DONE (both fail)</strong>: See <a href="../07-mc-eurusd-audusd/">EURUSD &amp; AUDUSD MC Analysis</a>. EURUSD: E[P&amp;L]=+0.4, CI spans zero [-1.3, +2.1], walk-forward fails (OOS=-2.0). AUDUSD: E[P&amp;L]=+4.8 but N=19 (too few trades), CI spans zero. Neither pair passes — the straddle edge exists only in exotic pairs (USDZAR, USDTRY) where news-driven moves are larger relative to spreads. USDJPY on BOJ events is already being paper-traded separately.</li>
+<li><strong>MC-validate additional US event types</strong> — These events are in <code>config/events.yaml</code> but <strong>DISABLED</strong> pending MC walk-forward analysis. Do NOT re-enable without a passing result:<ul>
+<li>~~<strong>PPI m/m</strong>~~ — <strong>DONE (PASSES)</strong>: See <a href="../08-mc-ppi/">PPI MC Analysis</a>. E[P&amp;L]=+17.1 (USDZAR), +11.1 (USDTRY). Both CIs above zero, both walk-forwards pass. Same 50/70/10 params. Re-enabled in events.yaml. Adds ~12 trading days/year.</li>
+<li>~~<strong>GDP q/q</strong>~~ — <strong>DONE (PASSES)</strong>: See <a href="../09-mc-gdp-pce/">GDP &amp; PCE MC Analysis</a>. Both pairs pass. USDZAR E[P&amp;L]=+15.8 CI=[+9.4,+22.3] WF OOS=+11.1. USDTRY E[P&amp;L]=+8.5 CI=[+1.4,+15.5] WF OOS=+13.9. Adds ~12 trading days/year.</li>
+<li>~~<strong>PCE</strong>~~ — <strong>DONE (PARTIAL)</strong>: See <a href="../09-mc-gdp-pce/">GDP &amp; PCE MC Analysis</a>. USDTRY passes (E[P&amp;L]=+14.5, WF OOS=+11.1). <strong>USDZAR fails walk-forward</strong> (OOS=-0.7). Enabled for USDTRY only.</li>
+<li>~~<strong>Unemployment Rate</strong>~~ — <strong>SKIPPED (redundant)</strong>: Same BLS "Employment Situation" release as NFP. Straddle already triggers at identical time.</li>
+<li>~~<strong>Unemployment Claims</strong>~~ — <strong>DONE (USDTRY PASSES)</strong>: See <a href="../12-mc-remaining-us/">Remaining US Events</a>. USDTRY passes all spread levels (50/70/10, WF OOS=+16.9 to +22.7). USDZAR/AUDUSD fail. Adds ~50 trading days/year on USDTRY.</li>
+<li>~~<strong>ISM Manufacturing PMI</strong>~~ — <strong>DONE (USDTRY PASSES)</strong>: See <a href="../12-mc-remaining-us/">Remaining US Events</a>. USDTRY passes all spread levels (~45/55/10, WF OOS=+6.3 to +7.1). USDZAR/AUDUSD fail. Adds ~12 trading days/year on USDTRY.</li>
+<li>~~<strong>Retail Sales m/m</strong>~~ — <strong>DONE (USDTRY PASSES)</strong>: See <a href="../12-mc-remaining-us/">Remaining US Events</a>. USDTRY passes all spread levels (50/65/10, WF OOS=+9.6 to +17.0). USDZAR/AUDUSD fail. Adds ~12 trading days/year on USDTRY.</li>
+</ul>
+</li>
+<li>~~<strong>Non-US event dates in download script</strong>~~ — <strong>DONE</strong>: Added BOC, Canada CPI, Canada Employment, BOJ, Japan CPI, SARB, TCMB, South Africa CPI event dates (2020-2026) to <code>scripts/download_dukascopy.py</code>. Added USDJPY to pairs. Event-pair mapping ensures only relevant pairs download for each event. Use <code>--group canada,japan</code> to download specific groups.</li>
+<li>~~<strong>Non-US event MC analysis (Canada, Japan)</strong>~~ — <strong>DONE</strong>: See <a href="../06-non-us-events/">Non-US Events Analysis</a>. Results: <strong>USDCAD fails</strong> (CI spans zero on all Canadian events, WF OOS=-10.6). <strong>USDJPY is promising but borderline</strong> — WF passes (OOS=+6.4, Sharpe 2.45) but CI barely touches zero [-0.3, +5.3]. BOJ Rate decisions are the strongest non-US event (E[P&amp;L]=+3.4, 62% WR). Recommendation: paper-trade USDJPY on BOJ events, re-evaluate end of 2026.</li>
+<li>~~<strong>SARB + SA CPI → USDZAR MC analysis</strong>~~ — <strong>DONE</strong>: See <a href="../06-non-us-events/">Non-US Events Analysis</a>. Results: <strong>USDZAR passes</strong> — E[P&amp;L]=+17.3, CI=[+12.5, +22.4], Sharpe 6.75, WF OOS=+8.3. Same 50/70/10 params as US events. Both SARB Rate (+16.3) and SA CPI (+17.8) independently profitable. Adds ~14 trading days/year.</li>
+<li>~~<strong>TCMB → USDTRY MC analysis</strong>~~ — <strong>DONE</strong>: See <a href="../06-non-us-events/">Non-US Events Analysis</a>. Results: <strong>USDTRY passes</strong> — E[P&amp;L]=+10.5, CI=[+5.2, +16.2], Sharpe 3.63, WF OOS=+14.8. Different params from US events (20/60/10 vs 50/70/10) — requires per-event-source overrides. Adds ~8-12 trading days/year.</li>
+<li>~~<strong>Keep all future event dates up to date</strong>~~ — <strong>DONE</strong>: Quarterly cron jobs handle this automatically. <code>scripts/quarterly_download.sh</code> runs on the 1st of Jan/Apr/Jul/Oct to download new Dukascopy data. <code>scripts/quarterly_reminder.sh</code> sends a reminder to update <code>config/static_events.yaml</code> with newly announced dates. Nightly auto-download appends new event data as it occurs. Dates currently through Dec 2026.</li>
+<li>~~<strong>Explore CAD-denominated pairs</strong>~~ — <strong>DONE (all fail)</strong>: See <a href="../10-mc-cad-pairs/">CAD Pair Exploration</a>. CADJPY, EURCAD, GBPCAD all fail walk-forward on US, Canadian, and Japanese events. CADJPY/Japan is borderline (OOS=+17.9 but N=7), deep-dive with extended OOS (2024-2026) and spread sensitivity shows a tiny edge (~+1.2 pips/trade at 10/15/10) that never clears statistical significance. No viable CAD replacement for USDCAD.</li>
+<li>~~<strong>Explore AUDUSD + Australian events</strong>~~ — <strong>DONE (paper-trade candidate)</strong>: See <a href="../11-mc-audusd-australia/">AUDUSD + Australian Events</a>. Added RBA Rate Decision (69 dates), Australia CPI (32 dates), Australia Employment (76 dates) to download script. 521 events total (350 US + 171 AU). Results: <strong>Combined events with params 40/70/30 passes walk-forward at ALL spread levels</strong> (1.0-4.0). Full-sample E[P&amp;L]=+12.5, CI=[+6.5, +18.9], Sharpe 3.93. OOS E[P&amp;L]=+1.9 to +3.3 (modest but positive). AU events alone overfit at tight spreads but pass at 3.0+. US events alone pass but N=7-8 OOS (too few). <strong>Next steps</strong>: validate actual event-time spreads from IB paper, then begin paper trading. <strong>Scheduling note</strong>: AU events fire Sunday night / Monday early AM in Canada — bot cron and IB Gateway need Sunday session support.</li>
+</ul>
+<h2 id="schedule-medium-impact">Schedule (Medium Impact)<a class="headerlink" href="#schedule-medium-impact" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Carry trade strategy</strong> — Buy high-yield currencies, sell low-yield. Exploits the forward premium puzzle: high-rate currencies don't depreciate as theory predicts, so you pocket the interest differential. Sharpe ~0.82 over 200+ years of data (<a href="https://quantpedia.com/fx-carry-value-momentum-strategies-over-their-200-year-history/">Quantpedia</a>). USDZAR and USDTRY are already classic carry pairs. Hold for weeks/months, collect swap interest — IB handles rollover natively. Complements the news straddle (minutes) with an uncorrelated longer-horizon return stream. <strong>Main risk</strong>: periodic violent reversals during crises (2008, 2024 JPY unwind). Existing circuit breaker infrastructure could manage crash risk. Implementation: separate strategy module, weekly/monthly rebalancing.</li>
+<li><strong>Currency momentum strategy</strong> — Buy recent winners, sell recent losers (1-12 month look-back). Sharpe ~0.95, returns up to 10% p.a. (<a href="https://www.bis.org/publ/work366.pdf">BIS Working Paper 366</a>, <a href="https://www.sciencedirect.com/science/article/abs/pii/S0304405X12001353">ScienceDirect</a>). Uncorrelated with carry (even -31% during crises), so combining them diversifies risk (<a href="https://www.kellogg.northwestern.edu/faculty/rebelo/htm/carry.pdf">Kellogg/Northwestern</a>). Likely driven by behavioral underreaction then overreaction. Implementation: monthly rebalancing of a currency basket ranked by trailing returns. IB supports all major and exotic pairs needed.</li>
+<li><strong>Value / Purchasing Power Parity (PPP) strategy</strong> — Buy undervalued currencies, sell overvalued ones based on fair-value models (PPP, BEER, FEER). OECD publishes PPP estimates; compare actual exchange rates to model-implied rates and bet on mean reversion. Sharpe ~0.5 standalone, but adds diversification when combined with carry + momentum (the classic institutional "factor portfolio"). <strong>Main risk</strong>: currencies can stay mispriced for years — requires patience and deep pockets. Implementation: monthly/quarterly rebalancing, long horizon (months to years). Research needed: backtest PPP signals on IB-available pairs, determine rebalancing frequency and position sizing.</li>
+<li><strong>Statistical arbitrage / mean reversion</strong> — Find correlated currency pairs (e.g., AUDUSD vs NZDUSD) that normally move together. When the spread between them widens beyond a statistical threshold (e.g., 2 standard deviations), buy the cheap one and sell the expensive one. Close when they converge. Market-neutral — uncorrelated with directional strategies. Sharpe ~1.0+ when it works. <strong>Main risk</strong>: correlations break permanently (e.g., 2015 CHF de-peg). Implementation: identify cointegrated pairs, calculate z-scores, set entry/exit thresholds. Research needed: cointegration tests on IB forex pairs, regime-change detection to avoid broken correlations. Timeframe: days to weeks.</li>
+<li>Model drift detection</li>
+<li>~~<strong>FOMC-specific parameter split</strong>~~ — <strong>DONE</strong>: All three event types (NFP, CPI, FOMC) are independently profitable for both active pairs. FOMC optimal TP is slightly tighter (55-65 vs 70 pips) due to press conference reversal risk, but the marginal improvement doesn't justify splitting params yet. All 6 walk-forwards pass. See <a href="../05-event-type-split/">Event-Type Split Analysis</a>.</li>
+<li>~~<strong>Automatic event data download</strong>~~ — <strong>DONE</strong>: Nightly cron job at 04:00 UTC (11 PM ET) runs <code>download_dukascopy.py --skip-existing --timeframe 1min</code> via <code>asyncio.create_subprocess_exec</code>. Appends new event data to existing CSVs automatically. See <code>src/forex_bot/data/dukascopy.py</code>.</li>
+<li>~~<strong>Remove Telegram alerts for IB connect/disconnect</strong>~~ — <strong>DONE</strong>: Demoted to log-only. Daily TWS restart no longer sends Telegram alerts.</li>
+<li>~~<strong>Spread/slippage logging and modeling</strong>~~ — <strong>DONE</strong>: <code>entry_spread_pips</code>, <code>fill_price</code>, <code>slippage_pips</code> tracked on every order. Spread captured at submission, slippage calculated on IB fill. Performance dashboard shows avg spread, avg slippage, total slippage. Auto-migrates existing SQLite DB.<ul>
+<li><strong>How to use this data</strong>:<ul>
+<li><strong>Validate MC assumptions</strong>: The Monte Carlo sims use fixed 50/70/10 pip params — if real slippage averages +3 pips, actual R:R is worse than modeled. Adjust MC sim to include avg slippage as a cost.</li>
+<li><strong>Per-pair spread profiles</strong>: Compare avg entry spreads for USDZAR vs USDTRY vs USDJPY. If one pair consistently has wider spreads at event time, tighten its straddle distance or widen the spread limit.</li>
+<li><strong>Event-type spread analysis</strong>: Do FOMC events have wider spreads than NFP? If so, FOMC may need different straddle params (the event-type split analysis already hinted at this).</li>
+<li><strong>Time-of-day patterns</strong>: BOJ events (3 AM UTC) may have different liquidity profiles than US 8:30 AM ET events. Spread data confirms or refutes this.</li>
+<li><strong>Slippage budget</strong>: Once you have 50+ fills, calculate the 95th percentile slippage. If it exceeds 5 pips, the straddle SL of 10 pips is getting eaten — consider widening SL or tightening straddle distance.</li>
+<li><strong>Live vs paper comparison</strong>: When switching to live, compare slippage distributions. Paper fills are instant and perfect; live fills have real market impact. This data quantifies the difference.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="backlog">Backlog<a class="headerlink" href="#backlog" title="Permanent link">&para;</a></h2>
+<ul>
+<li>~~<strong>Push trade data to Turso on execution/failure</strong>~~ — <strong>DONE</strong>: <code>TursoSyncer</code> pushes orders and trades to Turso in real-time on every lifecycle event (placed, filled, closed, failed). Fire-and-forget pattern. <code>account_type</code> column (paper/live) derived from broker port. See PR #31.</li>
+<li>~~<strong>OCA modeling for straddle legs</strong>~~ — <strong>DONE</strong>: Straddle buy/sell stops share an <code>ocaGroup</code> so IB cancels the unfilled leg on fill. See PR #14.</li>
+<li>~~<strong>Multiple testing correction (Bonferroni)</strong>~~ — <strong>DONE</strong>: Both MC scripts report Bonferroni-adjusted CIs alongside raw 95% CIs. See PR #14.</li>
+<li>Expand sample size (ongoing, passive)</li>
+<li>~~<strong>IBKR base currency trap</strong>~~ — <strong>DONE</strong>: Nightly currency sweep at 03:30 UTC (10:30 PM ET) converts all non-CAD residual cash balances back to CAD via IdealPro market orders. Handles majors (USD, JPY, EUR, GBP, AUD) directly, exotics (ZAR, TRY) via two-leg conversion through USD. See <code>src/forex_bot/broker/sweep.py</code>.</li>
+</ul>
+<hr />
+<h2 id="live-trading-readiness">Live Trading Readiness<a class="headerlink" href="#live-trading-readiness" title="Permanent link">&para;</a></h2>
+<h3 id="2fa-testing-required-before-going-live">2FA Testing Required Before Going Live<a class="headerlink" href="#2fa-testing-required-before-going-live" title="Permanent link">&para;</a></h3>
+<p>Paper trading does not require 2FA, so the IBC auto-start pipeline is fully unattended. <strong>Live trading will require 2FA via the IBKR Mobile app.</strong> Before switching to live:</p>
+<ol>
+<li>Test the IBC auto-start with live credentials and confirm the 2FA push notification arrives</li>
+<li>Verify <code>TWOFA_TIMEOUT_ACTION=restart</code> correctly re-triggers the push if missed</li>
+<li>Confirm <code>ReloginAfterSecondFactorAuthenticationTimeout=yes</code> works as expected</li>
+<li>Time the full login flow (TWS launch &gt; 2FA approval &gt; API socket ready) to ensure the 1-hour pre-market window is sufficient</li>
+<li>Consider whether the nightly TWS restart also requires 2FA re-authentication on live accounts</li>
+<li>Update the cron schedule if the live login flow takes significantly longer than paper</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../01-straddle-hourly/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Straddle Parameter Optimization">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Straddle Parameter Optimization
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "content.code.copy", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

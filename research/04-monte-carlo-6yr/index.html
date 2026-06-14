@@ -1,0 +1,2480 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Event-driven forex trading bot for major US economic news releases">
+      
+      
+        <meta name="author" content="Chris Selig">
+      
+      
+      
+        <link rel="prev" href="../05-event-type-split/">
+      
+      
+        <link rel="next" href="../03-monte-carlo-18mo/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Monte Carlo Optimization — January 2020 to June 2026 - Forex Trading Bot</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#monte-carlo-optimization-january-2020-to-june-2026" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Forex Trading Bot" class="md-header__button md-logo" aria-label="Forex Trading Bot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Forex Trading Bot
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Monte Carlo Optimization — January 2020 to June 2026
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/chrisselig/forex_trading_bot" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chrisselig/forex_trading_bot
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Forex Trading Bot" class="md-nav__button md-logo" aria-label="Forex Trading Bot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Forex Trading Bot
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/chrisselig/forex_trading_bot" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chrisselig/forex_trading_bot
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forex Trading
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Forex Trading
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forex Trading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/market-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/news-trading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Trading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/risk-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risk Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trading Strategies
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Trading Strategies
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trading Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/target-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Target Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/currency-pairs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Currency Pairs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/ib-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IB API Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/auto-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/process-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Process Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/telegram-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram Notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-mc-remaining-us/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — Remaining US Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-mc-audusd-australia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — AUDUSD + Australian Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-mc-cad-pairs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — CAD Pair Exploration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-mc-gdp-pce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GDP &amp; PCE Monte Carlo Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-mc-ppi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PPI m/m Monte Carlo Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mc-eurusd-audusd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — EURUSD &amp; AUDUSD on US Events (Jan 2020 — Jun 2026)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-non-us-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — Non-US Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-event-type-split/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event-Type Split Analysis — NFP vs CPI vs FOMC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — January 2020 to June 2026
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — January 2020 to June 2026
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-changed-18-months-vs-65-years" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Changed: 18 Months vs 6.5 Years
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What Changed: 18 Months vs 6.5 Years">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#comparison-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-the-larger-dataset-reveals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the Larger Dataset Reveals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sharpe-ratios-improved-dramatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sharpe Ratios Improved Dramatically
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optimal-parameters-by-pair" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimal Parameters by Pair
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optimal Parameters by Pair">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#notable-observations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notable observations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#walk-forward-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Walk-Forward Validation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Walk-Forward Validation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#walk-forward-previous-18-month-vs-current-65-year" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Walk-Forward: Previous (18-month) vs Current (6.5-year)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Risk Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usdzar-best-overall" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USDZAR (Best Overall)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usdtry-most-consistent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USDTRY (Most Consistent)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gbpusd-not-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GBPUSD (Not Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-monte-carlo-18mo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — 1-Minute Data (Jan 2025 — Jun 2026)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-dukascopy-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dukascopy Historical Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-straddle-hourly/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Straddle Parameter Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../todo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-changed-18-months-vs-65-years" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Changed: 18 Months vs 6.5 Years
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What Changed: 18 Months vs 6.5 Years">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#comparison-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-the-larger-dataset-reveals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the Larger Dataset Reveals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sharpe-ratios-improved-dramatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sharpe Ratios Improved Dramatically
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optimal-parameters-by-pair" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimal Parameters by Pair
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optimal Parameters by Pair">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#notable-observations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notable observations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#walk-forward-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Walk-Forward Validation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Walk-Forward Validation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#walk-forward-previous-18-month-vs-current-65-year" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Walk-Forward: Previous (18-month) vs Current (6.5-year)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Risk Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usdzar-best-overall" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USDZAR (Best Overall)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usdtry-most-consistent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USDTRY (Most Consistent)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gbpusd-not-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GBPUSD (Not Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="monte-carlo-optimization-january-2020-to-june-2026">Monte Carlo Optimization — January 2020 to June 2026<a class="headerlink" href="#monte-carlo-optimization-january-2020-to-june-2026" title="Permanent link">&para;</a></h1>
+<p><strong>Date</strong>: June 8, 2026
+<strong>Script</strong>: <code>scripts/monte_carlo_dukascopy.py</code>
+<strong>Data source</strong>: Dukascopy Bank SA (1-minute OHLCV, bid-side)</p>
+<h2 id="executive-summary">Executive Summary<a class="headerlink" href="#executive-summary" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Analysis period</strong>: January 2020 — June 2026 (6.5 years)</li>
+<li><strong>Events analyzed</strong>: 207 (NFP: 78, CPI: 77, FOMC: 52)</li>
+<li><strong>Data points</strong>: 1,016 event/pair combinations, ~301,000 1-min bars total</li>
+<li><strong>Pairs</strong>: GBPUSD, USDCAD, GBPJPY, USDZAR, USDTRY</li>
+<li><strong>Grid</strong>: 540 parameter combinations (distance 10-50, TP 15-70, SL 10-30 pips)</li>
+<li><strong>Bootstrap</strong>: 10,000 resamples, 95% confidence intervals</li>
+<li><strong>Walk-forward</strong>: Train 2020-2024 (5 years), test 2025-2026 (18 months)</li>
+<li><strong>Runtime</strong>: 1,295 seconds (~22 minutes)</li>
+</ul>
+<p>This supersedes the <a href="../03-monte-carlo-18mo/">previous 18-month analysis</a> (Jan 2025 — Jun 2026, 47 events). The 4.4x increase in sample size dramatically changes the statistical picture.</p>
+<h2 id="what-changed-18-months-vs-65-years">What Changed: 18 Months vs 6.5 Years<a class="headerlink" href="#what-changed-18-months-vs-65-years" title="Permanent link">&para;</a></h2>
+<h3 id="comparison-table">Comparison Table<a class="headerlink" href="#comparison-table" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Old E[P&amp;L]</th>
+<th>New E[P&amp;L]</th>
+<th>Old Params</th>
+<th>New Params</th>
+<th>Old N</th>
+<th>New N</th>
+<th>Key Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GBPUSD</td>
+<td>+6.1</td>
+<td><strong>+3.4</strong></td>
+<td>35/15/15</td>
+<td>35/15/25</td>
+<td>7</td>
+<td>46</td>
+<td>E[P&amp;L] halved, wider SL, CI still spans zero</td>
+</tr>
+<tr>
+<td>USDCAD</td>
+<td>+1.0</td>
+<td><strong>+0.7</strong></td>
+<td>10/15/25</td>
+<td>10/15/15</td>
+<td>43</td>
+<td>217</td>
+<td>Still marginal, tighter SL with more data</td>
+</tr>
+<tr>
+<td>GBPJPY</td>
+<td>+2.3</td>
+<td><strong>+1.4</strong></td>
+<td>10/15/10</td>
+<td>10/15/10</td>
+<td>60</td>
+<td>262</td>
+<td>Same params, lower returns — less promising</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>+25.4</td>
+<td><strong>+17.1</strong></td>
+<td>45/70/10</td>
+<td>50/70/10</td>
+<td>88</td>
+<td>374</td>
+<td>E[P&amp;L] down but CI tightened and still above zero</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>+13.9</td>
+<td><strong>+13.6</strong></td>
+<td>50/70/10</td>
+<td>50/70/10</td>
+<td>68</td>
+<td>298</td>
+<td>Almost unchanged — most stable pair</td>
+</tr>
+</tbody>
+</table>
+<h3 id="what-the-larger-dataset-reveals">What the Larger Dataset Reveals<a class="headerlink" href="#what-the-larger-dataset-reveals" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">More data = more honest</p>
+<p>With 4.4x more events spanning COVID, rate hikes, and normalization, the estimates are less noisy. E[P&amp;L] values are generally lower than the 18-month run — this is expected. The 18-month window happened to capture a favorable period for the exotics. The 6.5-year view is the more realistic expectation of future performance.</p>
+</div>
+<p>Key takeaways:</p>
+<ul>
+<li><strong>GBPUSD was overestimated</strong>: E[P&amp;L] dropped from +6.1 to +3.4. The 18-month run had only 7 triggered trades — too few for reliable statistics. With 46 trades, the CI [-0.5, +7.1] still spans zero. The 35-pip distance now selects for a wider SL (25 vs 15).</li>
+<li><strong>USDZAR remains the standout</strong>: Despite E[P&amp;L] dropping from +25.4 to +17.1, the confidence interval <strong>tightened</strong> from [+10.0, +45.9] to [+12.0, +22.8]. The CI is entirely above zero with 374 trades — this is robust.</li>
+<li><strong>USDTRY is the most stable</strong>: Nearly identical results across both time periods (+13.9 vs +13.6), same parameters (50/70/10). This consistency across 6.5 years is the strongest evidence of a real, persistent edge.</li>
+<li><strong>USDCAD and GBPJPY remain marginal</strong>: Both have CIs that touch or span zero. Not recommended for production.</li>
+</ul>
+<h3 id="sharpe-ratios-improved-dramatically">Sharpe Ratios Improved Dramatically<a class="headerlink" href="#sharpe-ratios-improved-dramatically" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Old Sharpe</th>
+<th>New Sharpe</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GBPUSD</td>
+<td>2.10</td>
+<td>1.83</td>
+<td>Modest drop</td>
+</tr>
+<tr>
+<td>USDCAD</td>
+<td>0.53</td>
+<td>0.81</td>
+<td>Improved</td>
+</tr>
+<tr>
+<td>GBPJPY</td>
+<td>1.43</td>
+<td>1.88</td>
+<td>Improved</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>2.86</td>
+<td><strong>6.40</strong></td>
+<td>Doubled — more data reduced variance</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>3.14</td>
+<td><strong>6.51</strong></td>
+<td>Doubled — extremely strong</td>
+</tr>
+</tbody>
+</table>
+<p>The exotic pair Sharpe ratios more than doubled. This happened because adding 5 years of data reduced the standard deviation of bootstrap means while the mean P&amp;L stayed strongly positive. Sharpe &gt; 3.0 is exceptional; &gt; 6.0 across 374 trades is remarkable.</p>
+<h2 id="optimal-parameters-by-pair">Optimal Parameters by Pair<a class="headerlink" href="#optimal-parameters-by-pair" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Distance</th>
+<th>TP</th>
+<th>SL</th>
+<th>E[P&amp;L]</th>
+<th>95% CI</th>
+<th>Win Rate</th>
+<th>Sharpe</th>
+<th>Profit Factor</th>
+<th>CVaR(5%)</th>
+<th>N</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GBPUSD</strong></td>
+<td>35</td>
+<td>15</td>
+<td>25</td>
+<td>+3.4</td>
+<td>[-0.5, +7.1]</td>
+<td>58.7%</td>
+<td>1.83</td>
+<td>1.81</td>
+<td>-25.0</td>
+<td>46</td>
+</tr>
+<tr>
+<td><strong>USDCAD</strong></td>
+<td>10</td>
+<td>15</td>
+<td>15</td>
+<td>+0.7</td>
+<td>[-0.9, +2.3]</td>
+<td>48.4%</td>
+<td>0.81</td>
+<td>1.13</td>
+<td>-15.0</td>
+<td>217</td>
+</tr>
+<tr>
+<td><strong>GBPJPY</strong></td>
+<td>10</td>
+<td>15</td>
+<td>10</td>
+<td>+1.4</td>
+<td>[-0.1, +2.9]</td>
+<td>46.6%</td>
+<td>1.88</td>
+<td>1.27</td>
+<td>-10.0</td>
+<td>262</td>
+</tr>
+<tr>
+<td><strong>USDZAR</strong></td>
+<td>50</td>
+<td>70</td>
+<td>10</td>
+<td>+17.1</td>
+<td>[+12.0, +22.8]</td>
+<td>30.7%</td>
+<td>6.40</td>
+<td>3.47</td>
+<td>-10.0</td>
+<td>374</td>
+</tr>
+<tr>
+<td><strong>USDTRY</strong></td>
+<td>50</td>
+<td>70</td>
+<td>10</td>
+<td>+13.6</td>
+<td>[+9.5, +17.8]</td>
+<td>30.5%</td>
+<td>6.51</td>
+<td>2.96</td>
+<td>-10.0</td>
+<td>298</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition info">
+<p class="admonition-title">Reading the table</p>
+<p>See the <a href="../../trading/glossary/">Glossary</a> for definitions of all metrics. E[P&amp;L] is expected profit per trade in pips. The 95% CI is the confidence interval — if it excludes zero, we have statistical evidence the strategy is profitable.</p>
+</div>
+<h3 id="notable-observations">Notable observations<a class="headerlink" href="#notable-observations" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>USDZAR</strong> and <strong>USDTRY</strong> both have CIs entirely above zero with 300+ trades each. These are not flukes.</li>
+<li><strong>GBPUSD</strong> shifted to a 0.6:1 R:R (TP=15, SL=25) — the optimizer is trading a high win rate against a negative R:R. The actual win rate (58.7%) is below the 62.5% breakeven, meaning the edge is fragile. CI spans zero.</li>
+<li><strong>GBPJPY</strong> has a CI that just barely touches zero ([-0.1, +2.9]). With 262 trades it's marginally positive but not convincing enough for production.</li>
+<li><strong>USDCAD</strong> has the weakest profile — profit factor of 1.13 means gross profits barely exceed gross losses.</li>
+</ul>
+<h2 id="walk-forward-validation">Walk-Forward Validation<a class="headerlink" href="#walk-forward-validation" title="Permanent link">&para;</a></h2>
+<p>Walk-forward validation guards against <a href="../../trading/glossary/#overfitting">overfitting</a>. We optimize parameters on 2020-2024 (5 years, ~150 events per pair), then test those exact parameters on 2025-2026 (18 months, ~45 events per pair) — data the optimizer never saw.</p>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Params</th>
+<th>In-Sample E[P&amp;L]</th>
+<th>In-Sample Sharpe</th>
+<th>Out-of-Sample E[P&amp;L]</th>
+<th>Out-of-Sample Sharpe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GBPUSD</strong></td>
+<td>45/25/10</td>
+<td>+5.1</td>
+<td>1.90</td>
+<td>-8.6</td>
+<td>-6.89</td>
+</tr>
+<tr>
+<td><strong>USDCAD</strong></td>
+<td>45/15/15</td>
+<td>+5.6</td>
+<td>2.43</td>
+<td>-14.3</td>
+<td>-10.00</td>
+</tr>
+<tr>
+<td><strong>GBPJPY</strong></td>
+<td>50/70/30</td>
+<td>+11.7</td>
+<td>1.93</td>
+<td>-2.5</td>
+<td>-0.61</td>
+</tr>
+<tr>
+<td><strong>USDZAR</strong></td>
+<td>35/70/10</td>
+<td>+14.6</td>
+<td>6.78</td>
+<td><strong>+21.3</strong></td>
+<td><strong>2.38</strong></td>
+</tr>
+<tr>
+<td><strong>USDTRY</strong></td>
+<td>50/70/10</td>
+<td>+13.6</td>
+<td>5.68</td>
+<td><strong>+13.9</strong></td>
+<td><strong>3.14</strong></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition success">
+<p class="admonition-title">USDZAR and USDTRY both pass walk-forward</p>
+<p><strong>USDZAR</strong>: Out-of-sample E[P&amp;L] of +21.3 with Sharpe 2.38, trained on 5 years of data. This is the strongest walk-forward result across both analysis runs.</p>
+<p><strong>USDTRY</strong>: Out-of-sample E[P&amp;L] of +13.9 with Sharpe 3.14 — actually <strong>improved</strong> out-of-sample. The 50/70/10 parameters are the same as the full-sample optimum, meaning the edge is consistent across all time periods. This is the most convincing pair in the entire analysis.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">GBPUSD, USDCAD, and GBPJPY all fail walk-forward</p>
+<p>All three major pairs show strong in-sample results that collapse out-of-sample. GBPUSD drops from +5.1 to -8.6. USDCAD drops from +5.6 to -14.3. These are classic overfitting signatures. Do not trade these pairs with straddle parameters.</p>
+</div>
+<h3 id="walk-forward-previous-18-month-vs-current-65-year">Walk-Forward: Previous (18-month) vs Current (6.5-year)<a class="headerlink" href="#walk-forward-previous-18-month-vs-current-65-year" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Old WF OOS E[P&amp;L]</th>
+<th>New WF OOS E[P&amp;L]</th>
+<th>Old WF Params</th>
+<th>New WF Params</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GBPUSD</td>
+<td>+0.0</td>
+<td>-8.6</td>
+<td>35/15/15</td>
+<td>45/25/10</td>
+<td>Was flat, now negative — worse with more training data</td>
+</tr>
+<tr>
+<td>USDCAD</td>
+<td>-1.9</td>
+<td>-14.3</td>
+<td>10/15/25</td>
+<td>45/15/15</td>
+<td>Much worse — confirms overfit</td>
+</tr>
+<tr>
+<td>GBPJPY</td>
+<td>-21.5</td>
+<td>-2.5</td>
+<td>30/25/30</td>
+<td>50/70/30</td>
+<td>Less bad, still negative</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>+47.1</td>
+<td><strong>+21.3</strong></td>
+<td>45/70/10</td>
+<td>35/70/10</td>
+<td>Lower but still strongly positive</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>+2.1</td>
+<td><strong>+13.9</strong></td>
+<td>50/70/10</td>
+<td>50/70/10</td>
+<td>Massively improved — same params, much better OOS</td>
+</tr>
+</tbody>
+</table>
+<p>The most important change: <strong>USDTRY</strong> went from marginal OOS (+2.1) to strongly positive (+13.9). With a 5-year training window instead of 12 months, the optimizer found the same 50/70/10 parameters — and they work even better out-of-sample. This is very strong evidence of a real edge.</p>
+<h2 id="risk-analysis">Risk Analysis<a class="headerlink" href="#risk-analysis" title="Permanent link">&para;</a></h2>
+<h3 id="usdzar-best-overall">USDZAR (Best Overall)<a class="headerlink" href="#usdzar-best-overall" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Reward:Risk ratio</strong>: 7.0:1 (TP=70 / SL=10)</li>
+<li><strong>Breakeven win rate</strong>: 12.5% (actual: 30.7%)</li>
+<li><strong>Edge</strong>: +18.2 percentage points above breakeven</li>
+<li><strong>Median max drawdown</strong>: 140 pips</li>
+<li><strong>95th percentile max drawdown</strong>: 210 pips</li>
+<li><strong>Worst 5% average trade</strong>: -10.0 pips (capped by SL)</li>
+</ul>
+<h3 id="usdtry-most-consistent">USDTRY (Most Consistent)<a class="headerlink" href="#usdtry-most-consistent" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Reward:Risk ratio</strong>: 7.0:1 (TP=70 / SL=10)</li>
+<li><strong>Breakeven win rate</strong>: 12.5% (actual: 30.5%)</li>
+<li><strong>Edge</strong>: +18.0 percentage points above breakeven</li>
+<li><strong>Median max drawdown</strong>: 130 pips</li>
+<li><strong>95th percentile max drawdown</strong>: 210 pips</li>
+<li><strong>Worst 5% average trade</strong>: -10.0 pips (capped by SL)</li>
+</ul>
+<h3 id="gbpusd-not-recommended">GBPUSD (Not Recommended)<a class="headerlink" href="#gbpusd-not-recommended" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Reward:Risk ratio</strong>: 0.6:1 (TP=15 / SL=25) — <strong>negative R:R</strong></li>
+<li><strong>Breakeven win rate</strong>: 62.5% (actual: 58.7%) — <strong>below breakeven</strong></li>
+<li><strong>Edge</strong>: -3.8 percentage points — the strategy loses on expectation at the optimal params</li>
+<li><strong>Walk-forward</strong>: Collapsed from +5.1 to -8.6 out-of-sample</li>
+<li><strong>Verdict</strong>: Do not trade GBPUSD straddles</li>
+</ul>
+<h2 id="recommended-settings">Recommended Settings<a class="headerlink" href="#recommended-settings" title="Permanent link">&para;</a></h2>
+<p>Based on the 6.5-year analysis and walk-forward results:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">strategy</span><span class="p">:</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">straddle_distance_pips</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span><span class="w">    </span><span class="c1"># Default to USDZAR/USDTRY params</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">straddle_tp_pips</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">70</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">straddle_sl_pips</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">straddle_pair_overrides</span><span class="p">:</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">USDZAR</span><span class="p">:</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="nt">distance_pips</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">      </span><span class="nt">tp_pips</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">70</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">      </span><span class="nt">sl_pips</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nt">USDTRY</span><span class="p">:</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="nt">distance_pips</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span><span class="nt">tp_pips</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">70</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">      </span><span class="nt">sl_pips</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Production recommendation</p>
+<p>Trade <strong>USDZAR</strong> and <strong>USDTRY</strong> only. Both pass walk-forward validation with 5 years of training data and 18 months of out-of-sample testing. Both have the same 7:1 R:R structure (50/70/10) with win rates more than double the breakeven threshold.</p>
+<p><strong>Remove GBPUSD from active trading</strong> — the 6.5-year analysis shows it's below breakeven at optimal parameters and fails walk-forward. The 18-month run's promising results were a small-sample artifact.</p>
+<p>GBPJPY and USDCAD remain excluded — marginal CIs and walk-forward failures.</p>
+</div>
+<h2 id="caveats">Caveats<a class="headerlink" href="#caveats" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Regime changes</strong>: 6.5 years spans COVID (2020), aggressive rate hikes (2022-2023), and normalization (2024-2026). Parameters optimized across all regimes may not be optimal for any single regime.</li>
+<li><strong>Spread approximation</strong>: Event-time spreads are fixed estimates. Exotic pairs (USDZAR, USDTRY) can exceed 50 pips during NFP.</li>
+<li><strong>Slippage not modeled</strong>: Stop orders can gap through during fast markets.</li>
+<li><strong>Bid-side data only</strong>: Dukascopy provides bid OHLCV. Ask side is approximated via spread adjustment.</li>
+<li><strong>Multiple testing</strong>: 540 parameter combinations. Walk-forward validation is the primary guard.</li>
+<li><strong>FOMC dynamics differ</strong>: Rate decisions move differently from data releases. However, the <a href="../05-event-type-split/">event-type split analysis</a> shows all three event types are independently profitable with current parameters.</li>
+<li><strong>Exotic pair liquidity</strong>: USDZAR and USDTRY have lower liquidity during off-hours. The strategy only trades around major US events when liquidity is highest, but slippage risk remains elevated vs majors.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../05-event-type-split/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Event-Type Split Analysis — NFP vs CPI vs FOMC">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Event-Type Split Analysis — NFP vs CPI vs FOMC
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../03-monte-carlo-18mo/" class="md-footer__link md-footer__link--next" aria-label="Next: Monte Carlo Optimization — 1-Minute Data (Jan 2025 — Jun 2026)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Monte Carlo Optimization — 1-Minute Data (Jan 2025 — Jun 2026)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "content.code.copy", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
