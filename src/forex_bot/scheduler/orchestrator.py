@@ -86,7 +86,7 @@ class Orchestrator:
         self._pricing = PricingService(self._client)
         self._scraper = ForexFactoryScraper()
         self._parser = EventParser()
-        self._event_store = EventStore()
+        self._event_store = EventStore(turso=self._turso)
         self._strategy_registry = create_default_registry()
         self._job_manager = JobManager(
             scheduler=self._scheduler,

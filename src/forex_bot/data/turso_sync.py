@@ -204,3 +204,59 @@ class TursoSyncer:
             logger.debug(f"Turso: closed trade #{trade_id}")
         except Exception as e:
             logger.error(f"Turso push_trade_close failed: {e}")
+
+    async def push_event(
+        self,
+        *,
+        event_id: int,
+        title: str,
+        country: str,
+        impact: str,
+        scheduled_at: datetime,
+        actual: str | None,
+        forecast: str | None,
+        previous: str | None,
+        fred_series: str | None,
+        created_at: datetime,
+    ) -> None:
+        """Push an event to Turso (INSERT OR REPLACE)."""
+        if not self._enabled:
+            return
+        try:
+            conn = self._get_connection()
+            conn.execute(
+                "INSERT OR REPLACE INTO events "
+                "(id, title, country, impact, scheduled_at, actual, forecast, "
+                "previous, fred_series, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    event_id, title, country, impact,
+                    scheduled_at.isoformat() if scheduled_at else None,
+                    actual, forecast, previous, fred_series,
+                    created_at.isoformat() if created_at else None,
+                ),
+            )
+            conn.commit()
+            logger.debug(f"Turso: pushed event #{event_id} ({title})")
+        except Exception as e:
+            logger.error(f"Turso push_event failed: {e}")
+
+    async def push_event_actual(
+        self,
+        *,
+        event_id: int,
+        actual: str,
+    ) -> None:
+        """Update an event's actual value in Turso."""
+        if not self._enabled:
+            return
+        try:
+            conn = self._get_connection()
+            conn.execute(
+                "UPDATE events SET actual = ? WHERE id = ?",
+                (actual, event_id),
+            )
+            conn.commit()
+            logger.debug(f"Turso: updated event #{event_id} actual={actual}")
+        except Exception as e:
+            logger.error(f"Turso push_event_actual failed: {e}")
