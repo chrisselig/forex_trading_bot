@@ -8,6 +8,7 @@ from sqlalchemy import select, update
 
 from forex_bot.data.database import get_session
 from forex_bot.data.schemas import TradeRecord, OrderRecord
+from forex_bot.data.turso_sync import TursoSyncer
 from forex_bot.models.orders import Order, Trade, OrderStatus
 
 if TYPE_CHECKING:
@@ -17,8 +18,15 @@ if TYPE_CHECKING:
 class TradeJournal:
     """Logs every order and trade to the database."""
 
-    def __init__(self, notifier: TelegramNotifier | None = None):
+    def __init__(
+        self,
+        notifier: TelegramNotifier | None = None,
+        turso: TursoSyncer | None = None,
+        account_type: str = "paper",
+    ):
         self._notifier = notifier
+        self._turso = turso
+        self._account_type = account_type
 
     async def log_order(self, order: Order, entry_spread_pips: float | None = None) -> int:
         """Log an order and return its database ID."""
@@ -36,12 +44,33 @@ class TradeJournal:
                 event_id=order.event_id,
                 strategy=order.strategy,
                 entry_spread_pips=entry_spread_pips,
+                account_type=self._account_type,
             )
             session.add(record)
             await session.commit()
             spread_str = f" (spread={entry_spread_pips:.1f} pips)" if entry_spread_pips is not None else ""
             logger.info(f"Logged order #{record.id}: {order.side} {order.quantity} {order.instrument}{spread_str}")
-            return record.id
+            db_id = record.id
+
+        if self._turso:
+            await self._turso.push_order(
+                order_id=db_id,
+                ib_order_id=order.ib_order_id,
+                instrument=order.instrument,
+                side=order.side.value,
+                order_type=order.order_type.value,
+                quantity=order.quantity,
+                price=order.price,
+                stop_loss=order.stop_loss,
+                take_profit=order.take_profit,
+                status=order.status.value,
+                event_id=order.event_id,
+                strategy=order.strategy,
+                entry_spread_pips=entry_spread_pips,
+                created_at=datetime.utcnow(),
+            )
+
+        return db_id
 
     async def update_order_status(
         self,
@@ -63,6 +92,15 @@ class TradeJournal:
             )
             await session.commit()
 
+        if self._turso:
+            await self._turso.push_order_status(
+                order_id=order_id,
+                status=status.value,
+                fill_price=fill_price,
+                filled_at=datetime.utcnow() if fill_price is not None else None,
+                slippage_pips=slippage_pips,
+            )
+
     async def log_trade(self, trade: Trade) -> int:
         """Log a trade entry and return its database ID."""
         async with get_session() as session:
@@ -77,11 +115,30 @@ class TradeJournal:
                 entry_spread_pips=trade.entry_spread_pips,
                 event_id=trade.event_id,
                 strategy=trade.strategy,
+                account_type=self._account_type,
             )
             session.add(record)
             await session.commit()
             logger.info(f"Logged trade #{record.id}: {trade.side} {trade.quantity} {trade.instrument} @ {trade.entry_price} (spread={trade.entry_spread_pips:.1f} pips)" if trade.entry_spread_pips else f"Logged trade #{record.id}: {trade.side} {trade.quantity} {trade.instrument} @ {trade.entry_price}")
-            return record.id
+            db_id = record.id
+
+        if self._turso:
+            await self._turso.push_trade(
+                trade_id=db_id,
+                order_id=trade.order_id,
+                instrument=trade.instrument,
+                side=trade.side.value,
+                quantity=trade.quantity,
+                entry_price=trade.entry_price,
+                stop_loss=trade.stop_loss,
+                take_profit=trade.take_profit,
+                entry_spread_pips=trade.entry_spread_pips,
+                event_id=trade.event_id,
+                strategy=trade.strategy,
+                opened_at=datetime.utcnow(),
+            )
+
+        return db_id
 
     async def update_fill(self, order_id: int, fill_price: float, slippage_pips: float) -> None:
         """Update a trade's fill price and slippage after IB fill."""
@@ -101,6 +158,13 @@ class TradeJournal:
                 f"(slippage={slippage_pips:+.1f} pips)"
             )
 
+        if self._turso:
+            await self._turso.push_trade_fill(
+                order_id=order_id,
+                fill_price=fill_price,
+                slippage_pips=slippage_pips,
+            )
+
     async def close_trade(self, trade_id: int, exit_price: float, pnl: float, pnl_pips: float) -> None:
         """Record trade exit."""
         async with get_session() as session:
@@ -116,6 +180,15 @@ class TradeJournal:
             )
             await session.commit()
             logger.info(f"Closed trade #{trade_id}: exit={exit_price} pnl={pnl:.2f} ({pnl_pips:.1f} pips)")
+
+        if self._turso:
+            await self._turso.push_trade_close(
+                trade_id=trade_id,
+                exit_price=exit_price,
+                pnl=pnl,
+                pnl_pips=pnl_pips,
+                closed_at=datetime.utcnow(),
+            )
 
         if self._notifier:
             # Fetch the full trade to send notification

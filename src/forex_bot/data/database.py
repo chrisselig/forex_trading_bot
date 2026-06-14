@@ -59,6 +59,8 @@ def _add_missing_columns(connection) -> None:
         ("trades", "slippage_pips", "FLOAT"),
         ("orders", "entry_spread_pips", "FLOAT"),
         ("orders", "slippage_pips", "FLOAT"),
+        ("trades", "account_type", "VARCHAR(10) DEFAULT 'paper'"),
+        ("orders", "account_type", "VARCHAR(10) DEFAULT 'paper'"),
     ]
     for table, column, col_type in migrations:
         try:

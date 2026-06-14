@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-import signal
-from datetime import datetime, timedelta
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from loguru import logger
 
@@ -22,10 +19,10 @@ from forex_bot.broker.sweep import sweep_to_cad
 from forex_bot.data.database import init_db
 from forex_bot.data.dukascopy import download_new_event_data
 from forex_bot.data.trade_journal import TradeJournal
+from forex_bot.data.turso_sync import TursoSyncer
 from forex_bot.execution.engine import ExecutionEngine
 from forex_bot.execution.monitor import PositionMonitor
 from forex_bot.execution.reconciler import Reconciler
-from forex_bot.models.events import EconomicEvent
 from forex_bot.notifications.telegram import TelegramNotifier
 from forex_bot.risk.circuit_breaker import CircuitBreaker
 from forex_bot.risk.manager import RiskManager
@@ -54,7 +51,21 @@ class Orchestrator:
             max_daily_drawdown_pct=self._settings.risk.max_daily_drawdown_pct,
             notifier=self._notifier,
         )
-        self._journal = TradeJournal(notifier=self._notifier)
+
+        # Turso real-time sync
+        turso_cfg = self._settings.turso
+        self._turso = TursoSyncer(
+            database_url=turso_cfg.database_url,
+            auth_token=turso_cfg.auth_token,
+            account_type=self._settings.broker.account_type,
+            enabled=turso_cfg.enabled,
+        )
+
+        self._journal = TradeJournal(
+            notifier=self._notifier,
+            turso=self._turso,
+            account_type=self._settings.broker.account_type,
+        )
         self._risk_manager = RiskManager(self._client, self._circuit_breaker, self._journal)
         self._execution_engine = ExecutionEngine(
             self._client, self._risk_manager, self._circuit_breaker, self._journal,
