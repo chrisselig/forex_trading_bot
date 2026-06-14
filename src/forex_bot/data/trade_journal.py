@@ -13,6 +13,7 @@ from forex_bot.models.orders import Order, Trade, OrderStatus
 
 if TYPE_CHECKING:
     from forex_bot.notifications.telegram import TelegramNotifier
+    from forex_bot.reporting.alerts import AnomalyDetector
 
 
 class TradeJournal:
@@ -22,10 +23,12 @@ class TradeJournal:
         self,
         notifier: TelegramNotifier | None = None,
         turso: TursoSyncer | None = None,
+        anomaly_detector: AnomalyDetector | None = None,
         account_type: str = "paper",
     ):
         self._notifier = notifier
         self._turso = turso
+        self._anomaly_detector = anomaly_detector
         self._account_type = account_type
 
     async def log_order(self, order: Order, entry_spread_pips: float | None = None) -> int:
@@ -190,15 +193,18 @@ class TradeJournal:
                 closed_at=datetime.utcnow(),
             )
 
-        if self._notifier:
-            # Fetch the full trade to send notification
+        if self._notifier or self._anomaly_detector:
+            # Fetch the full trade for notification and anomaly checks
             trades = await self.get_trades(limit=100)
             trade = next((t for t in trades if t.id == trade_id), None)
             if trade:
-                daily_pnl = await self.get_daily_pnl()
-                await self._notifier.notify_trade_closed(
-                    trade=trade, daily_pnl=daily_pnl,
-                )
+                if self._notifier:
+                    daily_pnl = await self.get_daily_pnl()
+                    await self._notifier.notify_trade_closed(
+                        trade=trade, daily_pnl=daily_pnl,
+                    )
+                if self._anomaly_detector:
+                    await self._anomaly_detector.check_trade(trade)
 
     async def get_trades(self, strategy: str | None = None, limit: int = 50) -> list[Trade]:
         """Retrieve recent trades from the journal."""
