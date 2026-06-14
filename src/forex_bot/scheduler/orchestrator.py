@@ -24,6 +24,8 @@ from forex_bot.execution.engine import ExecutionEngine
 from forex_bot.execution.monitor import PositionMonitor
 from forex_bot.execution.reconciler import Reconciler
 from forex_bot.notifications.telegram import TelegramNotifier
+from forex_bot.reporting.alerts import AnomalyDetector
+from forex_bot.reporting.weekly import WeeklyReporter
 from forex_bot.risk.circuit_breaker import CircuitBreaker
 from forex_bot.risk.manager import RiskManager
 from forex_bot.scheduler.jobs import JobManager
@@ -61,9 +63,14 @@ class Orchestrator:
             enabled=turso_cfg.enabled,
         )
 
+        # Anomaly detection and weekly reporting
+        self._anomaly_detector = AnomalyDetector(notifier=self._notifier)
+        self._weekly_reporter = WeeklyReporter(notifier=self._notifier)
+
         self._journal = TradeJournal(
             notifier=self._notifier,
             turso=self._turso,
+            anomaly_detector=self._anomaly_detector,
             account_type=self._settings.broker.account_type,
         )
         self._risk_manager = RiskManager(self._client, self._circuit_breaker, self._journal)
@@ -225,6 +232,14 @@ class Orchestrator:
             self._nightly_data_download,
             CronTrigger(hour=4, minute=0),
             id="nightly_dukascopy_download",
+            replace_existing=True,
+        )
+
+        # Weekly performance report — Sunday 21:00 UTC (3 PM MT)
+        self._scheduler.add_job(
+            self._weekly_reporter.send_report,
+            CronTrigger(day_of_week="sun", hour=21, minute=0),
+            id="weekly_performance_report",
             replace_existing=True,
         )
 
