@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -18,6 +17,11 @@ class BrokerConfig(BaseModel):
     port: int = 4002
     client_id: int = 1
     timeout: int = 30
+
+    @property
+    def account_type(self) -> str:
+        """Derive account type from port: 4002/7497 = paper, 4001/7496 = live."""
+        return "paper" if self.port in (4002, 7497) else "live"
 
 
 class TradingConfig(BaseModel):
@@ -108,6 +112,12 @@ class TelegramConfig(BaseModel):
     enabled: bool = True
 
 
+class TursoConfig(BaseModel):
+    database_url: str = ""
+    auth_token: str = ""
+    enabled: bool = True
+
+
 class Settings(BaseSettings):
     broker: BrokerConfig = Field(default_factory=BrokerConfig)
     trading: TradingConfig = Field(default_factory=TradingConfig)
@@ -115,6 +125,7 @@ class Settings(BaseSettings):
     strategy: StrategyConfig = Field(default_factory=StrategyConfig)
     events: EventsConfig = Field(default_factory=EventsConfig)
     telegram: TelegramConfig = Field(default_factory=TelegramConfig)
+    turso: TursoConfig = Field(default_factory=TursoConfig)
 
     fred_api_key: str = ""
     ib_host: str = ""
@@ -122,6 +133,8 @@ class Settings(BaseSettings):
     ib_client_id: int = 0
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
+    turso_database_url: str = ""
+    turso_auth_token: str = ""
 
     model_config = {"env_file": str(PROJECT_ROOT / ".env"), "env_file_encoding": "utf-8", "extra": "ignore"}
 
@@ -136,6 +149,10 @@ class Settings(BaseSettings):
             self.telegram.bot_token = self.telegram_bot_token
         if self.telegram_chat_id:
             self.telegram.chat_id = self.telegram_chat_id
+        if self.turso_database_url:
+            self.turso.database_url = self.turso_database_url
+        if self.turso_auth_token:
+            self.turso.auth_token = self.turso_auth_token
 
 
 def load_settings() -> Settings:

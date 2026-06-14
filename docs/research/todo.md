@@ -67,6 +67,7 @@
 
 ## Backlog
 
+- **Push trade data to Turso on execution/failure** — On trade execution or failure, push the data to the Turso database (enables the web dashboard to show live trade results without polling SQLite).
 - ~~**OCA modeling for straddle legs**~~ — **DONE**: Straddle buy/sell stops share an `ocaGroup` so IB cancels the unfilled leg on fill. See PR #14.
 - ~~**Multiple testing correction (Bonferroni)**~~ — **DONE**: Both MC scripts report Bonferroni-adjusted CIs alongside raw 95% CIs. See PR #14.
 - Expand sample size (ongoing, passive)

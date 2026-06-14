@@ -27,6 +27,7 @@ fredapi==0.5.2
 SQLAlchemy==2.0.50
 aiosqlite==0.22.1
 greenlet==3.5.1
+libsql-experimental==0.0.55
 
 # Config & validation
 pydantic==2.13.4
