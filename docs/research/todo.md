@@ -69,6 +69,7 @@
 
 ## Backlog
 
+- **Actual value extraction pipeline** — The historical events table (dashboard) has an "Actual" column that is currently empty. Build a pipeline to scrape/extract the actual economic value after each news announcement (e.g., from Forex Factory or FRED) and backfill it into the events data. This enables surprise-based analysis (actual vs forecast) and feeds into future surprise strategy development.
 - ~~**Push trade data to Turso on execution/failure**~~ — **DONE**: `TursoSyncer` pushes orders and trades to Turso in real-time on every lifecycle event (placed, filled, closed, failed). Fire-and-forget pattern. `account_type` column (paper/live) derived from broker port. See PR #31.
 - ~~**OCA modeling for straddle legs**~~ — **DONE**: Straddle buy/sell stops share an `ocaGroup` so IB cancels the unfilled leg on fill. See PR #14.
 - ~~**Multiple testing correction (Bonferroni)**~~ — **DONE**: Both MC scripts report Bonferroni-adjusted CIs alongside raw 95% CIs. See PR #14.
