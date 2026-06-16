@@ -9,6 +9,7 @@ from loguru import logger
 
 from forex_bot.broker.client import IBClient
 from forex_bot.broker.pricing import PricingService
+from forex_bot.broker.tws_launcher import ensure_tws_running, is_tws_listening
 from forex_bot.calendar.scraper import ForexFactoryScraper
 from forex_bot.calendar.store import EventStore
 from forex_bot.config import Settings
@@ -26,6 +27,7 @@ _PREFLIGHT_RETRY_INTERVAL = 15
 _PREFLIGHT_MAX_ATTEMPTS = 8  # 2 minutes / 15 seconds
 _ACTUAL_POLL_INTERVAL_MINUTES = 10
 _ACTUAL_POLL_MAX_ATTEMPTS = 12  # 12 × 10 min = 2 hours
+_TWS_ENSURE_MINUTES = 10  # cold-start check fires this many minutes before preflight
 
 
 class JobManager:
@@ -88,9 +90,21 @@ class JobManager:
         """Schedule pre-flight, pre-event, and post-event jobs for a specific event."""
         now = datetime.now(UTC).replace(tzinfo=None)
 
-        # Pre-flight connection check (2 minutes before pre-event)
+        # TWS cold-start check (10 minutes before preflight = 42 min before event)
         pre_time = event.scheduled_at - timedelta(minutes=pre_minutes)
         preflight_time = pre_time - timedelta(minutes=_PREFLIGHT_MINUTES)
+        tws_ensure_time = preflight_time - timedelta(minutes=_TWS_ENSURE_MINUTES)
+        if tws_ensure_time > now:
+            self._scheduler.add_job(
+                self._tws_ensure,
+                DateTrigger(run_date=tws_ensure_time),
+                args=[event],
+                id=f"tws_ensure_{event.title}_{event.scheduled_at.isoformat()}",
+                replace_existing=True,
+            )
+            logger.info(f"Scheduled TWS ensure for {event.title} at {tws_ensure_time} UTC")
+
+        # Pre-flight connection check (2 minutes before pre-event)
         if preflight_time > now:
             self._scheduler.add_job(
                 self._preflight_check,
@@ -125,6 +139,48 @@ class JobManager:
             )
             logger.info(f"Scheduled post-event job for {event.title} at {post_time} UTC")
 
+    async def _tws_ensure(self, event: EconomicEvent) -> None:
+        """Check if TWS is listening; cold-start it if not.
+
+        Fires ~42 min before event time to give TWS enough time to initialize
+        before the preflight check runs.
+        """
+        port = self._settings.broker.port
+        if is_tws_listening(port):
+            logger.info(f"TWS_ENSURE: TWS already listening on port {port} for {event.title}")
+            return
+
+        logger.warning(
+            f"TWS_ENSURE: TWS not listening on port {port} before {event.title} — "
+            f"initiating cold-start"
+        )
+        if self._notifier:
+            await self._notifier.send_raw(
+                f"*TWS COLD-START*\n\n"
+                f"TWS is down before *{event.title}*\n"
+                f"Attempting cold-start on port `{port}`...\n\n"
+                f"_{TelegramNotifier._fmt_et(datetime.now(UTC))}_"
+            )
+
+        success = await ensure_tws_running(port)
+        if success:
+            logger.info(f"TWS_ENSURE: Cold-start successful for {event.title}")
+            if self._notifier:
+                await self._notifier.send_raw(
+                    f"*TWS COLD-START OK*\n\n"
+                    f"TWS is back up on port `{port}` for *{event.title}*"
+                )
+        else:
+            logger.critical(
+                f"TWS_ENSURE: Cold-start FAILED for {event.title} on port {port}"
+            )
+            if self._notifier:
+                await self._notifier.send_raw(
+                    f"*TWS COLD-START FAILED*\n\n"
+                    f"Could not restart TWS on port `{port}` for *{event.title}*\n"
+                    f"*Preflight may also fail!*"
+                )
+
     async def _preflight_check(self, event: EconomicEvent) -> None:
         """Verify IB connection before event handlers fire. Retry until connected."""
         logger.info(f"PRE-FLIGHT: Checking IB connection for {event.title}")
@@ -145,6 +201,21 @@ class JobManager:
                 logger.error(f"PRE-FLIGHT: Reconnection attempt {attempt} failed: {e}")
                 if attempt < _PREFLIGHT_MAX_ATTEMPTS:
                     await asyncio.sleep(_PREFLIGHT_RETRY_INTERVAL)
+
+        # Last resort: try cold-starting TWS in case it's completely dead
+        port = self._settings.broker.port
+        if not is_tws_listening(port):
+            logger.warning(
+                f"PRE-FLIGHT: TWS not listening on port {port}, attempting cold-start as last resort"
+            )
+            started = await ensure_tws_running(port)
+            if started:
+                try:
+                    await self._client.connect()
+                    logger.info(f"PRE-FLIGHT: IB connected after cold-start for {event.title}")
+                    return
+                except Exception as e:
+                    logger.error(f"PRE-FLIGHT: Connect after cold-start failed: {e}")
 
         logger.critical(
             f"PRE-FLIGHT FAILED: Could not connect to IB after {_PREFLIGHT_MAX_ATTEMPTS} attempts. "
