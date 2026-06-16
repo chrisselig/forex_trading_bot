@@ -9,8 +9,9 @@ from loguru import logger
 
 from forex_bot.broker.client import IBClient
 from forex_bot.broker.pricing import PricingService
+from forex_bot.calendar.scraper import ForexFactoryScraper
 from forex_bot.calendar.store import EventStore
-from forex_bot.config import EventTarget, Settings
+from forex_bot.config import Settings
 from forex_bot.execution.engine import ExecutionEngine
 from forex_bot.execution.monitor import PositionMonitor
 from forex_bot.models.events import EconomicEvent
@@ -23,6 +24,8 @@ _RETRY_BACKOFF_SECONDS = [5, 15, 30]
 _PREFLIGHT_MINUTES = 2
 _PREFLIGHT_RETRY_INTERVAL = 15
 _PREFLIGHT_MAX_ATTEMPTS = 8  # 2 minutes / 15 seconds
+_ACTUAL_POLL_INTERVAL_MINUTES = 10
+_ACTUAL_POLL_MAX_ATTEMPTS = 12  # 12 × 10 min = 2 hours
 
 
 class JobManager:
@@ -39,6 +42,7 @@ class JobManager:
         client: IBClient,
         settings: Settings,
         notifier: TelegramNotifier | None = None,
+        scraper: ForexFactoryScraper | None = None,
     ):
         self._scheduler = scheduler
         self._engine = execution_engine
@@ -49,6 +53,7 @@ class JobManager:
         self._client = client
         self._settings = settings
         self._notifier = notifier
+        self._scraper = scraper
 
     def _pairs_for_event(self, event: EconomicEvent) -> list[str]:
         """Return instruments to trade for this event.
@@ -217,3 +222,68 @@ class JobManager:
                         await self._engine.execute_signals(signals)
                 except Exception as e:
                     logger.error(f"Post-event error ({strategy.name}/{pair}): {e}")
+
+        # Schedule actual value polling if scraper is available
+        if self._scraper:
+            self._schedule_actual_poll(event)
+
+    def _schedule_actual_poll(self, event: EconomicEvent) -> None:
+        """Schedule recurring poll for the event's actual value."""
+        poll_time = datetime.now(UTC).replace(tzinfo=None) + timedelta(
+            minutes=_ACTUAL_POLL_INTERVAL_MINUTES
+        )
+        job_id = f"poll_actual_{event.title}_{event.scheduled_at.isoformat()}"
+        self._scheduler.add_job(
+            self._poll_actual,
+            DateTrigger(run_date=poll_time),
+            args=[event, 1],
+            id=job_id,
+            replace_existing=True,
+        )
+        logger.info(f"Scheduled actual polling for {event.title} (attempt 1/{_ACTUAL_POLL_MAX_ATTEMPTS})")
+
+    async def _poll_actual(self, event: EconomicEvent, attempt: int) -> None:
+        """Poll Forex Factory for the event's actual value."""
+        logger.info(f"Polling actual for {event.title} (attempt {attempt}/{_ACTUAL_POLL_MAX_ATTEMPTS})")
+
+        try:
+            ff_events = await self._scraper.fetch_week(date=event.scheduled_at)
+            updated = await self._event_store.update_actuals(ff_events)
+
+            # Check if our target event now has an actual
+            refreshed = await self._event_store.get_events_range(
+                event.scheduled_at - timedelta(minutes=1),
+                event.scheduled_at + timedelta(minutes=1),
+            )
+            target = next((e for e in refreshed if e.title == event.title), None)
+
+            if target and target.has_actual:
+                logger.info(
+                    f"Actual found for {event.title}: {target.actual} "
+                    f"(attempt {attempt}/{_ACTUAL_POLL_MAX_ATTEMPTS})"
+                )
+                return  # Done — no more polling
+
+            if updated:
+                logger.info(f"Updated {updated} actuals, but {event.title} still missing")
+
+        except Exception as e:
+            logger.error(f"Actual poll failed for {event.title}: {e}")
+
+        # Schedule next attempt if not exhausted
+        if attempt < _ACTUAL_POLL_MAX_ATTEMPTS:
+            next_time = datetime.now(UTC).replace(tzinfo=None) + timedelta(
+                minutes=_ACTUAL_POLL_INTERVAL_MINUTES
+            )
+            job_id = f"poll_actual_{event.title}_{event.scheduled_at.isoformat()}"
+            self._scheduler.add_job(
+                self._poll_actual,
+                DateTrigger(run_date=next_time),
+                args=[event, attempt + 1],
+                id=job_id,
+                replace_existing=True,
+            )
+        else:
+            logger.warning(
+                f"Actual polling exhausted for {event.title} after {_ACTUAL_POLL_MAX_ATTEMPTS} attempts"
+            )
