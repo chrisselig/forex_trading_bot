@@ -98,6 +98,7 @@ class Orchestrator:
             client=self._client,
             settings=self._settings,
             notifier=self._notifier,
+            scraper=self._scraper,
         )
         self._shutdown_handler = ShutdownHandler(self._client, self._scheduler, self._monitor)
         self._running = False

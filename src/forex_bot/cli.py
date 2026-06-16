@@ -31,7 +31,6 @@ def status():
         from forex_bot.broker.client import IBClient
         from forex_bot.broker.accounts import AccountService
         from forex_bot.reporting.dashboard import Dashboard
-        from forex_bot.risk.circuit_breaker import CircuitBreaker
 
         dashboard = Dashboard()
         async with IBClient() as client:
@@ -177,6 +176,55 @@ def calendar(
             console.print(json_str)
 
     asyncio.run(_calendar())
+
+
+@app.command(name="backfill-actuals")
+def backfill_actuals(
+    hours: int = typer.Option(168, help="Hours to look back for missing actuals"),
+):
+    """Backfill missing actual values from Forex Factory."""
+    async def _backfill():
+        from rich.table import Table
+
+        from forex_bot.calendar.scraper import ForexFactoryScraper
+        from forex_bot.calendar.store import EventStore
+        from forex_bot.data.database import init_db
+
+        await init_db()
+        store = EventStore()
+        scraper = ForexFactoryScraper()
+
+        missing = await store.get_events_missing_actuals(since_hours=hours)
+        if not missing:
+            console.print("[green]0 events missing actuals — nothing to backfill[/green]")
+            return
+
+        console.print(f"[yellow]Found {len(missing)} events missing actuals, fetching FF data...[/yellow]")
+
+        ff_events = await scraper.fetch_week()
+        await store.update_actuals(ff_events)
+
+        # Re-query to show final state
+        still_missing = await store.get_events_missing_actuals(since_hours=hours)
+        filled = len(missing) - len(still_missing)
+
+        table = Table(title="Backfill Results")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Count", justify="right")
+        table.add_row("Events missing actuals (before)", str(len(missing)))
+        table.add_row("Actuals filled", str(filled))
+        table.add_row("Still missing", str(len(still_missing)))
+        console.print(table)
+
+        if still_missing:
+            detail = Table(title="Still Missing")
+            detail.add_column("Event", style="yellow")
+            detail.add_column("Scheduled (UTC)")
+            for evt in still_missing:
+                detail.add_row(evt.title, evt.scheduled_at.strftime("%Y-%m-%d %H:%M"))
+            console.print(detail)
+
+    asyncio.run(_backfill())
 
 
 @app.command()

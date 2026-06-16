@@ -120,6 +120,25 @@ class EventStore:
 
         return [self._to_model(r) for r in records]
 
+    async def get_events_missing_actuals(self, since_hours: int = 168) -> list[EconomicEvent]:
+        """Return past events where actual is NULL (default: last 7 days)."""
+        now = datetime.now(UTC).replace(tzinfo=None)
+        cutoff = now - timedelta(hours=since_hours)
+
+        async with get_session() as session:
+            result = await session.execute(
+                select(EventRecord)
+                .where(
+                    EventRecord.scheduled_at >= cutoff,
+                    EventRecord.scheduled_at <= now,
+                    EventRecord.actual.is_(None),
+                )
+                .order_by(EventRecord.scheduled_at)
+            )
+            records = result.scalars().all()
+
+        return [self._to_model(r) for r in records]
+
     @staticmethod
     def _to_model(record: EventRecord) -> EconomicEvent:
         return EconomicEvent(
