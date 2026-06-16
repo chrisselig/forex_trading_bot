@@ -128,7 +128,7 @@ log "Starting forex trading bot..."
 source "$HOME/anaconda3/etc/profile.d/conda.sh"
 conda activate forex-bot
 cd "$PROJECT_DIR"
-nohup forex-bot run >> "$BOT_LOG" 2>&1 &
+PYTHONUNBUFFERED=1 nohup forex-bot run >> "$BOT_LOG" 2>&1 &
 BOT_PID=$!
 
 # Verify bot started successfully
