@@ -214,8 +214,9 @@ class TestScheduleEventJobs:
         jm.schedule_event_jobs(event, pre_minutes=30)
 
         scheduler = jm._scheduler
-        assert scheduler.add_job.call_count == 3
+        assert scheduler.add_job.call_count == 4
         job_ids = [call.kwargs["id"] for call in scheduler.add_job.call_args_list]
+        assert any("tws_ensure_" in jid for jid in job_ids)
         assert any("preflight_" in jid for jid in job_ids)
         assert any("pre_event_" in jid for jid in job_ids)
         assert any("post_event_" in jid for jid in job_ids)
