@@ -61,8 +61,14 @@ class OrderService:
         take_profit: float,
         stop_loss: float,
         oca_group: str = "",
+        order_type: OrderType = OrderType.STOP,
     ) -> list[IBTrade]:
         """Place a bracket order (entry + TP + SL) with IB.
+
+        The entry order type is determined by order_type:
+        - STOP (default): StopOrder entry — triggers when price reaches the level.
+          Used for straddles where we want breakout entries.
+        - LIMIT: LimitOrder entry — fills at the price or better.
 
         If oca_group is set, the parent entry order joins an OCA group so
         that when one straddle leg fills, IB cancels the other leg's entry.
@@ -73,29 +79,66 @@ class OrderService:
         await self.ib.qualifyContractsAsync(contract)
 
         action = side.value
-        bracket = self.ib.bracketOrder(
-            action=action,
-            quantity=quantity,
-            limitPrice=entry_price,
-            takeProfitPrice=take_profit,
-            stopLossPrice=stop_loss,
+        reverse_action = "SELL" if action == "BUY" else "BUY"
+
+        # Build parent entry order (stop or limit based on order_type)
+        if order_type == OrderType.STOP:
+            parent = StopOrder(
+                action=action,
+                totalQuantity=quantity,
+                stopPrice=entry_price,
+                orderId=self.ib.client.getReqId(),
+                transmit=False,
+                tif="GTC",
+            )
+        else:
+            parent = LimitOrder(
+                action=action,
+                totalQuantity=quantity,
+                lmtPrice=entry_price,
+                orderId=self.ib.client.getReqId(),
+                transmit=False,
+                tif="GTC",
+            )
+
+        # Take-profit child (limit)
+        tp_order = LimitOrder(
+            action=reverse_action,
+            totalQuantity=quantity,
+            lmtPrice=take_profit,
+            orderId=self.ib.client.getReqId(),
+            transmit=False,
+            parentId=parent.orderId,
+            tif="GTC",
+        )
+
+        # Stop-loss child (stop)
+        sl_order = StopOrder(
+            action=reverse_action,
+            totalQuantity=quantity,
+            stopPrice=stop_loss,
+            orderId=self.ib.client.getReqId(),
+            transmit=True,
+            parentId=parent.orderId,
+            tif="GTC",
         )
 
         # Set OCA group on the parent (entry) order only.
         # TP and SL are children — they auto-cancel when the parent is cancelled.
-        if oca_group and bracket:
-            bracket[0].ocaGroup = oca_group
-            bracket[0].ocaType = 1  # Cancel all remaining on fill
+        if oca_group:
+            parent.ocaGroup = oca_group
+            parent.ocaType = 1  # Cancel all remaining on fill
 
+        entry_type = "STP" if order_type == OrderType.STOP else "LMT"
         logger.info(
             f"Placing bracket {side} {quantity} {instrument} "
-            f"entry={entry_price} tp={take_profit} sl={stop_loss}"
+            f"entry({entry_type})={entry_price} tp={take_profit} sl={stop_loss}"
             f"{f' OCA={oca_group}' if oca_group else ''}"
         )
 
         trades = []
         try:
-            for o in bracket:
+            for o in (parent, tp_order, sl_order):
                 trade = self.ib.placeOrder(contract, o)
                 trades.append(trade)
             return trades
