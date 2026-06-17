@@ -8,7 +8,7 @@ from forex_bot.broker.contracts import get_pip_size
 from forex_bot.broker.pricing import PricingService
 from forex_bot.data.trade_journal import TradeJournal
 from forex_bot.models.events import EconomicEvent
-from forex_bot.models.orders import Order, OrderSide, OrderType, OrderStatus, Trade
+from forex_bot.models.orders import Order, OrderStatus
 from forex_bot.notifications.telegram import TelegramNotifier
 from forex_bot.risk.manager import RiskManager
 from forex_bot.risk.circuit_breaker import CircuitBreaker
@@ -113,6 +113,7 @@ class ExecutionEngine:
                     take_profit=order.take_profit,
                     stop_loss=order.stop_loss,
                     oca_group=order.oca_group,
+                    order_type=order.order_type,
                 )
                 if trades:
                     order.ib_order_id = trades[0].order.orderId
