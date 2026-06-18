@@ -277,18 +277,21 @@ class Orchestrator:
 
     async def _health_check(self) -> None:
         """Verify IB connection and reconnect if needed."""
-        if not self._client.is_connected:
-            logger.warning("IB connection lost during health check")
-            await self._notifier.notify_connection_lost()
-            try:
-                await self._client.connect()
-                logger.info("IB reconnection successful")
-                await self._notifier.notify_connection_restored()
-                await self._refresh_calendar()
-                await self._schedule_event_jobs()
-                logger.info("Event jobs re-scheduled after reconnect")
-            except Exception as e:
-                logger.error(f"IB reconnection failed: {e}")
+        if self._client.is_connected:
+            logger.info("Health check: IB connected")
+            return
+
+        logger.warning("IB connection lost during health check")
+        await self._notifier.notify_connection_lost()
+        try:
+            await self._client.connect()
+            logger.info("IB reconnection successful")
+            await self._notifier.notify_connection_restored()
+            await self._refresh_calendar()
+            await self._schedule_event_jobs()
+            logger.info("Event jobs re-scheduled after reconnect")
+        except Exception as e:
+            logger.error(f"IB reconnection failed: {e}")
 
     async def run_forever(self) -> None:
         """Start and run until interrupted."""
