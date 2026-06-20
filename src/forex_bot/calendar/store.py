@@ -21,17 +21,65 @@ class EventStore:
         self._turso = turso
 
     async def save_events(self, events: list[EconomicEvent]) -> int:
-        """Save events to the database, deduplicating by title + scheduled_at."""
+        """Save events to the database, deduplicating by title + date.
+
+        If an event with the same title exists on the same day (±1 day window)
+        but at a different time, update its scheduled_at (time-change detection).
+        """
         saved = 0
+        updated = 0
         async with get_session() as session:
             for event in events:
-                existing = await session.execute(
+                # Exact match — already stored, skip
+                exact = await session.execute(
                     select(EventRecord).where(
                         EventRecord.title == event.title,
                         EventRecord.scheduled_at == event.scheduled_at,
                     )
                 )
-                if existing.scalar_one_or_none() is not None:
+                if exact.scalar_one_or_none() is not None:
+                    continue
+
+                # Same-day match — check if FF rescheduled the event
+                day_start = event.scheduled_at.replace(
+                    hour=0, minute=0, second=0, microsecond=0,
+                ) - timedelta(days=1)
+                day_end = day_start + timedelta(days=3)
+                same_day = await session.execute(
+                    select(EventRecord).where(
+                        EventRecord.title == event.title,
+                        EventRecord.scheduled_at >= day_start,
+                        EventRecord.scheduled_at <= day_end,
+                    )
+                )
+                existing_record = same_day.scalar_one_or_none()
+
+                if existing_record is not None:
+                    # Time changed — update the record
+                    old_time = existing_record.scheduled_at
+                    existing_record.scheduled_at = event.scheduled_at
+                    if event.forecast:
+                        existing_record.forecast = event.forecast
+                    if event.previous:
+                        existing_record.previous = event.previous
+                    logger.warning(
+                        f"Event time changed: {event.title} "
+                        f"{old_time} → {event.scheduled_at}"
+                    )
+                    if self._turso:
+                        await self._turso.push_event(
+                            event_id=existing_record.id,
+                            title=existing_record.title,
+                            country=existing_record.country,
+                            impact=existing_record.impact,
+                            scheduled_at=existing_record.scheduled_at,
+                            actual=existing_record.actual,
+                            forecast=existing_record.forecast,
+                            previous=existing_record.previous,
+                            fred_series=existing_record.fred_series,
+                            created_at=existing_record.created_at,
+                        )
+                    updated += 1
                     continue
 
                 record = EventRecord(
@@ -62,7 +110,10 @@ class EventStore:
                 saved += 1
             await session.commit()
 
-        logger.info(f"Saved {saved} new events ({len(events) - saved} duplicates skipped)")
+        logger.info(
+            f"Saved {saved} new events, {updated} time-updated "
+            f"({len(events) - saved - updated} duplicates skipped)"
+        )
         return saved
 
     async def update_actuals(self, events: list[EconomicEvent]) -> int:

@@ -108,4 +108,4 @@ filters:
     - "JPY"
     - "ZAR"
     - "TRY"
-  min_impact: "high"
+  min_impact: "medium"
