@@ -39,7 +39,10 @@ class Orchestrator:
     def __init__(self):
         self._settings = get_settings()
         self._client = IBClient()
-        self._scheduler = AsyncIOScheduler(timezone="UTC")
+        self._scheduler = AsyncIOScheduler(
+            timezone="UTC",
+            job_defaults={"misfire_grace_time": 300},
+        )
 
         # Telegram notifications
         tg = self._settings.telegram
@@ -186,6 +189,13 @@ class Orchestrator:
         except Exception as e:
             logger.error(f"Calendar export failed: {e}")
 
+    async def _daily_calendar_refresh(self) -> None:
+        """Daily refresh: fetch calendar and re-schedule event jobs for new/changed events."""
+        logger.info("Running daily calendar refresh")
+        await self._refresh_calendar()
+        await self._schedule_event_jobs()
+        logger.info("Daily calendar refresh complete — event jobs re-scheduled")
+
     def _schedule_recurring_jobs(self) -> None:
         """Set up periodic jobs."""
         # Calendar refresh every 6 hours
@@ -193,6 +203,14 @@ class Orchestrator:
             self._refresh_calendar,
             IntervalTrigger(hours=6),
             id="calendar_refresh",
+            replace_existing=True,
+        )
+
+        # Daily calendar refresh + re-schedule at 06:15 UTC (12:15 AM MT)
+        self._scheduler.add_job(
+            self._daily_calendar_refresh,
+            CronTrigger(hour=6, minute=15),
+            id="daily_calendar_refresh",
             replace_existing=True,
         )
 

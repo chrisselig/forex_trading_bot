@@ -56,18 +56,16 @@ class ForexFactoryScraper:
             return response.json()
 
     async def fetch_week(self, date: datetime | None = None) -> list[EconomicEvent]:
-        """Fetch events for the current week (and next week if date is late in the week)."""
+        """Fetch events for the current week and next week (2-week lookahead)."""
         raw_events = await self._fetch_json(FF_JSON_THIS_WEEK)
         events = self._parse_json(raw_events)
 
-        # If we're past Wednesday, also grab next week's events
-        now = date or datetime.now(UTC)
-        if now.weekday() >= 2:
-            try:
-                next_raw = await self._fetch_json(FF_JSON_NEXT_WEEK)
-                events.extend(self._parse_json(next_raw))
-            except httpx.HTTPError as e:
-                logger.warning(f"Failed to fetch next week calendar: {e}")
+        # Always fetch next week for maximum event visibility
+        try:
+            next_raw = await self._fetch_json(FF_JSON_NEXT_WEEK)
+            events.extend(self._parse_json(next_raw))
+        except httpx.HTTPError as e:
+            logger.warning(f"Failed to fetch next week calendar: {e}")
 
         logger.info(f"Fetched {len(events)} events from calendar API")
         return events

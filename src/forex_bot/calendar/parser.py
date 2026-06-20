@@ -41,7 +41,10 @@ class EventParser:
             allowed = [country_filter] if isinstance(country_filter, str) else country_filter
             if event.country not in allowed:
                 return False
-        if self._filters.min_impact == "high" and event.impact != EventImpact.HIGH:
+        min_impact = self._filters.min_impact
+        if min_impact == "high" and event.impact != EventImpact.HIGH:
+            return False
+        if min_impact == "medium" and event.impact not in (EventImpact.HIGH, EventImpact.MEDIUM):
             return False
         return True
 

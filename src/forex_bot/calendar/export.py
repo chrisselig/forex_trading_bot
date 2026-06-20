@@ -9,9 +9,8 @@ from zoneinfo import ZoneInfo
 from loguru import logger
 
 from forex_bot.calendar.parser import EventParser
-from forex_bot.calendar.scraper import ForexFactoryScraper
-from forex_bot.calendar.static import load_static_events
-from forex_bot.config import PROJECT_ROOT, get_settings
+from forex_bot.calendar.store import EventStore
+from forex_bot.config import get_settings
 from forex_bot.models.events import EconomicEvent
 
 ET = ZoneInfo("America/New_York")
@@ -23,11 +22,10 @@ DEFAULT_CALENDAR_PATH = Path.home() / "00_data_projects" / "trading_dashboard" /
 async def build_calendar(days: int = 30) -> list[dict]:
     """Build a list of upcoming tradeable events with enriched metadata.
 
-    Combines Forex Factory (US/major events) with the static calendar
-    (SARB, TCMB, SA CPI, BOJ). Each event is enriched with:
+    Reads from the EventStore DB (which accumulates events over time from
+    both Forex Factory and static sources). Each event is enriched with:
     - target pairs
     - straddle parameters (per-pair, with event overrides)
-    - event source (forex_factory or static)
     - display times in both UTC and Eastern
 
     Returns a list of dicts ready for JSON serialisation.
@@ -37,37 +35,16 @@ async def build_calendar(days: int = 30) -> list[dict]:
     now = datetime.now(UTC).replace(tzinfo=None)
     cutoff = now + timedelta(days=days)
 
-    # Fetch from both sources
-    scraper = ForexFactoryScraper()
-    ff_events = await scraper.fetch_week()
-    ff_filtered = parser.filter_events(ff_events)
+    # Read from DB instead of fetching fresh from scraper
+    store = EventStore()
+    all_db_events = await store.get_events_range(now, cutoff)
+    filtered = parser.filter_events(all_db_events)
 
-    static_events = load_static_events()
-    static_filtered = parser.filter_events(static_events)
-
-    # Tag source before merging
-    ff_titles_times: set[tuple[str, datetime]] = set()
-    for ev in ff_filtered:
-        ff_titles_times.add((ev.title, ev.scheduled_at))
-
-    all_events: list[tuple[EconomicEvent, str]] = []
-    for ev in ff_filtered:
-        all_events.append((ev, "forex_factory"))
-    for ev in static_filtered:
-        # Avoid duplicates if FF also has this event
-        if (ev.title, ev.scheduled_at) not in ff_titles_times:
-            all_events.append((ev, "static"))
-
-    # Filter to the requested window and sort
-    all_events = [
-        (ev, src) for ev, src in all_events
-        if now <= ev.scheduled_at <= cutoff
-    ]
-    all_events.sort(key=lambda x: x[0].scheduled_at)
+    all_events: list[EconomicEvent] = sorted(filtered, key=lambda e: e.scheduled_at)
 
     # Build output
     calendar: list[dict] = []
-    for event, source in all_events:
+    for event in all_events:
         pairs = _resolve_pairs(event, settings)
         if not pairs:
             continue
@@ -80,7 +57,6 @@ async def build_calendar(days: int = 30) -> list[dict]:
             "country": event.country,
             "datetime_utc": scheduled_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "datetime_et": scheduled_et.strftime("%Y-%m-%d %H:%M ET"),
-            "source": source,
             "forecast": event.forecast,
             "previous": event.previous,
             "pairs": [],
