@@ -115,7 +115,19 @@ forex-bot events
 
 # Show performance stats
 forex-bot performance
+
+# Restart the bot (kill + start directly — do NOT use start_tws_and_bot.sh
+# because it may falsely detect "already running" and skip launch)
+kill $(pgrep -f 'forex-bot run') 2>/dev/null
+# Wait a moment, then:
+nohup ~/anaconda3/envs/forex-bot/bin/forex-bot run >> ~/ibc/logs/forex_bot_$(date +%Y%m%d).log 2>&1 &
 ```
+
+### Bot Restart Notes
+
+- `kill $(pgrep -f 'forex-bot run')` may return exit code 144 (SIGUSR1) — this is harmless, the process is still killed. Use `kill -9` if SIGTERM doesn't work.
+- Always verify the old process is dead before starting a new one: `pgrep -af 'forex-bot run'`
+- The watchdog (`*/5 * * * *` cron) auto-restarts the bot if the log goes stale >10 min, but don't rely on it for immediate restarts.
 
 ## IB-Specific Notes
 
