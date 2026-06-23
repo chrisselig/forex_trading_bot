@@ -56,11 +56,11 @@ class EventParser:
             if target.country and target.country != event.country:
                 continue
             # Check exact name match
-            if target.name.lower() in title_lower:
+            if title_lower == target.name.lower().strip():
                 return target
             # Check aliases
             for alias in target.aliases:
-                if alias.lower() in title_lower:
+                if title_lower == alias.lower().strip():
                     return target
         return None
 

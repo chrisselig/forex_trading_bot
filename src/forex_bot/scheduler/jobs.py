@@ -79,10 +79,10 @@ class JobManager:
         """Look up target pairs from events config by matching event title."""
         title_lower = event.title.lower().strip()
         for target in self._settings.events.target_events:
-            if target.name.lower() in title_lower:
+            if title_lower == target.name.lower().strip():
                 return target.pairs
             for alias in target.aliases:
-                if alias.lower() in title_lower:
+                if title_lower == alias.lower().strip():
                     return target.pairs
         return []
 
@@ -97,7 +97,7 @@ class JobManager:
         if tws_ensure_time > now:
             self._scheduler.add_job(
                 self._tws_ensure,
-                DateTrigger(run_date=tws_ensure_time),
+                DateTrigger(run_date=tws_ensure_time, timezone="UTC"),
                 args=[event],
                 id=f"tws_ensure_{event.title}_{event.scheduled_at.isoformat()}",
                 replace_existing=True,
@@ -108,7 +108,7 @@ class JobManager:
         if preflight_time > now:
             self._scheduler.add_job(
                 self._preflight_check,
-                DateTrigger(run_date=preflight_time),
+                DateTrigger(run_date=preflight_time, timezone="UTC"),
                 args=[event],
                 id=f"preflight_{event.title}_{event.scheduled_at.isoformat()}",
                 replace_existing=True,
@@ -119,7 +119,7 @@ class JobManager:
         if pre_time > now:
             self._scheduler.add_job(
                 self._pre_event_handler,
-                DateTrigger(run_date=pre_time),
+                DateTrigger(run_date=pre_time, timezone="UTC"),
                 args=[event],
                 id=f"pre_event_{event.title}_{event.scheduled_at.isoformat()}",
                 replace_existing=True,
@@ -132,7 +132,7 @@ class JobManager:
         if post_time > now:
             self._scheduler.add_job(
                 self._post_event_handler,
-                DateTrigger(run_date=post_time),
+                DateTrigger(run_date=post_time, timezone="UTC"),
                 args=[event],
                 id=f"post_event_{event.title}_{event.scheduled_at.isoformat()}",
                 replace_existing=True,
@@ -306,7 +306,7 @@ class JobManager:
         job_id = f"poll_actual_{event.title}_{event.scheduled_at.isoformat()}"
         self._scheduler.add_job(
             self._poll_actual,
-            DateTrigger(run_date=poll_time),
+            DateTrigger(run_date=poll_time, timezone="UTC"),
             args=[event, 1],
             id=job_id,
             replace_existing=True,
@@ -349,7 +349,7 @@ class JobManager:
             job_id = f"poll_actual_{event.title}_{event.scheduled_at.isoformat()}"
             self._scheduler.add_job(
                 self._poll_actual,
-                DateTrigger(run_date=next_time),
+                DateTrigger(run_date=next_time, timezone="UTC"),
                 args=[event, attempt + 1],
                 id=job_id,
                 replace_existing=True,
