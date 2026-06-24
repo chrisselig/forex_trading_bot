@@ -6,7 +6,6 @@ from forex_bot.config import get_settings
 from forex_bot.broker.client import IBClient
 from forex_bot.broker.contracts import get_pip_size
 from forex_bot.data.trade_journal import TradeJournal
-from forex_bot.models.account import AccountSummary
 from forex_bot.models.market import PriceSnapshot
 from forex_bot.risk.rules import (
     RiskRule,
@@ -37,7 +36,9 @@ class RiskManager:
         ]
         self._rules = [r for r in self._rules if r is not None]
 
-    async def validate(self, signal: Signal, price: PriceSnapshot | None = None) -> list[str]:
+    async def validate(
+        self, signal: Signal, price: PriceSnapshot | None = None, quote_to_cad: float = 1.0,
+    ) -> list[str]:
         """Validate a signal against all risk rules. Returns list of violations."""
         # Check circuit breaker first
         cb_error = self._circuit_breaker.check()
@@ -56,6 +57,7 @@ class RiskManager:
                 price=price,
                 open_position_count=len(positions),
                 daily_pnl=daily_pnl,
+                quote_to_cad=quote_to_cad,
             )
             if error:
                 violations.append(error)
@@ -73,20 +75,23 @@ class RiskManager:
         stop_loss_pips: float,
         pair: str,
         risk_pct: float | None = None,
+        quote_to_cad: float = 1.0,
     ) -> float:
         """Calculate position size based on risk percentage and stop loss distance.
 
-        Formula: units = (balance * risk%) / (sl_pips * pip_value)
-        For standard forex lots, pip_value depends on the pair.
+        Formula: units = (balance * risk%) / (sl_pips * pip_size * quote_to_cad)
+
+        The quote_to_cad conversion factor converts the pip value from quote
+        currency to account currency (CAD). Without it, pairs like USDTRY
+        (quote=TRY) are massively undersized because pip_size alone doesn't
+        reflect the TRY→CAD exchange rate.
         """
         if risk_pct is None:
             risk_pct = get_settings().risk.max_risk_per_trade_pct
 
         pip_size = get_pip_size(pair)
         risk_amount = account_balance * (risk_pct / 100)
-        # For simplicity, pip_value ≈ pip_size for most pairs
-        # In production, this would account for the quote currency conversion
-        units = risk_amount / (stop_loss_pips * pip_size)
+        units = risk_amount / (stop_loss_pips * pip_size * quote_to_cad)
         # Round to nearest 1000 (mini lot)
         units = round(units / 1000) * 1000
         return max(units, 1000)  # Minimum 1 micro lot (1000 units)

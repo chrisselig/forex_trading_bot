@@ -6,7 +6,7 @@ from loguru import logger
 from ib_async import IB, BarData
 
 from forex_bot.broker.client import IBClient
-from forex_bot.broker.contracts import make_forex_contract, get_pip_size
+from forex_bot.broker.contracts import get_quote_currency, make_forex_contract
 from forex_bot.broker.exceptions import DataError
 from forex_bot.models.market import Candle, PriceSnapshot
 
@@ -81,6 +81,35 @@ class PricingService:
                     )
         finally:
             self.ib.cancelMktData(contract)
+
+    async def get_quote_to_cad_rate(self, pair: str) -> float:
+        """Get the conversion rate from the pair's quote currency to CAD.
+
+        Returns 1.0 if quote currency is already CAD.
+        For USD-quote pairs (e.g. AUDUSD): returns USDCAD mid.
+        For other-quote pairs (e.g. USDTRY): returns USDCAD / pair_mid.
+        Falls back to 1.0 with warning if fetch fails.
+        """
+        quote = get_quote_currency(pair)
+        if quote == "CAD":
+            return 1.0
+
+        try:
+            usdcad = await self.get_snapshot("USDCAD")
+            usdcad_mid = (usdcad.bid + usdcad.ask) / 2
+
+            if quote == "USD":
+                return usdcad_mid
+
+            # For non-USD, non-CAD quote currencies (TRY, ZAR, JPY, etc.)
+            # 1 unit of quote currency = USDCAD / pair_mid CAD
+            pair_snapshot = await self.get_snapshot(pair)
+            pair_mid = (pair_snapshot.bid + pair_snapshot.ask) / 2
+            return usdcad_mid / pair_mid
+
+        except Exception as e:
+            logger.warning(f"Failed to get quote-to-CAD rate for {pair}, using 1.0: {e}")
+            return 1.0
 
     async def get_historical_bars(
         self,

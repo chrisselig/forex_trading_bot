@@ -54,6 +54,10 @@ class ExecutionEngine:
             logger.error(f"Failed to get price for {signal.instrument}: {e}")
             return None
 
+        # Get quote currency conversion rate for correct position sizing
+        quote_to_cad = await self._pricing_service.get_quote_to_cad_rate(signal.instrument)
+        logger.info(f"Quote-to-CAD rate for {signal.instrument}: {quote_to_cad:.6f}")
+
         # Calculate position size if not specified
         if signal.quantity == 0 and signal.stop_loss is not None and signal.price is not None:
             pip = get_pip_size(signal.instrument)
@@ -63,10 +67,11 @@ class ExecutionEngine:
                 account_balance=account.net_liquidation,
                 stop_loss_pips=sl_pips,
                 pair=signal.instrument,
+                quote_to_cad=quote_to_cad,
             )
 
         # Risk validation (mandatory)
-        violations = await self._risk_manager.validate(signal, price)
+        violations = await self._risk_manager.validate(signal, price, quote_to_cad=quote_to_cad)
         if violations:
             logger.warning(f"Signal rejected by risk manager: {violations}")
             if self._notifier:

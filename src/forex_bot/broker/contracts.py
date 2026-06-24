@@ -50,6 +50,12 @@ def get_tick_size(pair: str) -> float:
     return TICK_SIZES.get(pair, _DEFAULT_TICK)
 
 
+def get_quote_currency(pair: str) -> str:
+    """Return the quote currency (last 3 chars) of a forex pair."""
+    pair = pair.upper().replace("/", "").replace("_", "")
+    return pair[3:6]
+
+
 def round_to_tick(price: float, pair: str) -> float:
     """Round a price to the nearest valid tick for the given pair."""
     tick = get_tick_size(pair)
