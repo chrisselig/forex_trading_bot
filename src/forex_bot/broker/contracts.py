@@ -32,3 +32,25 @@ def get_pip_size(pair: str) -> float:
     """Return the pip size for a given forex pair."""
     pair = pair.upper().replace("/", "").replace("_", "")
     return PIP_SIZES.get(pair, 0.0001)
+
+
+# IB minimum price increments (half-pip for most pairs)
+TICK_SIZES: dict[str, float] = {
+    "USDJPY": 0.005,
+    "EURJPY": 0.005,
+    "GBPJPY": 0.005,
+    "CADJPY": 0.005,
+}
+_DEFAULT_TICK = 0.00005  # Half-pip for non-JPY pairs
+
+
+def get_tick_size(pair: str) -> float:
+    """Return the IB minimum price increment for a given forex pair."""
+    pair = pair.upper().replace("/", "").replace("_", "")
+    return TICK_SIZES.get(pair, _DEFAULT_TICK)
+
+
+def round_to_tick(price: float, pair: str) -> float:
+    """Round a price to the nearest valid tick for the given pair."""
+    tick = get_tick_size(pair)
+    return round(round(price / tick) * tick, 10)

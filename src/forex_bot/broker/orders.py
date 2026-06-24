@@ -4,7 +4,7 @@ from loguru import logger
 from ib_async import IB, MarketOrder, LimitOrder, StopOrder, Trade as IBTrade
 
 from forex_bot.broker.client import IBClient
-from forex_bot.broker.contracts import make_forex_contract
+from forex_bot.broker.contracts import make_forex_contract, round_to_tick
 from forex_bot.broker.exceptions import OrderError
 from forex_bot.models.orders import Order, OrderSide, OrderType
 
@@ -77,6 +77,11 @@ class OrderService:
         await self._client.ensure_connected()
         contract = make_forex_contract(instrument)
         await self.ib.qualifyContractsAsync(contract)
+
+        # Round all prices to IB's minimum tick size
+        entry_price = round_to_tick(entry_price, instrument)
+        take_profit = round_to_tick(take_profit, instrument)
+        stop_loss = round_to_tick(stop_loss, instrument)
 
         action = side.value
         reverse_action = "SELL" if action == "BUY" else "BUY"
