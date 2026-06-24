@@ -2,36 +2,42 @@ target_events:
   # --- US Events ---
   - name: "Non-Farm Employment Change"
     aliases: ["NFP", "Non-Farm Payrolls", "Nonfarm Payrolls"]
+    country: "USD"
     fred_series: "PAYEMS"
     pairs: ["USDZAR", "USDTRY", "AUDUSD"]
     impact: "high"
 
   - name: "CPI m/m"
     aliases: ["Consumer Price Index"]
+    country: "USD"
     fred_series: "CPIAUCSL"
     pairs: ["USDZAR", "USDTRY", "AUDUSD"]
     impact: "high"
 
   - name: "Federal Funds Rate"
     aliases: ["FOMC", "Fed Interest Rate Decision", "FOMC Statement"]
+    country: "USD"
     fred_series: "FEDFUNDS"
     pairs: ["USDZAR", "USDTRY", "AUDUSD"]
     impact: "high"
 
   - name: "PPI m/m"
     aliases: ["Producer Price Index", "PPI"]
+    country: "USD"
     fred_series: "PPIACO"
     pairs: ["USDZAR", "USDTRY", "AUDUSD"]
     impact: "high"
 
   - name: "GDP q/q"
     aliases: ["Gross Domestic Product", "Advance GDP", "Preliminary GDP", "Final GDP"]
+    country: "USD"
     fred_series: "GDP"
     pairs: ["USDZAR", "USDTRY", "AUDUSD"]
     impact: "high"
 
   - name: "Core PCE Price Index m/m"
     aliases: ["PCE", "Personal Consumption Expenditures", "PCE Price Index"]
+    country: "USD"
     fred_series: "PCEPI"
     pairs: ["USDTRY", "AUDUSD"]    # USDZAR fails walk-forward (OOS=-0.7)
     impact: "high"
@@ -39,16 +45,19 @@ target_events:
   # --- US Events (USDTRY only — see docs/research/12-mc-remaining-us.md) ---
   - name: "Unemployment Claims"
     aliases: ["Initial Claims", "Initial Jobless Claims", "Jobless Claims"]
+    country: "USD"
     pairs: ["USDTRY"]    # USDZAR/AUDUSD fail (no edge)
     impact: "high"
 
   - name: "ISM Manufacturing PMI"
     aliases: ["ISM Manufacturing", "ISM PMI", "Manufacturing PMI"]
+    country: "USD"
     pairs: ["USDTRY"]    # USDZAR/AUDUSD fail (no edge)
     impact: "high"
 
   - name: "Retail Sales m/m"
     aliases: ["Retail Sales", "Advance Retail Sales", "Core Retail Sales"]
+    country: "USD"
     pairs: ["USDTRY"]    # USDZAR/AUDUSD fail (no edge)
     impact: "high"
 
@@ -63,7 +72,7 @@ target_events:
     impact: "high"
 
   - name: "Australia CPI"
-    aliases: ["AU CPI", "Australian CPI", "CPI q/q"]
+    aliases: ["AU CPI", "Australian CPI", "CPI q/q", "CPI m/m", "Trimmed Mean CPI m/m"]
     country: "AUD"
     pairs: ["AUDUSD"]
     impact: "high"
