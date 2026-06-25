@@ -78,7 +78,7 @@ target_events:
     impact: "high"
 
   - name: "Australia Employment"
-    aliases: ["AU Employment Change", "Australian Employment", "Employment Change"]
+    aliases: ["AU Employment Change", "Australian Employment", "Australia Employment Change"]
     country: "AUD"
     pairs: ["AUDUSD"]
     impact: "high"
