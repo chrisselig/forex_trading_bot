@@ -67,6 +67,14 @@
         - **Slippage budget**: Once you have 50+ fills, calculate the 95th percentile slippage. If it exceeds 5 pips, the straddle SL of 10 pips is getting eaten — consider widening SL or tightening straddle distance.
         - **Live vs paper comparison**: When switching to live, compare slippage distributions. Paper fills are instant and perfect; live fills have real market impact. This data quantifies the difference.
 
+## Do Next (High Impact, High Effort) — New
+
+- **Harden event alias collision logic** — The current alias matching is fragile: generic titles like "Employment Change" can match events from multiple countries (Canada vs Australia), causing trades on the wrong pair. Harden this by: (1) adding a startup validator that detects duplicate aliases across different country definitions and refuses to start, (2) requiring the FF-scraped country/currency to match the `events.yaml` country field at match time (reject mismatches), (3) considering a naming convention that embeds the country in aliases (e.g. "AU Employment Change" not "Employment Change"), and (4) adding a unit test that asserts all aliases in `events.yaml` are globally unique across countries. The Jun 2026 incident where Canadian "Employment Change" triggered an AUDUSD straddle is the motivating case.
+
+- **Second bot on unregulated broker for micro-lots** — IB's IDEALPRO minimum is 25,000 units, requiring ~$5,000+ NLV to clear the 1% risk limit. An unregulated (offshore) broker supporting micro-lots (1,000 units or 0.01 lots) would allow starting with ~$200-500. Same event-driven straddle strategy, separate codebase or abstracted broker interface. Research needed: broker selection (IC Markets, Pepperstone, XM, Exness — must support the pairs USDZAR/USDTRY), API availability (MT4/MT5 bridge, cTrader, or REST API), latency profile, and regulatory/counterparty risk. Could share the calendar/strategy/risk modules but swap out the broker layer.
+
+- **Re-run Monte Carlo analysis at 1.1% and 1.5% risk levels** — All existing MC analysis uses a fixed risk percentage that may not match the current 1.5% setting. Re-run the full MC suite (`scripts/monte_carlo_dukascopy.py`, `scripts/mc_non_us.py`, `scripts/mc_event_split.py`, etc.) at both 1.1% and 1.5% risk levels to verify: (1) which pairs/events remain profitable at higher risk, (2) whether optimal straddle params (distance/TP/SL) change with different risk sizing, (3) updated confidence intervals and walk-forward results. The current params were optimized assuming ~1% risk; 1.5% may shift the optimal SL/TP balance due to larger position sizes hitting margin limits differently.
+
 ## Backlog
 
 - ~~**Actual value extraction pipeline**~~ — **DONE**: Post-event polling job polls Forex Factory every 10 minutes (up to 2 hours) for actual values after each event fires. `forex-bot backfill-actuals` CLI command for one-off backfills. `EventStore.get_events_missing_actuals()` query helper. See PR #35.

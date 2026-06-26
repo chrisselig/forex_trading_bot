@@ -56,6 +56,9 @@ class JobManager:
         self._settings = settings
         self._notifier = notifier
         self._scraper = scraper
+        # Track (pair, event_time) combos to prevent duplicate straddles
+        # when multiple events fire at the same scheduled time
+        self._straddle_placed: set[tuple[str, datetime]] = set()
 
     def _pairs_for_event(self, event: EconomicEvent) -> list[str]:
         """Return instruments to trade for this event.
@@ -256,14 +259,29 @@ class JobManager:
             return
 
         self._engine.set_current_event(event)
+        # Prune stale dedup keys (older than 24h)
+        cutoff = datetime.now(UTC) - timedelta(hours=24)
+        self._straddle_placed = {k for k in self._straddle_placed if k[1] > cutoff}
+
         pairs = self._pairs_for_event(event)
         for strategy in self._registry.all():
             for pair in pairs:
+                # Deduplicate: skip if we already placed a straddle for this
+                # pair at this event time (multiple events can fire simultaneously)
+                dedup_key = (pair, event.scheduled_at)
+                if strategy.name == "straddle" and dedup_key in self._straddle_placed:
+                    logger.info(
+                        f"Skipping duplicate straddle for {pair} at {event.scheduled_at} "
+                        f"(already placed for earlier event)"
+                    )
+                    continue
                 try:
                     price = await self._pricing.get_snapshot(pair)
                     signals = await strategy.evaluate_pre_event(event, price)
                     if signals:
                         await self._engine.execute_signals(signals)
+                        if strategy.name == "straddle":
+                            self._straddle_placed.add(dedup_key)
                 except Exception as e:
                     logger.error(f"Pre-event error ({strategy.name}/{pair}): {e}")
 
