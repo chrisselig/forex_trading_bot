@@ -79,9 +79,16 @@ class JobManager:
         return all_instruments
 
     def _lookup_target_pairs(self, event: EconomicEvent) -> list[str]:
-        """Look up target pairs from events config by matching event title."""
+        """Look up target pairs from events config by matching event title.
+
+        Respects country validation: a target with a country set will only
+        match events from the same country (prevents cross-country collisions).
+        """
         title_lower = event.title.lower().strip()
         for target in self._settings.events.target_events:
+            # Skip if target is country-specific and event is from a different country
+            if target.country and target.country != event.country:
+                continue
             if title_lower == target.name.lower().strip():
                 return target.pairs
             for alias in target.aliases:

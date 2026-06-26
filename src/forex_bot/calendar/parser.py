@@ -12,6 +12,31 @@ ET = ZoneInfo("America/New_York")
 UTC = timezone.utc
 
 
+def validate_alias_uniqueness(targets: list) -> None:
+    """Raise ValueError if any alias or canonical name maps to multiple countries.
+
+    Prevents ambiguous event matching where e.g. "Employment Change" could match
+    both Canadian and Australian event targets.
+    """
+    alias_map: dict[str, list[tuple[str, str]]] = {}
+    for target in targets:
+        country = getattr(target, "country", None) or "unknown"
+        keys = [target.name.lower().strip()]
+        for alias in target.aliases:
+            keys.append(alias.lower().strip())
+        for key in keys:
+            alias_map.setdefault(key, []).append((target.name, country))
+
+    collisions = {k: v for k, v in alias_map.items() if len({c for _, c in v}) > 1}
+    if collisions:
+        details = "; ".join(
+            f"'{k}' -> {v}" for k, v in collisions.items()
+        )
+        raise ValueError(
+            f"Ambiguous event aliases across countries: {details}"
+        )
+
+
 class EventParser:
     """Filters and enriches economic events based on configuration."""
 
@@ -19,6 +44,7 @@ class EventParser:
         self._settings = get_settings()
         self._targets = self._settings.events.target_events
         self._filters = self._settings.events.filters
+        validate_alias_uniqueness(self._targets)
 
     def filter_events(self, events: list[EconomicEvent]) -> list[EconomicEvent]:
         """Filter events to only those matching our target criteria."""

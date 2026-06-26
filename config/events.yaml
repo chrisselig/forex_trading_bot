@@ -72,7 +72,7 @@ target_events:
     impact: "high"
 
   - name: "Australia CPI"
-    aliases: ["AU CPI", "Australian CPI", "CPI q/q", "CPI m/m", "Trimmed Mean CPI m/m"]
+    aliases: ["AU CPI", "Australian CPI", "CPI q/q", "Trimmed Mean CPI m/m"]
     country: "AUD"
     pairs: ["AUDUSD"]
     impact: "high"
