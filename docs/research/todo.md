@@ -73,7 +73,7 @@
 
 - **Second bot on unregulated broker for micro-lots** — IB's IDEALPRO minimum is 25,000 units, requiring ~$5,000+ NLV to clear the 1% risk limit. An unregulated (offshore) broker supporting micro-lots (1,000 units or 0.01 lots) would allow starting with ~$200-500. Same event-driven straddle strategy, separate codebase or abstracted broker interface. Research needed: broker selection (IC Markets, Pepperstone, XM, Exness — must support the pairs USDZAR/USDTRY), API availability (MT4/MT5 bridge, cTrader, or REST API), latency profile, and regulatory/counterparty risk. Could share the calendar/strategy/risk modules but swap out the broker layer.
 
-- **Re-run Monte Carlo analysis at 1.1% and 1.5% risk levels** — All existing MC analysis uses a fixed risk percentage that may not match the current 1.5% setting. Re-run the full MC suite (`scripts/monte_carlo_dukascopy.py`, `scripts/mc_non_us.py`, `scripts/mc_event_split.py`, etc.) at both 1.1% and 1.5% risk levels to verify: (1) which pairs/events remain profitable at higher risk, (2) whether optimal straddle params (distance/TP/SL) change with different risk sizing, (3) updated confidence intervals and walk-forward results. The current params were optimized assuming ~1% risk; 1.5% may shift the optimal SL/TP balance due to larger position sizes hitting margin limits differently.
+- ~~**Re-run Monte Carlo analysis at 1.1% and 1.5% risk levels**~~ — NOT NEEDED. MC analysis is pip-denominated (not dollar-denominated). The simulation computes P&L in pips per event and optimal distance/TP/SL params are independent of risk percentage. Risk % only affects position sizing (how many units), not whether a straddle is profitable in pips. The existing analysis remains valid at any risk level.
 
 ## Backlog
 
