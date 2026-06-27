@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from loguru import logger
 
 from forex_bot.models.events import EconomicEvent
 from forex_bot.models.market import PriceSnapshot, Candle
 from forex_bot.strategy.base import BaseStrategy
-from forex_bot.strategy.signals import Signal
 
 
 class BacktestRunner:

@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-from rich.layout import Layout
 from rich.text import Text
 
-from forex_bot.data.trade_journal import TradeJournal
 from forex_bot.models.account import AccountSummary
 from forex_bot.models.events import EconomicEvent
 from forex_bot.reporting.performance import PerformanceStats

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from loguru import logger
 from ib_async import IB
 

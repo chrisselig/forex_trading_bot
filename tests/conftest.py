@@ -1,15 +1,12 @@
 """Shared test fixtures."""
 
-import asyncio
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-import pytest_asyncio
 
 from forex_bot.models.events import EconomicEvent, EventImpact
 from forex_bot.models.market import PriceSnapshot
-from forex_bot.models.orders import Order, OrderSide, OrderType, Trade
 from forex_bot.models.account import AccountSummary
 
 

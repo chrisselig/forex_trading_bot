@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from loguru import logger
 
 from forex_bot.data.database import get_session
 from forex_bot.data.schemas import OrderRecord
 from forex_bot.data.trade_journal import TradeJournal
-from forex_bot.models.orders import Trade
 
 
 @dataclass

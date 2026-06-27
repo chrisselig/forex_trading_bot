@@ -10,19 +10,14 @@ Tests:
 
 from __future__ import annotations
 
-import sys
 import time
-from pathlib import Path
 
 import numpy as np
 from loguru import logger
 
 from monte_carlo_dukascopy import (
-    CONFIDENCE_LEVEL,
     DATA_DIR,
     DISTANCE_RANGE,
-    DUKASCOPY_DIR,
-    N_BOOTSTRAP,
     PIP_SIZES,
     SL_RANGE,
     TP_RANGE,

@@ -40,7 +40,7 @@ async def main():
         bars = await pricing.get_historical_bars("EURUSD", duration="1 D", bar_size="1 hour")
         if bars:
             last = bars[-1]
-            print(f"\nLatest EURUSD 1h bar:")
+            print("\nLatest EURUSD 1h bar:")
             print(f"  Time:  {last.timestamp}")
             print(f"  Open:  {last.open:.5f}")
             print(f"  High:  {last.high:.5f}")

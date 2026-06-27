@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from loguru import logger
 from ib_async import IB
 
 from forex_bot.broker.client import IBClient

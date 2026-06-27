@@ -22,7 +22,6 @@ Usage:
 from __future__ import annotations
 
 import time
-from pathlib import Path
 
 import numpy as np
 from loguru import logger
@@ -297,7 +296,7 @@ def main():
 
         # Spread sensitivity with walk-forward
         lines += [
-            f"### Spread Sensitivity + Walk-Forward",
+            "### Spread Sensitivity + Walk-Forward",
             "",
             "| Spread | Best Params | IS E[P&L] | IS CI | IS Sharpe | IS N | OOS E[P&L] | OOS Sharpe | OOS WR | OOS N | Verdict |",
             "|--------|-------------|-----------|-------|-----------|------|------------|------------|--------|-------|---------|",
