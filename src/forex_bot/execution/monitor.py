@@ -32,7 +32,14 @@ class PositionMonitor:
         self._order_service = OrderService(client)
         self._max_holding = get_settings().strategy.max_holding_minutes
         self._tracked_trades: dict[int, datetime] = {}  # order_id -> opened_at
+        self._excluded_order_ids: set[int] = set()
         self._running = False
+
+    def exclude_from_holding_check(self, order_ids: set[int]) -> None:
+        """Exclude order IDs from holding time checks (e.g., carry positions)."""
+        self._excluded_order_ids |= order_ids
+        if order_ids:
+            logger.debug(f"Excluded {len(order_ids)} order(s) from holding checks")
 
     def start_monitoring(self) -> None:
         """Subscribe to IB order status events."""
@@ -101,6 +108,8 @@ class PositionMonitor:
         now = datetime.now(UTC)
         expired = []
         for order_id, opened_at in list(self._tracked_trades.items()):
+            if order_id in self._excluded_order_ids:
+                continue
             if now - opened_at > timedelta(minutes=self._max_holding):
                 expired.append(order_id)
                 logger.warning(f"Order #{order_id} exceeded max holding time ({self._max_holding} min)")

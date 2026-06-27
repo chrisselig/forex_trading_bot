@@ -27,14 +27,26 @@ class RiskManager:
         self._circuit_breaker = circuit_breaker
         self._journal = journal
         settings = get_settings()
-        self._rules: list[RiskRule] = [
+
+        # Straddle rules (existing behavior)
+        self._straddle_rules: list[RiskRule] = [
             MandatoryStopLoss() if settings.risk.mandatory_stop_loss else None,
             MaxRiskPerTrade(settings.risk.max_risk_per_trade_pct),
             MaxDailyDrawdown(settings.risk.max_daily_drawdown_pct),
             MaxConcurrentPositions(settings.risk.max_concurrent_positions),
             MaxSpread(settings.risk.max_spread_pips, settings.risk.max_spread_overrides),
         ]
-        self._rules = [r for r in self._rules if r is not None]
+        self._straddle_rules = [r for r in self._straddle_rules if r is not None]
+
+        # Carry rules (wider limits, separate position count)
+        carry = settings.carry
+        self._carry_rules: list[RiskRule] = [
+            MandatoryStopLoss(),
+            MaxRiskPerTrade(carry.max_risk_per_carry_pct),
+            MaxDailyDrawdown(settings.risk.max_daily_drawdown_pct),
+            MaxConcurrentPositions(carry.max_concurrent_carry),
+            MaxSpread(carry.max_spread_pips, carry.max_spread_overrides),
+        ]
 
     async def validate(
         self, signal: Signal, price: PriceSnapshot | None = None, quote_to_cad: float = 1.0,
@@ -46,16 +58,24 @@ class RiskManager:
             return [cb_error]
 
         account = await self._client.get_account_summary()
-        positions = await self._client.get_positions()
         daily_pnl = await self._journal.get_daily_pnl()
 
+        # Strategy-aware position counting and rule selection
+        if signal.strategy == "carry":
+            rules = self._carry_rules
+            open_count = await self._journal.count_open_by_strategy("carry")
+        else:
+            rules = self._straddle_rules
+            positions = await self._client.get_positions()
+            open_count = len(positions)
+
         violations = []
-        for rule in self._rules:
+        for rule in rules:
             error = rule.validate(
                 signal=signal,
                 account=account,
                 price=price,
-                open_position_count=len(positions),
+                open_position_count=open_count,
                 daily_pnl=daily_pnl,
                 quote_to_cad=quote_to_cad,
             )

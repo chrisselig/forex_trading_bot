@@ -106,6 +106,23 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     return {}
 
 
+class CarryConfig(BaseModel):
+    enabled: bool = False
+    instruments: list[str] = Field(
+        default_factory=lambda: ["USDZAR", "USDTRY", "USDMXN", "AUDJPY", "NZDJPY"],
+    )
+    min_differential_pct: float = 2.0
+    risk_budget_pct: float = 5.0
+    max_concurrent_carry: int = 5
+    max_risk_per_carry_pct: float = 1.5
+    stop_loss_pct: float = 5.0
+    rebalance_day: int = 1  # Day of month
+    rebalance_hour_utc: int = 14  # 8 AM MT
+    fallback_rates: dict[str, float] = Field(default_factory=lambda: {"TRY": 50.0})
+    max_spread_pips: float = 30.0
+    max_spread_overrides: dict[str, float] = Field(default_factory=dict)
+
+
 class TelegramConfig(BaseModel):
     bot_token: str = ""
     chat_id: str = ""
@@ -126,6 +143,7 @@ class Settings(BaseSettings):
     events: EventsConfig = Field(default_factory=EventsConfig)
     telegram: TelegramConfig = Field(default_factory=TelegramConfig)
     turso: TursoConfig = Field(default_factory=TursoConfig)
+    carry: CarryConfig = Field(default_factory=CarryConfig)
 
     fred_api_key: str = ""
     ib_host: str = ""
