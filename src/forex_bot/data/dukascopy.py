@@ -33,7 +33,7 @@ async def download_new_event_data() -> bool:
     stdout, stderr = await proc.communicate()
 
     if proc.returncode == 0:
-        logger.info(f"Nightly Dukascopy download completed successfully")
+        logger.info("Nightly Dukascopy download completed successfully")
         if stdout:
             for line in stdout.decode().strip().splitlines()[-5:]:
                 logger.debug(f"  {line}")

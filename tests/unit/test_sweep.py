@@ -1,9 +1,9 @@
 """Unit tests for currency sweep module."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
-from forex_bot.broker.sweep import get_cash_balances, MIN_SWEEP_THRESHOLD
+from forex_bot.broker.sweep import get_cash_balances
 
 
 @pytest.fixture

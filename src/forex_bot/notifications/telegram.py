@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -148,11 +148,11 @@ class TelegramNotifier:
             tp_pips = f"{abs(order.price - order.take_profit) / pip_size:.1f}"
 
         lines = [
-            f"*NEW TRADE OPENED*",
-            f"",
+            "*NEW TRADE OPENED*",
+            "",
             f"*{pair}* {self._arrow(order.side)} ({order.order_type})",
             f"Strategy: `{order.strategy}`",
-            f"",
+            "",
             f"Entry: `{entry}`",
             f"Stop Loss: `{sl}` ({sl_pips} pips)",
             f"Take Profit: `{tp}` ({tp_pips} pips)",
@@ -164,19 +164,19 @@ class TelegramNotifier:
             lines.append(f"Spread: `{spread_pips:.1f}` pips")
 
         if event:
-            lines.append(f"")
+            lines.append("")
             lines.append(f"*Event:* {event.title}")
             lines.append(f"Scheduled: {self._fmt_et(event.scheduled_at)}")
             if event.forecast:
                 lines.append(f"Forecast: `{event.forecast}`  Prev: `{event.previous or '—'}`")
 
         if account:
-            lines.append(f"")
+            lines.append("")
             lines.append(f"Account NLV: `${account.net_liquidation:,.2f}`")
             if account.unrealized_pnl != 0:
                 lines.append(f"Open P&L: `${account.unrealized_pnl:,.2f}`")
 
-        lines.append(f"")
+        lines.append("")
         lines.append(f"_{self._fmt_et(order.created_at)}_")
 
         await self._send("\n".join(lines), critical=True)
@@ -196,13 +196,13 @@ class TelegramNotifier:
         """Notify when an order is filled by IB."""
         pair = instrument
         lines = [
-            f"*ORDER FILLED*",
-            f"",
+            "*ORDER FILLED*",
+            "",
             f"*{pair}* {self._arrow(side)}",
             f"Fill: `{self._fmt_price(fill_price, pair)}`",
             f"Size: `{quantity:,.0f}` units",
             f"IB Order: `#{order_id}`",
-            f"",
+            "",
             f"_{self._fmt_et(datetime.utcnow())}_",
         ]
 
@@ -250,35 +250,35 @@ class TelegramNotifier:
 
         lines = [
             f"*TRADE CLOSED — {result}*",
-            f"",
+            "",
             f"*{pair}* {self._arrow(trade.side)}",
             f"Strategy: `{trade.strategy}`",
-            f"",
+            "",
             f"Entry: `{self._fmt_price(trade.entry_price, pair)}`",
             f"Exit: `{self._fmt_price(trade.exit_price, pair)}`",
             f"Closed by: _{exit_reason}_",
             f"Duration: `{duration}`",
-            f"",
+            "",
             f"*P&L: `{pnl_sign}${pnl:,.2f}` ({pnl_sign}{pnl_pips:.1f} pips)*",
         ]
 
         if event and event.has_actual:
             surprise = event.surprise_pct
-            lines.append(f"")
+            lines.append("")
             lines.append(f"*Event:* {event.title}")
             lines.append(f"Actual: `{event.actual}`  Forecast: `{event.forecast}`  Prev: `{event.previous or '—'}`")
             if surprise is not None:
                 lines.append(f"Surprise: `{surprise:+.1f}%`")
 
         if account or daily_pnl is not None:
-            lines.append(f"")
+            lines.append("")
             if account:
                 lines.append(f"Account NLV: `${account.net_liquidation:,.2f}`")
             if daily_pnl is not None:
                 dpnl_sign = "+" if daily_pnl >= 0 else ""
                 lines.append(f"Daily P&L: `{dpnl_sign}${daily_pnl:,.2f}`")
 
-        lines.append(f"")
+        lines.append("")
         lines.append(f"_{self._fmt_et(trade.closed_at)}_")
 
         await self._send("\n".join(lines), critical=True)
@@ -296,20 +296,20 @@ class TelegramNotifier:
     ) -> None:
         """Notify when a signal is rejected by the risk manager."""
         lines = [
-            f"*SIGNAL REJECTED*",
-            f"",
+            "*SIGNAL REJECTED*",
+            "",
             f"*{instrument}* — `{strategy}`",
-            f"",
-            f"Violations:",
+            "",
+            "Violations:",
         ]
         for v in violations:
             lines.append(f"  - {v}")
 
         if event:
-            lines.append(f"")
+            lines.append("")
             lines.append(f"Event: {event.title} ({self._fmt_et(event.scheduled_at)})")
 
-        lines.append(f"")
+        lines.append("")
         lines.append(f"_{self._fmt_et(datetime.utcnow())}_")
 
         await self._send("\n".join(lines), critical=True)
@@ -322,21 +322,21 @@ class TelegramNotifier:
 
         if state == CircuitState.HALTED:
             lines = [
-                f"*CIRCUIT BREAKER — HALTED*",
-                f"",
+                "*CIRCUIT BREAKER — HALTED*",
+                "",
                 f"Reason: {circuit_breaker.halt_reason}",
-                f"",
-                f"*All trading is STOPPED.*",
-                f"Manual reset required via `forex-bot reset-circuit`.",
-                f"",
+                "",
+                "*All trading is STOPPED.*",
+                "Manual reset required via `forex-bot reset-circuit`.",
+                "",
                 f"_{self._fmt_et(datetime.utcnow())}_",
             ]
         else:
             lines = [
-                f"*CIRCUIT BREAKER — COOLDOWN*",
-                f"",
-                f"Trading paused for 30 minutes.",
-                f"",
+                "*CIRCUIT BREAKER — COOLDOWN*",
+                "",
+                "Trading paused for 30 minutes.",
+                "",
                 f"_{self._fmt_et(datetime.utcnow())}_",
             ]
 
@@ -384,8 +384,8 @@ class TelegramNotifier:
         dpnl_sign = "+" if daily_pnl >= 0 else ""
 
         lines = [
-            f"*DAILY SUMMARY*",
-            f"",
+            "*DAILY SUMMARY*",
+            "",
             f"Trades today: `{stats.total_trades}`",
             f"Won: `{stats.winning_trades}`  Lost: `{stats.losing_trades}`",
         ]
@@ -395,30 +395,30 @@ class TelegramNotifier:
                 f"Win rate: `{stats.win_rate:.0f}%`",
                 f"Avg win: `${stats.avg_win:,.2f}`  Avg loss: `${stats.avg_loss:,.2f}`",
                 f"Profit factor: `{stats.profit_factor:.2f}`",
-                f"",
+                "",
                 f"*Daily P&L: `{dpnl_sign}${daily_pnl:,.2f}`*",
                 f"Avg pips: `{stats.avg_pnl_pips:+.1f}`",
             ])
         else:
             lines.extend([
-                f"",
-                f"_No trades executed today._",
+                "",
+                "_No trades executed today._",
             ])
 
         if account:
             lines.extend([
-                f"",
+                "",
                 f"Account NLV: `${account.net_liquidation:,.2f}`",
                 f"Open P&L: `${account.unrealized_pnl:,.2f}`",
             ])
 
         if circuit_state != CircuitState.ACTIVE:
             lines.extend([
-                f"",
+                "",
                 f"Circuit Breaker: *{circuit_state}*",
             ])
 
-        lines.append(f"")
+        lines.append("")
         lines.append(f"_{self._fmt_et(datetime.utcnow())}_")
 
         await self._send("\n".join(lines))
@@ -431,7 +431,7 @@ class TelegramNotifier:
         """Notify that a high-impact event is approaching."""
         lines = [
             f"*EVENT IN {minutes} MIN*",
-            f"",
+            "",
             f"*{event.title}* ({event.country})",
             f"Scheduled: {self._fmt_et(event.scheduled_at)}",
         ]
@@ -439,7 +439,7 @@ class TelegramNotifier:
         if event.forecast:
             lines.append(f"Forecast: `{event.forecast}`  Prev: `{event.previous or '—'}`")
 
-        lines.append(f"")
+        lines.append("")
         lines.append(f"_{self._fmt_et(datetime.utcnow())}_")
 
         await self._send("\n".join(lines), silent=True)
@@ -451,8 +451,8 @@ class TelegramNotifier:
     async def notify_bot_started(self, account: AccountSummary | None = None) -> None:
         """Notify that the trading bot has started."""
         lines = [
-            f"*BOT STARTED*",
-            f"",
+            "*BOT STARTED*",
+            "",
         ]
 
         if account:
@@ -460,7 +460,7 @@ class TelegramNotifier:
                 f"Account: `{account.account_id}`",
                 f"NLV: `${account.net_liquidation:,.2f}`",
                 f"Buying power: `${account.buying_power:,.2f}`",
-                f"",
+                "",
             ])
 
         lines.append(f"_{self._fmt_et(datetime.utcnow())}_")

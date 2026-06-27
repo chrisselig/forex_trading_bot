@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
-from loguru import logger
 from sqlalchemy import select
 
 from forex_bot.data.database import get_session

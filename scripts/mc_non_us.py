@@ -23,7 +23,6 @@ import argparse
 import json
 import sys
 import time
-from pathlib import Path
 
 import numpy as np
 from loguru import logger
@@ -33,7 +32,6 @@ from monte_carlo_dukascopy import (
     CONFIDENCE_LEVEL,
     DATA_DIR,
     DISTANCE_RANGE,
-    DUKASCOPY_DIR,
     N_BOOTSTRAP,
     SL_RANGE,
     TP_RANGE,
@@ -277,7 +275,7 @@ def generate_report(
         "",
         "## Executive Summary",
         "",
-        f"- **Analysis period**: January 2020 — June 2026 (6.5 years)",
+        "- **Analysis period**: January 2020 — June 2026 (6.5 years)",
         f"- **Total events analyzed**: {total_events}",
     ]
 

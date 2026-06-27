@@ -5,9 +5,8 @@ from datetime import UTC, datetime
 
 from forex_bot.models.account import AccountSummary
 from forex_bot.models.market import PriceSnapshot
-from forex_bot.models.orders import OrderSide, OrderType
+from forex_bot.models.orders import OrderSide
 from forex_bot.risk.rules import (
-    MaxRiskPerTrade,
     MaxDailyDrawdown,
     MaxConcurrentPositions,
     MandatoryStopLoss,

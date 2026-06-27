@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from loguru import logger
+from datetime import datetime
 
 from forex_bot.calendar.store import EventStore
 from forex_bot.models.events import EconomicEvent
