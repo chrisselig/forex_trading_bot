@@ -87,7 +87,7 @@ strategy:
   max_holding_minutes: 120
 
 carry:
-  enabled: false    # Start disabled, enable after paper-trade validation
+  enabled: true
   instruments: [USDZAR, USDTRY, USDMXN, AUDJPY, NZDJPY]
   min_differential_pct: 2.0
   risk_budget_pct: 5.0
@@ -95,7 +95,7 @@ carry:
   max_risk_per_carry_pct: 1.5
   stop_loss_pct: 5.0
   rebalance_day: 1
-  rebalance_hour_utc: 14
+  rebalance_hour_utc: 11
   fallback_rates:
     TRY: 50.0
   max_spread_pips: 30.0
