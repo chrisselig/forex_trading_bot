@@ -85,3 +85,20 @@ strategy:
   surprise_tp_pips: 25
   surprise_sl_pips: 15
   max_holding_minutes: 120
+
+carry:
+  enabled: false    # Start disabled, enable after paper-trade validation
+  instruments: [USDZAR, USDTRY, USDMXN, AUDJPY, NZDJPY]
+  min_differential_pct: 2.0
+  risk_budget_pct: 5.0
+  max_concurrent_carry: 5
+  max_risk_per_carry_pct: 1.5
+  stop_loss_pct: 5.0
+  rebalance_day: 1
+  rebalance_hour_utc: 14
+  fallback_rates:
+    TRY: 50.0
+  max_spread_pips: 30.0
+  max_spread_overrides:
+    USDZAR: 60.0
+    USDTRY: 80.0

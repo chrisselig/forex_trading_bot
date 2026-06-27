@@ -30,6 +30,7 @@ from forex_bot.risk.circuit_breaker import CircuitBreaker
 from forex_bot.risk.manager import RiskManager
 from forex_bot.scheduler.jobs import JobManager
 from forex_bot.scheduler.shutdown import ShutdownHandler
+from forex_bot.strategy.carry import CarryManager
 from forex_bot.strategy.registry import create_default_registry
 
 
@@ -85,6 +86,18 @@ class Orchestrator:
             self._client, self._journal, self._circuit_breaker,
             notifier=self._notifier,
         )
+        # Carry trade manager (schedule-driven, not event-driven)
+        self._carry_manager: CarryManager | None = None
+        if self._settings.carry.enabled:
+            self._carry_manager = CarryManager(
+                client=self._client,
+                execution_engine=self._execution_engine,
+                journal=self._journal,
+                pricing=PricingService(self._client),
+                monitor=self._monitor,
+                notifier=self._notifier,
+            )
+
         self._reconciler = Reconciler(self._client)
         self._pricing = PricingService(self._client)
         self._scraper = ForexFactoryScraper()
@@ -122,6 +135,13 @@ class Orchestrator:
 
         # 4. Start position monitoring
         self._monitor.start_monitoring()
+
+        # 4b. Restore carry positions from DB
+        if self._carry_manager:
+            await self._carry_manager.restore_state()
+            carry_ids = self._carry_manager.get_carry_order_ids()
+            if carry_ids:
+                self._monitor.exclude_from_holding_check(carry_ids)
 
         # 5. Validate static calendar against master event list
         missing = validate_static_calendar()
@@ -246,6 +266,20 @@ class Orchestrator:
             replace_existing=True,
         )
 
+        # Monthly carry rebalance (1st of month at configured hour)
+        if self._carry_manager:
+            carry_cfg = self._settings.carry
+            self._scheduler.add_job(
+                self._carry_manager.rebalance,
+                CronTrigger(day=carry_cfg.rebalance_day, hour=carry_cfg.rebalance_hour_utc, minute=7),
+                id="carry_rebalance",
+                replace_existing=True,
+            )
+            logger.info(
+                f"Carry rebalance scheduled: day={carry_cfg.rebalance_day} "
+                f"hour={carry_cfg.rebalance_hour_utc} UTC"
+            )
+
         # Nightly Dukascopy data download at 04:00 UTC (11 PM ET)
         self._scheduler.add_job(
             self._nightly_data_download,
@@ -280,7 +314,8 @@ class Orchestrator:
             if not self._client.is_connected:
                 logger.warning("Currency sweep skipped: IB not connected")
                 return
-            results = await sweep_to_cad(self._client)
+            exclude = self._carry_manager.get_active_currencies() if self._carry_manager else None
+            results = await sweep_to_cad(self._client, exclude_currencies=exclude)
             if results:
                 logger.info(f"Currency sweep completed: {len(results)} conversion(s)")
         except Exception as e:

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 
 from forex_bot.data.database import get_session
 from forex_bot.data.schemas import TradeRecord, OrderRecord
@@ -229,6 +229,28 @@ class TradeJournal:
             )
             records = result.scalars().all()
         return sum(r.pnl for r in records if r.pnl is not None)
+
+    async def count_open_by_strategy(self, strategy: str) -> int:
+        """Count open orders for a specific strategy."""
+        async with get_session() as session:
+            result = await session.execute(
+                select(func.count(OrderRecord.id)).where(
+                    OrderRecord.strategy == strategy,
+                    OrderRecord.status == "submitted",
+                )
+            )
+            return result.scalar_one()
+
+    async def get_open_orders_by_strategy(self, strategy: str) -> list[OrderRecord]:
+        """Get all open orders for a specific strategy."""
+        async with get_session() as session:
+            result = await session.execute(
+                select(OrderRecord).where(
+                    OrderRecord.strategy == strategy,
+                    OrderRecord.status == "submitted",
+                )
+            )
+            return list(result.scalars().all())
 
     @staticmethod
     def _to_model(record: TradeRecord) -> Trade:

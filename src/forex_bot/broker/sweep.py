@@ -66,17 +66,28 @@ async def get_cash_balances(client: IBClient) -> dict[str, float]:
     return balances
 
 
-async def sweep_to_cad(client: IBClient, dry_run: bool = False) -> list[str]:
+async def sweep_to_cad(
+    client: IBClient,
+    dry_run: bool = False,
+    exclude_currencies: set[str] | None = None,
+) -> list[str]:
     """Convert all non-CAD cash balances back to CAD.
 
     Args:
         client: Connected IBClient.
         dry_run: If True, log what would happen but don't place orders.
+        exclude_currencies: Currencies to skip (e.g., carry position currencies).
 
     Returns:
         List of summary strings for each conversion placed.
     """
     balances = await get_cash_balances(client)
+
+    if exclude_currencies:
+        for ccy in exclude_currencies:
+            if ccy in balances:
+                logger.info(f"Currency sweep: skipping {ccy} (excluded by carry)")
+                del balances[ccy]
 
     if not balances:
         logger.info("Currency sweep: no non-CAD balances to convert")
