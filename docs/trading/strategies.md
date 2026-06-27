@@ -1,6 +1,6 @@
 # Trading Strategies
 
-The bot runs two complementary strategies. The straddle captures volatility regardless of direction. The surprise trades in the direction the data implies. They operate independently and can both be active during the same event.
+The bot runs three strategies. The **straddle** captures volatility regardless of direction around news events. The **surprise** trades in the direction post-release data implies. The **carry trade** exploits interest rate differentials on a monthly schedule. Straddle and surprise are event-driven and operate independently during the same event. Carry runs on its own schedule with a separate risk budget.
 
 ## Strategy 1: Straddle (Pre-Event)
 
@@ -94,19 +94,75 @@ NFP forecast: 200K. Actual: 250K. Surprise: +25%.
 
 ---
 
+## Strategy 3: Carry Trade (Schedule-Driven)
+
+### Concept
+
+The carry trade exploits interest rate differentials between currencies. Buy (go long) the high-yield currency, sell (go short) the low-yield currency, and collect the swap interest difference. Unlike straddle and surprise, carry is **not event-driven** — it rebalances on a fixed monthly schedule (1st of each month).
+
+Positions are held for weeks or months, not minutes. There is no take profit — the goal is to earn interest over time. A wide 5% stop loss protects against adverse moves while giving positions room to breathe.
+
+### How It Differs from Event Strategies
+
+| | Straddle | Surprise | Carry |
+|---|---------|---------|-------|
+| **Trigger** | Economic event (T-30 min) | Post-event surprise | Monthly schedule (1st of month) |
+| **Duration** | Minutes to hours | Minutes | Weeks to months |
+| **Profit source** | Price volatility | Directional move | Interest rate differential |
+| **Take profit** | Yes (30-70 pips) | Yes (25 pips) | None (hold for interest) |
+| **Stop loss** | Tight (10-15 pips) | Tight (15 pips) | Wide (5% of entry price) |
+| **Risk budget** | Per-trade (1%) | Per-trade (1%) | Separate budget (5% total) |
+
+### Execution Flow
+
+1. **Fetch FRED rates** — queries central bank policy rates from FRED API (with configurable fallbacks for currencies like TRY where FRED data is unavailable)
+2. **Score by differential** — calculates `quote_rate - base_rate` for each configured pair, filters out pairs below the minimum differential threshold
+3. **Close stale positions** — closes any existing carry positions that are no longer in the target set or whose direction has flipped
+4. **Enter new positions** — opens new positions via the standard risk pipeline (Signal → RiskManager → CircuitBreaker → ExecutionEngine)
+5. **Telegram summary** — sends a rebalance report showing targets, new entries, closes, and held positions
+
+### Direction Logic
+
+The direction depends on which currency in the pair has the higher interest rate:
+
+- **Positive differential** (quote rate > base rate) → **SELL the pair** (short base, long quote — earn interest on the higher-yielding quote currency)
+- **Negative differential** (quote rate < base rate) → **BUY the pair** (long base, short quote — earn interest on the higher-yielding base currency)
+
+### Example
+
+USD/ZAR with USD rate = 5.33%, ZAR rate = 8.25%:
+
+- Differential = 8.25% - 5.33% = **+2.92%** (positive → quote rate higher)
+- Direction: **SELL USDZAR** (short USD, long ZAR — earn ZAR interest)
+- Stop loss: entry price + 5% of entry price
+- Hold until next rebalance or direction flip
+
+### The Risk
+
+Carry trades are exposed to **emerging market currency crashes**. A year of accumulated swap interest can be wiped out in a single session if the high-yield currency collapses (e.g., 2008 crisis, 2024 JPY carry unwind). The 5% stop loss caps downside but can still be a significant loss on exotic pairs.
+
+Additional risks:
+
+- **FRED data staleness** — if rate data is >60 days old, the strategy falls back to configured rates which may not reflect recent policy changes
+- **Gap risk** — EM currencies can gap through stop loss levels over weekends
+- **Correlation** — multiple EM carry positions can all move against you simultaneously
+
+### Parameters
+
+| Setting | Default | Controls |
+|---------|---------|----------|
+| `carry.enabled` | `true` | Master toggle for the carry strategy |
+| `carry.instruments` | USDZAR, USDTRY, USDMXN, AUDJPY, NZDJPY | Pairs evaluated for carry trades |
+| `carry.min_differential_pct` | 2.0% | Minimum interest rate differential to open a position |
+| `carry.risk_budget_pct` | 5.0% | Total portfolio % allocated to all carry positions |
+| `carry.max_concurrent_carry` | 5 | Maximum carry positions held simultaneously |
+| `carry.max_risk_per_carry_pct` | 1.5% | Maximum risk per individual carry position |
+| `carry.stop_loss_pct` | 5.0% | Stop loss as percentage of entry price |
+| `carry.rebalance_day` | 1 | Day of month to rebalance (1-31) |
+| `carry.rebalance_hour_utc` | 11 | UTC hour for rebalance (5 AM MT) |
+| `carry.max_spread_pips` | 30.0 | Default max spread at entry |
+| `carry.fallback_rates` | TRY: 50.0 | Fallback rates when FRED data unavailable |
+
+---
+
 ## How They Work Together
-
-| | Straddle | Surprise |
-|---|---------|---------|
-| **Timing** | Before the event | After the event |
-| **Approach** | Bet on volatility (either direction) | Bet on direction (based on data) |
-| **Trigger** | Price movement | Data surprise magnitude |
-| **Order type** | Pending stop orders | Market orders |
-
-During a single event:
-
-1. **T-30 min** — Straddle places buy stop + sell stop
-2. **T+0** — Data releases, price moves, one straddle leg triggers
-3. **T+5 sec** — Surprise strategy evaluates data, may place additional trade
-
-Both strategies operate independently and can produce signals on the same event.
