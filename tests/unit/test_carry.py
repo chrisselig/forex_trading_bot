@@ -25,7 +25,7 @@ def mock_settings():
         settings.carry.max_concurrent_carry = 5
         settings.carry.max_risk_per_carry_pct = 1.5
         settings.carry.stop_loss_pct = 5.0
-        settings.carry.rebalance_day = 1
+        settings.carry.rebalance_day_of_week = "sun"
         settings.carry.rebalance_hour_utc = 14
         settings.carry.fallback_rates = {"TRY": 50.0}
         settings.carry.max_spread_pips = 30.0

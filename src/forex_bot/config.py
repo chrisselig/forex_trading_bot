@@ -116,7 +116,7 @@ class CarryConfig(BaseModel):
     max_concurrent_carry: int = 5
     max_risk_per_carry_pct: float = 1.5
     stop_loss_pct: float = 5.0
-    rebalance_day: int = 1  # Day of month
+    rebalance_day_of_week: str = "sun"  # Day of week (mon-sun)
     rebalance_hour_utc: int = 14  # 8 AM MT
     fallback_rates: dict[str, float] = Field(default_factory=lambda: {"TRY": 50.0})
     max_spread_pips: float = 30.0
