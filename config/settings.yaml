@@ -94,7 +94,7 @@ carry:
   max_concurrent_carry: 5
   max_risk_per_carry_pct: 1.5
   stop_loss_pct: 5.0
-  rebalance_day: 1
+  rebalance_day_of_week: sun
   rebalance_hour_utc: 11
   fallback_rates:
     TRY: 50.0

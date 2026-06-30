@@ -4,7 +4,7 @@
 
 **[Documentation](https://chrisselig.github.io/forex_trading_bot/)** | [Glossary](https://chrisselig.github.io/forex_trading_bot/trading/glossary/) | [Strategies](https://chrisselig.github.io/forex_trading_bot/trading/strategies/) | [Risk Management](https://chrisselig.github.io/forex_trading_bot/trading/risk-management/) | [Monte Carlo Analysis](https://chrisselig.github.io/forex_trading_bot/research/04-monte-carlo-6yr/) | [Roadmap](https://chrisselig.github.io/forex_trading_bot/research/todo/)
 
-An event-driven forex trading bot that automatically trades major economic news releases — [NFP](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#nfp-non-farm-payrolls), [CPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#cpi-consumer-price-index), [FOMC](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#fomc-federal-open-market-committee), [PPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#ppi-producer-price-index), GDP, PCE, Unemployment Claims, ISM Manufacturing PMI, Retail Sales, plus non-US events (SARB, TCMB, SA CPI, BOJ, RBA, AU CPI, AU Employment) — using [Interactive Brokers](https://www.interactivebrokers.com). The bot places [straddle](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#straddle) orders around news events, evaluates post-release surprises, and runs a monthly carry trade strategy exploiting interest rate differentials. It enforces strict risk management, sends real-time [Telegram alerts](https://chrisselig.github.io/forex_trading_bot/operations/telegram-notifications/) to your phone, and logs everything to a trade journal.
+An event-driven forex trading bot that automatically trades major economic news releases — [NFP](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#nfp-non-farm-payrolls), [CPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#cpi-consumer-price-index), [FOMC](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#fomc-federal-open-market-committee), [PPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#ppi-producer-price-index), GDP, PCE, Unemployment Claims, ISM Manufacturing PMI, Retail Sales, plus non-US events (SARB, TCMB, SA CPI, BOJ, RBA, AU CPI, AU Employment) — using [Interactive Brokers](https://www.interactivebrokers.com). The bot places [straddle](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#straddle) orders around news events, evaluates post-release surprises, and runs a weekly carry trade strategy exploiting interest rate differentials. It enforces strict risk management, sends real-time [Telegram alerts](https://chrisselig.github.io/forex_trading_bot/operations/telegram-notifications/) to your phone, and logs everything to a trade journal.
 
 Built for a Canadian trader in Alberta where OANDA is not available due to provincial regulatory constraints.
 
@@ -189,7 +189,7 @@ The bot will:
 2. Reconcile any open positions/orders
 3. Fetch the economic calendar from Forex Factory
 4. Schedule jobs for upcoming events (pre-event straddle + post-event surprise)
-5. Schedule monthly carry trade rebalance (1st of each month, 5 AM MT)
+5. Schedule weekly carry trade rebalance (every Sunday, 5 AM MT)
 6. Run health checks every 5 minutes (auto-reconnects on disconnect)
 7. Refresh the calendar every 6 hours
 8. Shut down gracefully on `Ctrl+C`

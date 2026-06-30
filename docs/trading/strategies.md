@@ -1,6 +1,6 @@
 # Trading Strategies
 
-The bot runs three strategies. The **straddle** captures volatility regardless of direction around news events. The **surprise** trades in the direction post-release data implies. The **carry trade** exploits interest rate differentials on a monthly schedule. Straddle and surprise are event-driven and operate independently during the same event. Carry runs on its own schedule with a separate risk budget.
+The bot runs three strategies. The **straddle** captures volatility regardless of direction around news events. The **surprise** trades in the direction post-release data implies. The **carry trade** exploits interest rate differentials on a weekly schedule. Straddle and surprise are event-driven and operate independently during the same event. Carry runs on its own schedule with a separate risk budget.
 
 ## Strategy 1: Straddle (Pre-Event)
 
@@ -98,7 +98,7 @@ NFP forecast: 200K. Actual: 250K. Surprise: +25%.
 
 ### Concept
 
-The carry trade exploits interest rate differentials between currencies. Buy (go long) the high-yield currency, sell (go short) the low-yield currency, and collect the swap interest difference. Unlike straddle and surprise, carry is **not event-driven** — it rebalances on a fixed monthly schedule (1st of each month).
+The carry trade exploits interest rate differentials between currencies. Buy (go long) the high-yield currency, sell (go short) the low-yield currency, and collect the swap interest difference. Unlike straddle and surprise, carry is **not event-driven** — it rebalances on a fixed weekly schedule (every Sunday).
 
 Positions are held for weeks or months, not minutes. There is no take profit — the goal is to earn interest over time. A wide 5% stop loss protects against adverse moves while giving positions room to breathe.
 
@@ -106,7 +106,7 @@ Positions are held for weeks or months, not minutes. There is no take profit —
 
 | | Straddle | Surprise | Carry |
 |---|---------|---------|-------|
-| **Trigger** | Economic event (T-30 min) | Post-event surprise | Monthly schedule (1st of month) |
+| **Trigger** | Economic event (T-30 min) | Post-event surprise | Weekly schedule (every Sunday) |
 | **Duration** | Minutes to hours | Minutes | Weeks to months |
 | **Profit source** | Price volatility | Directional move | Interest rate differential |
 | **Take profit** | Yes (30-70 pips) | Yes (25 pips) | None (hold for interest) |
@@ -158,7 +158,7 @@ Additional risks:
 | `carry.max_concurrent_carry` | 5 | Maximum carry positions held simultaneously |
 | `carry.max_risk_per_carry_pct` | 1.5% | Maximum risk per individual carry position |
 | `carry.stop_loss_pct` | 5.0% | Stop loss as percentage of entry price |
-| `carry.rebalance_day` | 1 | Day of month to rebalance (1-31) |
+| `carry.rebalance_day_of_week` | sun | Day of week to rebalance (mon-sun) |
 | `carry.rebalance_hour_utc` | 11 | UTC hour for rebalance (5 AM MT) |
 | `carry.max_spread_pips` | 30.0 | Default max spread at entry |
 | `carry.fallback_rates` | TRY: 50.0 | Fallback rates when FRED data unavailable |

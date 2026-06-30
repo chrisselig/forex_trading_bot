@@ -266,17 +266,17 @@ class Orchestrator:
             replace_existing=True,
         )
 
-        # Monthly carry rebalance (1st of month at configured hour)
+        # Weekly carry rebalance (Sunday at configured hour)
         if self._carry_manager:
             carry_cfg = self._settings.carry
             self._scheduler.add_job(
                 self._carry_manager.rebalance,
-                CronTrigger(day=carry_cfg.rebalance_day, hour=carry_cfg.rebalance_hour_utc, minute=7),
+                CronTrigger(day_of_week=carry_cfg.rebalance_day_of_week, hour=carry_cfg.rebalance_hour_utc, minute=7),
                 id="carry_rebalance",
                 replace_existing=True,
             )
             logger.info(
-                f"Carry rebalance scheduled: day={carry_cfg.rebalance_day} "
+                f"Carry rebalance scheduled: day_of_week={carry_cfg.rebalance_day_of_week} "
                 f"hour={carry_cfg.rebalance_hour_utc} UTC"
             )
 
