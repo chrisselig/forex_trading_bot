@@ -13,7 +13,7 @@ from forex_bot.config import get_settings
 from forex_bot.data.trade_journal import TradeJournal
 from forex_bot.execution.engine import ExecutionEngine
 from forex_bot.execution.monitor import PositionMonitor
-from forex_bot.models.orders import OrderSide, OrderType
+from forex_bot.models.orders import Order, OrderSide, OrderType
 from forex_bot.notifications.telegram import TelegramNotifier
 from forex_bot.strategy.signals import Signal
 
@@ -289,8 +289,9 @@ class CarryManager:
     ) -> Signal:
         """Build an entry signal for a carry position.
 
-        Uses FXCONV (no minimum order size) so position sizing reflects
-        actual risk budget without the IDEALPRO 25K floor.
+        IDEALPRO accepts odd-lot orders below 25K units (routed as
+        currency conversions), so position sizing uses actual risk
+        budget without any artificial floor.
         """
         # Size to max risk per carry position (what the risk validator enforces)
         risk_pct = self._settings.max_risk_per_carry_pct
@@ -325,62 +326,37 @@ class CarryManager:
         )
 
     async def _close_position(self, pair: str, position: CarryPosition, reason: str) -> None:
-        """Close an active carry position via reverse FXCONV market order."""
+        """Close an active carry position.
+
+        Carry entries use place_order_with_stop (market + SL child) on IDEALPRO.
+        To close: cancel the SL child order, then place a reverse market order.
+        """
         logger.info(f"Carry: closing {pair} ({reason})")
         try:
             order_service = OrderService(self._client)
+            open_trades = await order_service.get_open_trades()
+
+            # Cancel the stop loss child order (parentId matches the entry)
+            for trade in open_trades:
+                if trade.order.parentId == position.ib_order_id:
+                    await order_service.cancel_order(trade)
+                    logger.info(f"Carry: cancelled SL child for {pair}")
+
+            # Place reverse market order to flatten the position
             reverse_side = OrderSide.SELL if position.side == OrderSide.BUY else OrderSide.BUY
-            await order_service.place_fxconv_order(
+            close_order = Order(
                 instrument=pair,
                 side=reverse_side,
+                order_type=OrderType.MARKET,
                 quantity=position.quantity,
+                strategy="carry",
             )
-            logger.info(f"Carry: closed {pair} via FXCONV {reverse_side} {position.quantity}")
+            await order_service.place_order(close_order)
+            logger.info(f"Carry: closed {pair} via {reverse_side} {position.quantity}")
         except Exception as e:
             logger.error(f"Carry: failed to close {pair}: {e}")
         finally:
             self._positions.pop(pair, None)
-
-    async def check_stop_losses(self) -> None:
-        """Periodic SL monitor for FXCONV carry positions.
-
-        FXCONV orders don't support brackets, so stop losses are
-        software-monitored. Called every 60s by the scheduler.
-        """
-        if not self._positions:
-            return
-
-        if not self._client.is_connected:
-            return
-
-        for pair in list(self._positions):
-            pos = self._positions[pair]
-            try:
-                price = await self._pricing.get_snapshot(pair)
-                mid = price.mid
-
-                triggered = False
-                if pos.side == OrderSide.BUY and mid <= pos.stop_loss:
-                    triggered = True
-                elif pos.side == OrderSide.SELL and mid >= pos.stop_loss:
-                    triggered = True
-
-                if triggered:
-                    logger.warning(
-                        f"Carry SL triggered: {pair} {pos.side} mid={mid:.5f} SL={pos.stop_loss:.5f}"
-                    )
-                    await self._close_position(pair, pos, "stop loss triggered")
-                    if self._notifier:
-                        await self._notifier.send_raw(
-                            f"*CARRY STOP LOSS*\n\n"
-                            f"Pair: {pair}\n"
-                            f"Side: {pos.side}\n"
-                            f"Entry: {pos.entry_price:.5f}\n"
-                            f"SL: {pos.stop_loss:.5f}\n"
-                            f"Exit: {mid:.5f}"
-                        )
-            except Exception as e:
-                logger.error(f"Carry SL check failed for {pair}: {e}")
 
     async def _send_rebalance_summary(
         self,

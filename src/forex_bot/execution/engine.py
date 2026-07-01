@@ -109,16 +109,7 @@ class ExecutionEngine:
 
         # Place with IB
         try:
-            if signal.strategy == "carry":
-                # Carry uses FXCONV (no minimum order size, software-monitored SL)
-                ib_trade = await self._order_service.place_fxconv_order(
-                    instrument=order.instrument,
-                    side=order.side,
-                    quantity=order.quantity,
-                )
-                order.ib_order_id = ib_trade.order.orderId
-                order.status = OrderStatus.SUBMITTED
-            elif signal.take_profit and signal.price:
+            if signal.take_profit and signal.price:
                 trades = await self._order_service.place_bracket_order(
                     instrument=order.instrument,
                     side=order.side,

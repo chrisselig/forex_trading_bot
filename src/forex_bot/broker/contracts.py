@@ -31,18 +31,6 @@ def make_forex_contract(pair: str) -> Forex:
     return Forex(pair)
 
 
-def make_fxconv_contract(pair: str) -> Forex:
-    """Create an IB FXCONV contract for currency conversion orders.
-
-    FXCONV has no minimum order size (unlike IDEALPRO's 25,000 unit minimum),
-    making it suitable for small position sizes like carry trades on small accounts.
-    Tradeoff: no bracket orders — stop losses must be software-monitored.
-    """
-    pair = pair.upper().replace("/", "").replace("_", "")
-    if len(pair) != 6:
-        raise ContractError(f"Invalid forex pair: {pair}")
-    return Forex(pair, exchange="FXCONV")
-
 
 def get_pip_size(pair: str) -> float:
     """Return the pip size for a given forex pair."""

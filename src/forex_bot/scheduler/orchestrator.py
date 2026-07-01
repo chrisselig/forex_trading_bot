@@ -266,16 +266,6 @@ class Orchestrator:
             replace_existing=True,
         )
 
-        # Carry stop loss monitor (every 60s — FXCONV has no bracket orders)
-        if self._carry_manager:
-            self._scheduler.add_job(
-                self._carry_manager.check_stop_losses,
-                IntervalTrigger(seconds=60),
-                id="carry_sl_monitor",
-                replace_existing=True,
-            )
-            logger.info("Carry SL monitor scheduled (60s interval)")
-
         # Weekly carry rebalance (Sunday at configured hour)
         if self._carry_manager:
             carry_cfg = self._settings.carry
