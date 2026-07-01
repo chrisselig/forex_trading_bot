@@ -104,6 +104,43 @@ class TradeJournal:
                 slippage_pips=slippage_pips,
             )
 
+    async def update_commission(self, order_id: int, commission: float) -> None:
+        """Accumulate commission on an order and its matching trade.
+
+        IB may send multiple commission reports per order (partial fills),
+        so we add to any existing value.
+        """
+        async with get_session() as session:
+            # Accumulate on OrderRecord
+            result = await session.execute(
+                select(OrderRecord).where(OrderRecord.ib_order_id == order_id)
+            )
+            order_rec = result.scalar_one_or_none()
+            if order_rec is not None:
+                order_rec.commission = (order_rec.commission or 0.0) + commission
+                db_order_id = order_rec.id
+            else:
+                db_order_id = None
+                logger.debug(f"No order found for IB order #{order_id} (commission)")
+
+            # Accumulate on TradeRecord (matched by order_id FK)
+            if db_order_id is not None:
+                trade_result = await session.execute(
+                    select(TradeRecord).where(TradeRecord.order_id == db_order_id)
+                )
+                trade_rec = trade_result.scalar_one_or_none()
+                if trade_rec is not None:
+                    trade_rec.commission = (trade_rec.commission or 0.0) + commission
+
+            await session.commit()
+            logger.info(f"Commission for IB order #{order_id}: ${commission:.4f}")
+
+        if self._turso and db_order_id is not None:
+            total = (order_rec.commission or 0.0) if order_rec else commission
+            await self._turso.push_commission(
+                order_id=db_order_id, commission=total,
+            )
+
     async def log_trade(self, trade: Trade) -> int:
         """Log a trade entry and return its database ID."""
         async with get_session() as session:
@@ -228,7 +265,10 @@ class TradeJournal:
                 )
             )
             records = result.scalars().all()
-        return sum(r.pnl for r in records if r.pnl is not None)
+        return sum(
+            (r.pnl or 0.0) - (r.commission or 0.0)
+            for r in records if r.pnl is not None
+        )
 
     async def count_open_by_strategy(self, strategy: str) -> int:
         """Count open orders for a specific strategy."""
@@ -272,6 +312,7 @@ class TradeJournal:
             slippage_pips=record.slippage_pips,
             event_id=record.event_id,
             strategy=record.strategy,
+            commission=record.commission,
             opened_at=record.opened_at,
             closed_at=record.closed_at,
         )

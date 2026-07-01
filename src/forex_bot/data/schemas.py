@@ -60,6 +60,7 @@ class TradeRecord(Base):
     opened_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    commission: Mapped[float | None] = mapped_column(Float, nullable=True)
     account_type: Mapped[str] = mapped_column(String(10), default="paper")
 
 
@@ -83,4 +84,5 @@ class OrderRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     filled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     fill_price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    commission: Mapped[float | None] = mapped_column(Float, nullable=True)
     account_type: Mapped[str] = mapped_column(String(10), default="paper")
