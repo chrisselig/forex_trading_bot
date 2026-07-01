@@ -10,7 +10,7 @@ import pytest
 from forex_bot.models.account import AccountSummary
 from forex_bot.models.market import PriceSnapshot
 from forex_bot.models.orders import OrderSide
-from forex_bot.strategy.carry import CarryManager, CarryScore
+from forex_bot.strategy.carry import CarryManager, CarryPosition, CarryScore
 
 
 @pytest.fixture
@@ -172,6 +172,7 @@ class TestRebalance:
                 bid=18.5000, ask=18.5100,
             )
             carry_manager._pricing.get_snapshot.return_value = price
+            carry_manager._pricing.get_quote_to_cad_rate = AsyncMock(return_value=0.075)
             carry_manager._client.get_account_summary = AsyncMock(
                 return_value=AccountSummary(net_liquidation=5000.0),
             )
@@ -210,6 +211,7 @@ class TestRebalance:
                 instrument="USDZAR", timestamp=datetime.now(UTC),
                 bid=18.5, ask=18.51,
             )
+            carry_manager._pricing.get_quote_to_cad_rate = AsyncMock(return_value=0.075)
             carry_manager._client.get_account_summary.return_value = AccountSummary(
                 net_liquidation=5000.0,
             )
@@ -239,6 +241,7 @@ class TestRebalance:
                 instrument="USDZAR", timestamp=datetime.now(UTC),
                 bid=18.5, ask=18.51,
             )
+            carry_manager._pricing.get_quote_to_cad_rate = AsyncMock(return_value=0.075)
             carry_manager._client.get_account_summary.return_value = AccountSummary(
                 net_liquidation=5000.0,
             )
@@ -311,16 +314,29 @@ class TestBuildEntrySignal:
         signal = carry_manager._build_entry_signal(score, 18.5, 5000.0, 1)
         assert signal.take_profit is None
 
-    def test_minimum_25k_units(self, carry_manager):
-        """Position size floors at 25,000 units (IB IDEALPRO minimum)."""
+    def test_small_position_size_fxconv(self, carry_manager):
+        """FXCONV allows small positions — no 25K floor."""
         score = CarryScore(
             pair="USDZAR", base_currency="USD", quote_currency="ZAR",
             base_rate=5.0, quote_rate=8.0, differential=3.0,
             direction=OrderSide.SELL, rate_source="fred",
         )
-        # Very small NLV to force small sizing
-        signal = carry_manager._build_entry_signal(score, 18.5, 100.0, 5)
-        assert signal.quantity >= 25000
+        # Small NLV should produce small position, not 25K
+        signal = carry_manager._build_entry_signal(score, 18.5, 100.0, 5, quote_to_cad=0.075)
+        assert signal.quantity >= 1
+        assert signal.quantity < 25000
+
+    def test_quote_to_cad_affects_sizing(self, carry_manager):
+        """quote_to_cad conversion changes position size."""
+        score = CarryScore(
+            pair="USDZAR", base_currency="USD", quote_currency="ZAR",
+            base_rate=5.0, quote_rate=8.0, differential=3.0,
+            direction=OrderSide.SELL, rate_source="fred",
+        )
+        sig_low = carry_manager._build_entry_signal(score, 18.5, 5000.0, 1, quote_to_cad=0.075)
+        sig_high = carry_manager._build_entry_signal(score, 18.5, 5000.0, 1, quote_to_cad=1.0)
+        # Lower quote_to_cad means cheaper pips → larger position
+        assert sig_low.quantity > sig_high.quantity
 
 
 # --- State Management Tests ---
@@ -365,3 +381,178 @@ class TestStateManagement:
 
         assert "USDZAR" in carry_manager._positions
         assert carry_manager._positions["USDZAR"].ib_order_id == 100
+
+
+# --- Stop Loss Monitor Tests ---
+
+
+class TestCheckStopLosses:
+    @pytest.mark.asyncio
+    async def test_buy_sl_triggered(self, carry_manager):
+        """BUY position: SL triggers when mid drops below stop_loss."""
+        carry_manager._positions["USDZAR"] = CarryPosition(
+            pair="USDZAR", side=OrderSide.BUY, entry_price=18.5,
+            quantity=500, stop_loss=17.575, ib_order_id=100,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._pricing.get_snapshot.return_value = PriceSnapshot(
+            instrument="USDZAR", timestamp=datetime.now(UTC),
+            bid=17.50, ask=17.52,  # mid=17.51, below SL=17.575
+        )
+
+        with patch.object(carry_manager, "_close_position", new_callable=AsyncMock) as mock_close:
+            await carry_manager.check_stop_losses()
+            mock_close.assert_called_once()
+            assert mock_close.call_args[0][0] == "USDZAR"
+            assert mock_close.call_args[0][2] == "stop loss triggered"
+
+    @pytest.mark.asyncio
+    async def test_sell_sl_triggered(self, carry_manager):
+        """SELL position: SL triggers when mid rises above stop_loss."""
+        carry_manager._positions["USDZAR"] = CarryPosition(
+            pair="USDZAR", side=OrderSide.SELL, entry_price=18.5,
+            quantity=500, stop_loss=19.425, ib_order_id=100,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._pricing.get_snapshot.return_value = PriceSnapshot(
+            instrument="USDZAR", timestamp=datetime.now(UTC),
+            bid=19.50, ask=19.52,  # mid=19.51, above SL=19.425
+        )
+
+        with patch.object(carry_manager, "_close_position", new_callable=AsyncMock) as mock_close:
+            await carry_manager.check_stop_losses()
+            mock_close.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_no_trigger_within_range(self, carry_manager):
+        """No SL trigger when price is within range."""
+        carry_manager._positions["USDZAR"] = CarryPosition(
+            pair="USDZAR", side=OrderSide.BUY, entry_price=18.5,
+            quantity=500, stop_loss=17.575, ib_order_id=100,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._pricing.get_snapshot.return_value = PriceSnapshot(
+            instrument="USDZAR", timestamp=datetime.now(UTC),
+            bid=18.40, ask=18.42,  # mid=18.41, above SL=17.575
+        )
+
+        with patch.object(carry_manager, "_close_position", new_callable=AsyncMock) as mock_close:
+            await carry_manager.check_stop_losses()
+            mock_close.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_pricing_failure_handled(self, carry_manager):
+        """Pricing failure doesn't crash the monitor."""
+        carry_manager._positions["USDZAR"] = CarryPosition(
+            pair="USDZAR", side=OrderSide.BUY, entry_price=18.5,
+            quantity=500, stop_loss=17.575, ib_order_id=100,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._pricing.get_snapshot.side_effect = Exception("no price")
+
+        # Should not raise
+        await carry_manager.check_stop_losses()
+        assert "USDZAR" in carry_manager._positions  # Position kept
+
+    @pytest.mark.asyncio
+    async def test_empty_positions_noop(self, carry_manager):
+        """No-op when no positions exist."""
+        await carry_manager.check_stop_losses()
+        carry_manager._pricing.get_snapshot.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_disconnected_noop(self, carry_manager):
+        """No-op when IB is disconnected."""
+        carry_manager._client.is_connected = False
+        carry_manager._positions["USDZAR"] = CarryPosition(
+            pair="USDZAR", side=OrderSide.BUY, entry_price=18.5,
+            quantity=500, stop_loss=17.575, ib_order_id=100,
+            opened_at=datetime.now(UTC),
+        )
+        await carry_manager.check_stop_losses()
+        carry_manager._pricing.get_snapshot.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_sl_sends_telegram(self, carry_manager):
+        """SL trigger sends Telegram notification."""
+        carry_manager._positions["USDZAR"] = CarryPosition(
+            pair="USDZAR", side=OrderSide.BUY, entry_price=18.5,
+            quantity=500, stop_loss=17.575, ib_order_id=100,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._pricing.get_snapshot.return_value = PriceSnapshot(
+            instrument="USDZAR", timestamp=datetime.now(UTC),
+            bid=17.50, ask=17.52,
+        )
+
+        with patch.object(carry_manager, "_close_position", new_callable=AsyncMock):
+            await carry_manager.check_stop_losses()
+            carry_manager._notifier.send_raw.assert_called_once()
+            msg = carry_manager._notifier.send_raw.call_args[0][0]
+            assert "CARRY STOP LOSS" in msg
+
+
+# --- FXCONV Close Tests ---
+
+
+class TestClosePosition:
+    @pytest.mark.asyncio
+    async def test_close_buy_places_sell(self, carry_manager):
+        """Closing a BUY position places a SELL FXCONV order."""
+        pos = CarryPosition(
+            pair="USDZAR", side=OrderSide.BUY, entry_price=18.5,
+            quantity=500, stop_loss=17.575, ib_order_id=100,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._positions["USDZAR"] = pos
+
+        with patch("forex_bot.strategy.carry.OrderService") as MockOS:
+            mock_svc = AsyncMock()
+            MockOS.return_value = mock_svc
+
+            await carry_manager._close_position("USDZAR", pos, "test")
+
+            mock_svc.place_fxconv_order.assert_called_once_with(
+                instrument="USDZAR", side=OrderSide.SELL, quantity=500,
+            )
+            assert "USDZAR" not in carry_manager._positions
+
+    @pytest.mark.asyncio
+    async def test_close_sell_places_buy(self, carry_manager):
+        """Closing a SELL position places a BUY FXCONV order."""
+        pos = CarryPosition(
+            pair="USDTRY", side=OrderSide.SELL, entry_price=30.0,
+            quantity=300, stop_loss=31.5, ib_order_id=200,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._positions["USDTRY"] = pos
+
+        with patch("forex_bot.strategy.carry.OrderService") as MockOS:
+            mock_svc = AsyncMock()
+            MockOS.return_value = mock_svc
+
+            await carry_manager._close_position("USDTRY", pos, "test")
+
+            mock_svc.place_fxconv_order.assert_called_once_with(
+                instrument="USDTRY", side=OrderSide.BUY, quantity=300,
+            )
+            assert "USDTRY" not in carry_manager._positions
+
+    @pytest.mark.asyncio
+    async def test_close_failure_still_removes_position(self, carry_manager):
+        """Position removed from tracking even if FXCONV order fails."""
+        pos = CarryPosition(
+            pair="USDZAR", side=OrderSide.BUY, entry_price=18.5,
+            quantity=500, stop_loss=17.575, ib_order_id=100,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._positions["USDZAR"] = pos
+
+        with patch("forex_bot.strategy.carry.OrderService") as MockOS:
+            mock_svc = AsyncMock()
+            mock_svc.place_fxconv_order.side_effect = Exception("order failed")
+            MockOS.return_value = mock_svc
+
+            await carry_manager._close_position("USDZAR", pos, "test")
+
+            assert "USDZAR" not in carry_manager._positions
