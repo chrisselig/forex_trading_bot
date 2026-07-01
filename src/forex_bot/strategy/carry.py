@@ -292,8 +292,8 @@ class CarryManager:
         Uses FXCONV (no minimum order size) so position sizing reflects
         actual risk budget without the IDEALPRO 25K floor.
         """
-        # Risk budget per position
-        risk_pct = self._settings.risk_budget_pct / num_targets
+        # Size to max risk per carry position (what the risk validator enforces)
+        risk_pct = self._settings.max_risk_per_carry_pct
 
         # Wide stop loss for carry (percentage-based)
         sl_distance = mid_price * (self._settings.stop_loss_pct / 100)
@@ -303,9 +303,11 @@ class CarryManager:
             stop_loss = mid_price + sl_distance
 
         # Position sizing via risk budget (account for quote-to-CAD conversion)
+        # 0.95 safety margin: quote_to_cad can shift between sizing and
+        # risk validation, so leave headroom to avoid borderline rejections.
         pip_size = get_pip_size(score.pair)
         sl_pips = sl_distance / pip_size
-        risk_amount = nlv * (risk_pct / 100)
+        risk_amount = nlv * (risk_pct / 100) * 0.95
         pip_value_cad = pip_size * quote_to_cad
         units = risk_amount / (sl_pips * pip_value_cad)
         units = max(round(units), 1)
