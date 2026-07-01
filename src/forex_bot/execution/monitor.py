@@ -45,6 +45,7 @@ class PositionMonitor:
         """Subscribe to IB order status events."""
         self._client.ib.orderStatusEvent += self._on_order_status
         self._client.ib.newOrderEvent += self._on_new_order
+        self._client.ib.commissionReportEvent += self._on_commission_report
         self._running = True
         logger.info("Position monitor started")
 
@@ -52,6 +53,7 @@ class PositionMonitor:
         """Unsubscribe from IB events."""
         self._client.ib.orderStatusEvent -= self._on_order_status
         self._client.ib.newOrderEvent -= self._on_new_order
+        self._client.ib.commissionReportEvent -= self._on_commission_report
         self._running = False
         logger.info("Position monitor stopped")
 
@@ -96,6 +98,18 @@ class PositionMonitor:
                 )
         elif status == "Cancelled":
             logger.info(f"Order #{order_id} CANCELLED")
+
+    def _on_commission_report(self, trade: IBTrade, fill, report) -> None:
+        """Handle commission reports from IB (arrives after fills)."""
+        order_id = trade.order.orderId
+        commission = report.commission
+        # IB sends 1e10 (MAX_DOUBLE) when commission is not yet known
+        if commission is None or commission >= 1e9:
+            return
+        logger.info(f"Order #{order_id} commission: ${commission:.4f} {report.currency}")
+        asyncio.get_event_loop().create_task(
+            self._journal.update_commission(order_id, commission)
+        )
 
     def _on_new_order(self, trade: IBTrade) -> None:
         """Track new orders."""

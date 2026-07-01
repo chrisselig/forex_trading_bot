@@ -205,6 +205,30 @@ class TursoSyncer:
         except Exception as e:
             logger.error(f"Turso push_trade_close failed: {e}")
 
+    async def push_commission(
+        self,
+        *,
+        order_id: int,
+        commission: float,
+    ) -> None:
+        """Update commission on an order and its matching trade in Turso."""
+        if not self._enabled:
+            return
+        try:
+            conn = self._get_connection()
+            conn.execute(
+                "UPDATE orders SET commission = ? WHERE id = ?",
+                (commission, order_id),
+            )
+            conn.execute(
+                "UPDATE trades SET commission = ? WHERE order_id = ?",
+                (commission, order_id),
+            )
+            conn.commit()
+            logger.debug(f"Turso: updated commission for order #{order_id}: ${commission:.4f}")
+        except Exception as e:
+            logger.error(f"Turso push_commission failed: {e}")
+
     async def push_event(
         self,
         *,

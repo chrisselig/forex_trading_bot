@@ -41,6 +41,7 @@ class Order(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     filled_at: datetime | None = None
     fill_price: float | None = None
+    commission: float | None = None
 
 
 class Trade(BaseModel):
@@ -60,6 +61,7 @@ class Trade(BaseModel):
     slippage_pips: float | None = None
     event_id: int | None = None
     strategy: str = ""
+    commission: float | None = None
     opened_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     closed_at: datetime | None = None
 

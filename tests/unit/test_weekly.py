@@ -36,12 +36,12 @@ class TestWeeklyReporter:
             MagicMock(
                 instrument="USDZAR", pnl=50.0, pnl_pips=70.0,
                 event_id=1, closed_at=datetime(2026, 6, 13),
-                slippage_pips=1.0,
+                slippage_pips=1.0, commission=2.0,
             ),
             MagicMock(
                 instrument="USDTRY", pnl=-20.0, pnl_pips=-10.0,
                 event_id=2, closed_at=datetime(2026, 6, 12),
-                slippage_pips=0.5,
+                slippage_pips=0.5, commission=1.5,
             ),
         ]
 
@@ -74,7 +74,7 @@ class TestWeeklyReporter:
             MagicMock(
                 instrument="USDZAR", pnl=50.0, pnl_pips=15.0,
                 event_id=1, closed_at=datetime(2026, 6, 13),
-                slippage_pips=1.0,
+                slippage_pips=1.0, commission=None,
             ),
         ]
 
@@ -96,7 +96,7 @@ class TestWeeklyReporter:
             MagicMock(
                 instrument="USDZAR", pnl=-10.0, pnl_pips=5.0,
                 event_id=1, closed_at=datetime(2026, 6, 13),
-                slippage_pips=1.0,
+                slippage_pips=1.0, commission=None,
             ),
         ]
 

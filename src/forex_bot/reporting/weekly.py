@@ -43,15 +43,23 @@ class WeeklyReporter:
             total_pips = sum(t.pnl_pips for t in trades if t.pnl_pips is not None)
             win_rate = len(wins) / len(trades) * 100
 
+            total_commission = sum(
+                t.commission for t in trades if t.commission is not None
+            )
+            net_pnl = total_pnl - total_commission
             pnl_sign = "+" if total_pnl >= 0 else ""
+            net_sign = "+" if net_pnl >= 0 else ""
             pips_sign = "+" if total_pips >= 0 else ""
 
             lines.extend([
                 f"Trades: `{len(trades)}`  Won: `{len(wins)}`  Lost: `{len(losses)}`",
                 f"Win rate: `{win_rate:.0f}%`",
                 "",
-                f"*P&L: `{pnl_sign}${total_pnl:,.2f}` ({pips_sign}{total_pips:.1f} pips)*",
+                f"*Gross P&L: `{pnl_sign}${total_pnl:,.2f}` ({pips_sign}{total_pips:.1f} pips)*",
             ])
+            if total_commission > 0:
+                lines.append(f"Commissions: `${total_commission:,.2f}`")
+                lines.append(f"*Net P&L: `{net_sign}${net_pnl:,.2f}`*")
 
             # Avg win / avg loss
             if wins:
