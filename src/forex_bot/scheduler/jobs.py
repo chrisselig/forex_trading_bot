@@ -18,6 +18,7 @@ from forex_bot.execution.monitor import PositionMonitor
 from forex_bot.models.events import EconomicEvent
 from forex_bot.notifications.telegram import TelegramNotifier
 from forex_bot.strategy.registry import StrategyRegistry
+from forex_bot.strategy.straddle import StraddleStrategy
 
 # Retry configuration for event handlers
 _MAX_RETRIES = 3
@@ -28,6 +29,7 @@ _PREFLIGHT_MAX_ATTEMPTS = 8  # 2 minutes / 15 seconds
 _ACTUAL_POLL_INTERVAL_MINUTES = 10
 _ACTUAL_POLL_MAX_ATTEMPTS = 12  # 12 × 10 min = 2 hours
 _TWS_ENSURE_MINUTES = 10  # cold-start check fires this many minutes before preflight
+_CATCHUP_DELAY_SECONDS = 5  # late-start catch-up: run the pre-event handler this soon
 
 
 class JobManager:
@@ -125,16 +127,28 @@ class JobManager:
             )
             logger.info(f"Scheduled pre-flight check for {event.title} at {preflight_time} UTC")
 
-        # Pre-event job
+        # Pre-event job. Normally scheduled at T-minus pre_minutes; on a late
+        # start (bot restarted after that window, but the event hasn't fired)
+        # fire a catch-up run immediately. The handler re-validates the
+        # remaining lead time and alerts if it's too late to place safely.
         if pre_time > now:
-            self._scheduler.add_job(
-                self._pre_event_handler,
-                DateTrigger(run_date=pre_time, timezone="UTC"),
-                args=[event],
-                id=f"pre_event_{event.title}_{event.scheduled_at.isoformat()}",
-                replace_existing=True,
+            run_at = pre_time
+            logger.info(f"Scheduled pre-event job for {event.title} at {run_at} UTC")
+        else:
+            run_at = now + timedelta(seconds=_CATCHUP_DELAY_SECONDS)
+            seconds_to_event = (event.scheduled_at - now).total_seconds()
+            logger.warning(
+                f"LATE-START: pre-event window for {event.title} already passed; "
+                f"scheduling catch-up straddle at {run_at} UTC "
+                f"({seconds_to_event:.0f}s to event)"
             )
-            logger.info(f"Scheduled pre-event job for {event.title} at {pre_time} UTC")
+        self._scheduler.add_job(
+            self._pre_event_handler,
+            DateTrigger(run_date=run_at, timezone="UTC"),
+            args=[event],
+            id=f"pre_event_{event.title}_{event.scheduled_at.isoformat()}",
+            replace_existing=True,
+        )
 
         # Post-event job (event time + small delay for data release)
         post_delay = self._settings.strategy.surprise_entry_delay_seconds
@@ -253,9 +267,45 @@ class JobManager:
         logger.error(f"IB reconnection failed after {_MAX_RETRIES} retries")
         return False
 
+    async def _resting_straddle_oca_groups(self) -> set[str]:
+        """OCA group names of straddle orders currently resting on IB.
+
+        Persistent double-trade guard: if the bot placed a straddle and then
+        restarted before the event, the OCA stop orders are still live on the
+        broker. Matching against these prevents a catch-up run from placing a
+        second straddle for the same event.
+        """
+        try:
+            trades = await self._client.get_open_orders()
+        except Exception as e:
+            logger.error(f"Could not fetch open orders for straddle dedup: {e}")
+            return set()
+        groups: set[str] = set()
+        for trade in trades:
+            oca = getattr(getattr(trade, "order", None), "ocaGroup", "") or ""
+            if oca.startswith("straddle_"):
+                groups.add(oca)
+        return groups
+
     async def _pre_event_handler(self, event: EconomicEvent) -> None:
         """Execute pre-event strategies."""
-        logger.info(f"PRE-EVENT: {event.title} (scheduled {event.scheduled_at} UTC)")
+        now = datetime.now(UTC).replace(tzinfo=None)
+        seconds_to_event = (event.scheduled_at - now).total_seconds()
+        logger.info(
+            f"PRE-EVENT: {event.title} (scheduled {event.scheduled_at} UTC, "
+            f"{seconds_to_event:.0f}s to event)"
+        )
+
+        # Late-start / late-fire guard: too close to the event to position safely.
+        min_lead = self._settings.strategy.min_pre_event_lead_seconds
+        if seconds_to_event < min_lead:
+            logger.warning(
+                f"MISSED STRADDLE: {event.title} fires in {seconds_to_event:.0f}s "
+                f"(< {min_lead}s min lead) — too late to position, skipping"
+            )
+            if self._notifier:
+                await self._notifier.notify_straddle_missed(event, seconds_to_event)
+            return
 
         if self._notifier:
             pre_minutes = self._settings.strategy.pre_event_minutes
@@ -270,6 +320,10 @@ class JobManager:
         cutoff = datetime.now(UTC) - timedelta(hours=24)
         self._straddle_placed = {k for k in self._straddle_placed if k[1] > cutoff}
 
+        # Persistent guard against re-placing a straddle already resting on IB
+        # (e.g. bot restarted after placement but before the event fired).
+        resting_oca = await self._resting_straddle_oca_groups()
+
         pairs = self._pairs_for_event(event)
         for strategy in self._registry.all():
             for pair in pairs:
@@ -282,6 +336,15 @@ class JobManager:
                         f"(already placed for earlier event)"
                     )
                     continue
+                if strategy.name == "straddle":
+                    oca_prefix = StraddleStrategy.oca_prefix(pair, event)
+                    if any(g.startswith(oca_prefix) for g in resting_oca):
+                        logger.warning(
+                            f"DEDUP: resting straddle already open on IB for {pair} at "
+                            f"{event.scheduled_at} — skipping re-placement (late start)"
+                        )
+                        self._straddle_placed.add(dedup_key)
+                        continue
                 try:
                     price = await self._pricing.get_snapshot(pair)
                     signals = await strategy.evaluate_pre_event(event, price)

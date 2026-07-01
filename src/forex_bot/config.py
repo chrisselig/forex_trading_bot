@@ -51,6 +51,11 @@ class StraddlePairOverride(StraddleParams):
 class StrategyConfig(BaseModel):
     pre_event_minutes: int = 30
     post_event_minutes: int = 60
+    # Minimum lead time (seconds) before an event to still place a pre-event
+    # straddle. On a late start (bot restart inside the pre-event window) the
+    # straddle is placed as a catch-up as long as at least this much lead
+    # remains; below it, placement is skipped and a "missed" alert is sent.
+    min_pre_event_lead_seconds: int = 90
     straddle_distance_pips: float = 20.0
     straddle_tp_pips: float = 30.0
     straddle_sl_pips: float = 15.0

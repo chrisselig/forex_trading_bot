@@ -26,11 +26,21 @@ class StraddleStrategy(BaseStrategy):
         self._settings = get_settings()
 
     @staticmethod
+    def oca_prefix(instrument: str, event: EconomicEvent) -> str:
+        """Deterministic OCA group prefix for this instrument+event.
+
+        Every straddle for a given (instrument, event) shares this prefix, so
+        it can be used to detect a resting straddle already on the broker
+        (double-trade guard on late-start catch-up).
+        """
+        ts = event.scheduled_at.strftime("%Y%m%d_%H%M")
+        return f"straddle_{instrument}_{ts}"
+
+    @staticmethod
     def _make_oca_group(instrument: str, event: EconomicEvent) -> str:
         """Generate a unique OCA group ID for this straddle."""
-        ts = event.scheduled_at.strftime("%Y%m%d_%H%M")
         now_ms = int(datetime.now(UTC).timestamp() * 1000) % 100000
-        return f"straddle_{instrument}_{ts}_{now_ms}"
+        return f"{StraddleStrategy.oca_prefix(instrument, event)}_{now_ms}"
 
     async def evaluate_pre_event(
         self,
