@@ -358,6 +358,25 @@ class TelegramNotifier:
         self._connection_lost_notified = False
         logger.info("IB connection restored")
 
+    async def notify_straddle_missed(self, event: EconomicEvent, seconds_to_event: float) -> None:
+        """Notify when a pre-event straddle was skipped because it was too late to place.
+
+        Fires on a late start (bot restarted inside the pre-event window) when
+        the remaining lead time is below the safe minimum.
+        """
+        if seconds_to_event < 0:
+            timing = f"event was {abs(seconds_to_event) / 60:.0f} min ago"
+        else:
+            timing = f"only {seconds_to_event:.0f}s of lead remained"
+        await self._send(
+            f"*STRADDLE MISSED*\n\n"
+            f"No pre-event straddle placed for *{event.title}*\n"
+            f"Scheduled: {self._fmt_et(event.scheduled_at)}\n"
+            f"Reason: {timing} (late start)\n\n"
+            f"_{self._fmt_et(datetime.utcnow())}_",
+            critical=True,
+        )
+
     async def notify_preflight_failed(self, event: EconomicEvent) -> None:
         """Notify when pre-flight connection check fails before an event."""
         await self._send(

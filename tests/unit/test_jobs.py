@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from forex_bot.scheduler.jobs import JobManager, _MAX_RETRIES, _PREFLIGHT_MAX_ATTEMPTS
+from forex_bot.strategy.straddle import StraddleStrategy
 
 
 @pytest.fixture
@@ -14,6 +15,7 @@ def job_manager():
     client = MagicMock()
     client.is_connected = True
     client.connect = AsyncMock()
+    client.get_open_orders = AsyncMock(return_value=[])
 
     pricing = MagicMock()
     pricing.get_snapshot = AsyncMock()
@@ -36,6 +38,7 @@ def job_manager():
     settings.trading.instruments = ["EURUSD"]
     settings.strategy.pre_event_minutes = 30
     settings.strategy.surprise_entry_delay_seconds = 5
+    settings.strategy.min_pre_event_lead_seconds = 90
 
     scheduler = MagicMock()
 
@@ -54,10 +57,11 @@ def job_manager():
 
 @pytest.fixture
 def event():
+    # Scheduled comfortably in the future so the pre-event min-lead gate passes.
     return MagicMock(
         id=1,
         title="Non-Farm Employment Change",
-        scheduled_at=datetime(2026, 6, 5, 12, 30, 0),
+        scheduled_at=datetime.now(UTC).replace(tzinfo=None) + timedelta(hours=2),
         target_pairs=["EURUSD"],
     )
 
@@ -178,6 +182,36 @@ class TestPreEventHandler:
         strategy.evaluate_pre_event.assert_not_called()
         engine.execute_signals.assert_not_called()
 
+    @pytest.mark.asyncio
+    async def test_skips_and_alerts_when_too_close_to_event(self, job_manager, event):
+        jm, client, pricing, engine, strategy = job_manager
+        # Event fires in 30s — below the 90s min lead: too late to position.
+        event.scheduled_at = datetime.now(UTC).replace(tzinfo=None) + timedelta(seconds=30)
+        jm._notifier = AsyncMock()
+        strategy.evaluate_pre_event = AsyncMock(return_value=[MagicMock()])
+
+        await jm._pre_event_handler(event)
+
+        jm._notifier.notify_straddle_missed.assert_called_once()
+        pricing.get_snapshot.assert_not_called()
+        strategy.evaluate_pre_event.assert_not_called()
+        engine.execute_signals.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_skips_when_resting_straddle_already_on_ib(self, job_manager, event):
+        jm, client, pricing, engine, strategy = job_manager
+        # A resting straddle for this exact pair+event is already live on IB.
+        resting = MagicMock()
+        resting.order.ocaGroup = StraddleStrategy.oca_prefix("EURUSD", event) + "_42"
+        client.get_open_orders = AsyncMock(return_value=[resting])
+        strategy.evaluate_pre_event = AsyncMock(return_value=[MagicMock()])
+
+        await jm._pre_event_handler(event)
+
+        pricing.get_snapshot.assert_not_called()
+        strategy.evaluate_pre_event.assert_not_called()
+        engine.execute_signals.assert_not_called()
+
 
 class TestPostEventHandler:
     @pytest.mark.asyncio
@@ -220,3 +254,20 @@ class TestScheduleEventJobs:
         assert any("preflight_" in jid for jid in job_ids)
         assert any("pre_event_" in jid for jid in job_ids)
         assert any("post_event_" in jid for jid in job_ids)
+
+    def test_late_start_still_schedules_catchup_pre_event(self, job_manager, event):
+        jm, *_ = job_manager
+        # Event fires in 10 min: the T-30 pre-event window (and the earlier
+        # tws_ensure/preflight windows) have already passed, but the event has
+        # not fired. Only the catch-up pre_event and post_event should schedule.
+        event.scheduled_at = datetime.now(UTC).replace(tzinfo=None) + timedelta(minutes=10)
+
+        jm.schedule_event_jobs(event, pre_minutes=30)
+
+        scheduler = jm._scheduler
+        job_ids = [call.kwargs["id"] for call in scheduler.add_job.call_args_list]
+        assert any("pre_event_" in jid for jid in job_ids)
+        assert any("post_event_" in jid for jid in job_ids)
+        # Past windows are not scheduled as jobs in the past.
+        assert not any("tws_ensure_" in jid for jid in job_ids)
+        assert not any("preflight_" in jid for jid in job_ids)

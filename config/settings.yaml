@@ -29,6 +29,7 @@ risk:
 strategy:
   pre_event_minutes: 30
   post_event_minutes: 60
+  min_pre_event_lead_seconds: 90   # Late-start catch-up: place straddle only if >= this much lead remains
   straddle_distance_pips: 50   # Default (USDZAR/USDTRY — 6.5yr MC, Jun 2026)
   straddle_tp_pips: 70         # 7:1 R:R, 30.7% win rate (breakeven 12.5%)
   straddle_sl_pips: 10         # Min 10 pips for news event spread safety
