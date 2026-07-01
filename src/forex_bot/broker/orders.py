@@ -160,14 +160,19 @@ class OrderService:
 
         ib_order = self._create_ib_order(order)
         ib_order.transmit = False  # Hold until child is attached
+        ib_order.tif = "GTC"
+
+        # Round SL to IB's minimum tick size
+        sl_price = round_to_tick(order.stop_loss, order.instrument)
 
         reverse_action = "SELL" if order.side == OrderSide.BUY else "BUY"
         sl_order = StopOrder(
             action=reverse_action,
             totalQuantity=order.quantity,
-            stopPrice=order.stop_loss,
+            stopPrice=sl_price,
             parentId=0,  # Will be set after parent is placed
             transmit=True,
+            tif="GTC",
         )
 
         logger.info(
