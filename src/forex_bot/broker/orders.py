@@ -4,7 +4,7 @@ from loguru import logger
 from ib_async import IB, MarketOrder, LimitOrder, StopOrder, Trade as IBTrade
 
 from forex_bot.broker.client import IBClient
-from forex_bot.broker.contracts import make_forex_contract, round_to_tick
+from forex_bot.broker.contracts import make_forex_contract, make_fxconv_contract, round_to_tick
 from forex_bot.broker.exceptions import OrderError
 from forex_bot.models.orders import Order, OrderSide, OrderType
 
@@ -149,6 +149,33 @@ class OrderService:
             return trades
         except Exception as e:
             raise OrderError(f"Failed to place bracket order: {e}") from e
+
+    async def place_fxconv_order(
+        self,
+        instrument: str,
+        side: OrderSide,
+        quantity: float,
+    ) -> IBTrade:
+        """Place a simple FXCONV market order (no bracket, no SL/TP).
+
+        Used for carry trades where position sizes are too small for
+        IDEALPRO's 25,000 unit minimum. Stop losses are software-monitored.
+        """
+        await self._client.ensure_connected()
+        contract = make_fxconv_contract(instrument)
+        await self.ib.qualifyContractsAsync(contract)
+
+        action = side.value
+        order = MarketOrder(action=action, totalQuantity=quantity)
+        order.tif = "IOC"
+
+        logger.info(f"Placing FXCONV {action} {quantity} {instrument}")
+
+        try:
+            trade = self.ib.placeOrder(contract, order)
+            return trade
+        except Exception as e:
+            raise OrderError(f"Failed to place FXCONV order: {e}") from e
 
     async def place_order_with_stop(self, order: Order) -> IBTrade:
         """Place an order with an attached stop loss order."""

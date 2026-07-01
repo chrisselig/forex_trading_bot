@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from forex_bot.broker.client import IBClient
 from forex_bot.broker.contracts import get_pip_size
+from forex_bot.broker.orders import OrderService
 from forex_bot.broker.pricing import PricingService
 from forex_bot.config import get_settings
 from forex_bot.data.trade_journal import TradeJournal
@@ -159,7 +160,11 @@ class CarryManager:
             try:
                 price = await self._pricing.get_snapshot(score.pair)
                 account = await self._client.get_account_summary()
-                signal = self._build_entry_signal(score, price.mid, account.net_liquidation, num_targets)
+                quote_to_cad = await self._pricing.get_quote_to_cad_rate(score.pair)
+                signal = self._build_entry_signal(
+                    score, price.mid, account.net_liquidation, num_targets,
+                    quote_to_cad=quote_to_cad,
+                )
 
                 order = await self._engine.execute_signal(signal)
                 if order and order.ib_order_id:
@@ -280,8 +285,13 @@ class CarryManager:
         mid_price: float,
         nlv: float,
         num_targets: int,
+        quote_to_cad: float = 1.0,
     ) -> Signal:
-        """Build an entry signal for a carry position."""
+        """Build an entry signal for a carry position.
+
+        Uses FXCONV (no minimum order size) so position sizing reflects
+        actual risk budget without the IDEALPRO 25K floor.
+        """
         # Risk budget per position
         risk_pct = self._settings.risk_budget_pct / num_targets
 
@@ -292,13 +302,13 @@ class CarryManager:
         else:
             stop_loss = mid_price + sl_distance
 
-        # Position sizing via risk budget
+        # Position sizing via risk budget (account for quote-to-CAD conversion)
         pip_size = get_pip_size(score.pair)
         sl_pips = sl_distance / pip_size
         risk_amount = nlv * (risk_pct / 100)
-        units = risk_amount / (sl_pips * pip_size)
-        units = round(units / 1000) * 1000
-        units = max(units, 25000)  # IB IDEALPRO minimum
+        pip_value_cad = pip_size * quote_to_cad
+        units = risk_amount / (sl_pips * pip_value_cad)
+        units = max(round(units), 1)
 
         return Signal(
             instrument=score.pair,
@@ -313,21 +323,62 @@ class CarryManager:
         )
 
     async def _close_position(self, pair: str, position: CarryPosition, reason: str) -> None:
-        """Close an active carry position."""
+        """Close an active carry position via reverse FXCONV market order."""
         logger.info(f"Carry: closing {pair} ({reason})")
         try:
-            from forex_bot.broker.orders import OrderService
-
             order_service = OrderService(self._client)
-            open_trades = await order_service.get_open_trades()
-            for trade in open_trades:
-                if trade.order.orderId == position.ib_order_id:
-                    await order_service.cancel_order(trade)
-                    break
+            reverse_side = OrderSide.SELL if position.side == OrderSide.BUY else OrderSide.BUY
+            await order_service.place_fxconv_order(
+                instrument=pair,
+                side=reverse_side,
+                quantity=position.quantity,
+            )
+            logger.info(f"Carry: closed {pair} via FXCONV {reverse_side} {position.quantity}")
         except Exception as e:
             logger.error(f"Carry: failed to close {pair}: {e}")
         finally:
             self._positions.pop(pair, None)
+
+    async def check_stop_losses(self) -> None:
+        """Periodic SL monitor for FXCONV carry positions.
+
+        FXCONV orders don't support brackets, so stop losses are
+        software-monitored. Called every 60s by the scheduler.
+        """
+        if not self._positions:
+            return
+
+        if not self._client.is_connected:
+            return
+
+        for pair in list(self._positions):
+            pos = self._positions[pair]
+            try:
+                price = await self._pricing.get_snapshot(pair)
+                mid = price.mid
+
+                triggered = False
+                if pos.side == OrderSide.BUY and mid <= pos.stop_loss:
+                    triggered = True
+                elif pos.side == OrderSide.SELL and mid >= pos.stop_loss:
+                    triggered = True
+
+                if triggered:
+                    logger.warning(
+                        f"Carry SL triggered: {pair} {pos.side} mid={mid:.5f} SL={pos.stop_loss:.5f}"
+                    )
+                    await self._close_position(pair, pos, "stop loss triggered")
+                    if self._notifier:
+                        await self._notifier.send_raw(
+                            f"*CARRY STOP LOSS*\n\n"
+                            f"Pair: {pair}\n"
+                            f"Side: {pos.side}\n"
+                            f"Entry: {pos.entry_price:.5f}\n"
+                            f"SL: {pos.stop_loss:.5f}\n"
+                            f"Exit: {mid:.5f}"
+                        )
+            except Exception as e:
+                logger.error(f"Carry SL check failed for {pair}: {e}")
 
     async def _send_rebalance_summary(
         self,
