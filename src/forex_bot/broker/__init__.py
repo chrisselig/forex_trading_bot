@@ -2,7 +2,7 @@ from forex_bot.broker.client import IBClient
 from forex_bot.broker.contracts import make_forex_contract, get_pip_size
 from forex_bot.broker.exceptions import (
     ForexBotError,
-    ConnectionError,
+    BrokerConnectionError,
     OrderError,
     ContractError,
     DataError,
@@ -13,7 +13,7 @@ __all__ = [
     "make_forex_contract",
     "get_pip_size",
     "ForexBotError",
-    "ConnectionError",
+    "BrokerConnectionError",
     "OrderError",
     "ContractError",
     "DataError",

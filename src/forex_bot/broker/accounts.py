@@ -34,6 +34,10 @@ class AccountService:
                     side=OrderSide.BUY if pos.position > 0 else OrderSide.SELL,
                     quantity=abs(pos.position),
                     avg_cost=pos.avgCost,
+                    # ib.positions() carries no market data: unrealized P&L is
+                    # unknown here (0.0 is a placeholder, NOT "flat") and
+                    # market_value is cost basis. Use portfolio()/PnL
+                    # subscriptions if real marks are ever needed.
                     unrealized_pnl=0.0,
                     market_value=abs(pos.position) * pos.avgCost,
                 )

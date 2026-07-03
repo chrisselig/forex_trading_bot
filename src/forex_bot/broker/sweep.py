@@ -7,6 +7,8 @@ account. This module sweeps them back to CAD via market orders on IdealPro.
 
 from __future__ import annotations
 
+import asyncio
+
 from loguru import logger
 from ib_async import Forex, MarketOrder
 
@@ -81,13 +83,16 @@ async def sweep_to_cad(
     Returns:
         List of summary strings for each conversion placed.
     """
-    balances = await get_cash_balances(client)
-
-    if exclude_currencies:
+    def apply_exclusions(bals: dict[str, float]) -> dict[str, float]:
+        if not exclude_currencies:
+            return bals
         for ccy in exclude_currencies:
-            if ccy in balances:
+            if ccy in bals:
                 logger.info(f"Currency sweep: skipping {ccy} (excluded by carry)")
-                del balances[ccy]
+                del bals[ccy]
+        return bals
+
+    balances = apply_exclusions(await get_cash_balances(client))
 
     if not balances:
         logger.info("Currency sweep: no non-CAD balances to convert")
@@ -154,10 +159,12 @@ async def sweep_to_cad(
     # Second pass: convert majors (including any new USD from exotic conversion) to CAD
     # Wait briefly for exotic fills
     if usd_from_exotics != 0:
-        import asyncio
         await asyncio.sleep(2)
-        # Refresh balances to pick up USD from exotic conversions
-        balances = await get_cash_balances(client)
+        # Refresh balances to pick up USD from exotic conversions.
+        # Exclusions MUST be reapplied — the refreshed balances would
+        # otherwise re-include carry-position currencies and the second
+        # pass would market-sell a live carry hedge.
+        balances = apply_exclusions(await get_cash_balances(client))
 
     for currency, balance in balances.items():
         if currency not in SWEEP_PAIRS:

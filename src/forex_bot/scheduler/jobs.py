@@ -9,7 +9,7 @@ from loguru import logger
 
 from forex_bot.broker.client import IBClient
 from forex_bot.broker.pricing import PricingService
-from forex_bot.broker.tws_launcher import ensure_tws_running, is_tws_listening
+from forex_bot.broker.tws_launcher import ensure_tws_running, is_tws_listening_async
 from forex_bot.calendar.scraper import ForexFactoryScraper
 from forex_bot.calendar.store import EventStore
 from forex_bot.config import Settings
@@ -177,7 +177,7 @@ class JobManager:
         before the preflight check runs.
         """
         port = self._settings.broker.port
-        if is_tws_listening(port):
+        if await is_tws_listening_async(port):
             logger.info(f"TWS_ENSURE: TWS already listening on port {port} for {event.title}")
             return
 
@@ -235,7 +235,7 @@ class JobManager:
 
         # Last resort: try cold-starting TWS in case it's completely dead
         port = self._settings.broker.port
-        if not is_tws_listening(port):
+        if not await is_tws_listening_async(port):
             logger.warning(
                 f"PRE-FLIGHT: TWS not listening on port {port}, attempting cold-start as last resort"
             )
@@ -357,7 +357,7 @@ class JobManager:
                     price = await self._pricing.get_snapshot(pair)
                     signals = await strategy.evaluate_pre_event(event, price)
                     if signals:
-                        await self._engine.execute_signals(signals)
+                        await self._engine.execute_signals(signals, event=event)
                         if strategy.name == "straddle":
                             self._straddle_placed.add(dedup_key)
                 except Exception as e:
@@ -391,7 +391,7 @@ class JobManager:
                     price = await self._pricing.get_snapshot(pair)
                     signals = await strategy.evaluate_post_event(current_event, price)
                     if signals:
-                        await self._engine.execute_signals(signals)
+                        await self._engine.execute_signals(signals, event=event)
                 except Exception as e:
                     logger.error(f"Post-event error ({strategy.name}/{pair}): {e}")
 

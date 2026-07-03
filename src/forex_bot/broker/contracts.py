@@ -33,9 +33,16 @@ def make_forex_contract(pair: str) -> Forex:
 
 
 def get_pip_size(pair: str) -> float:
-    """Return the pip size for a given forex pair."""
+    """Return the pip size for a given forex pair.
+
+    Unlisted pairs fall back to the quote-currency rule (JPY-quoted pairs
+    use 0.01, everything else 0.0001) — a flat 0.0001 default was a silent
+    100x error for JPY crosses like CADJPY.
+    """
     pair = pair.upper().replace("/", "").replace("_", "")
-    return PIP_SIZES.get(pair, 0.0001)
+    if pair in PIP_SIZES:
+        return PIP_SIZES[pair]
+    return 0.01 if pair.endswith("JPY") else 0.0001
 
 
 # IB minimum price increments (half-pip for most pairs)
@@ -49,9 +56,15 @@ _DEFAULT_TICK = 0.00005  # Half-pip for non-JPY pairs
 
 
 def get_tick_size(pair: str) -> float:
-    """Return the IB minimum price increment for a given forex pair."""
+    """Return the IB minimum price increment for a given forex pair.
+
+    Unlisted JPY-quoted pairs use the JPY half-pip (0.005), not the
+    non-JPY default.
+    """
     pair = pair.upper().replace("/", "").replace("_", "")
-    return TICK_SIZES.get(pair, _DEFAULT_TICK)
+    if pair in TICK_SIZES:
+        return TICK_SIZES[pair]
+    return 0.005 if pair.endswith("JPY") else _DEFAULT_TICK
 
 
 def get_quote_currency(pair: str) -> str:

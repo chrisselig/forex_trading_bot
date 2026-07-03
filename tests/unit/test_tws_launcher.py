@@ -61,7 +61,7 @@ def test_is_tws_listening_os_error():
 @pytest.mark.asyncio
 async def test_ensure_tws_already_running():
     """If TWS is already listening, no subprocess is called."""
-    with patch("forex_bot.broker.tws_launcher.is_tws_listening", return_value=True):
+    with patch("forex_bot.broker.tws_launcher.is_tws_listening_async", new=AsyncMock(return_value=True)):
         with patch("asyncio.create_subprocess_exec") as mock_exec:
             result = await ensure_tws_running(7497)
             assert result is True
@@ -85,7 +85,7 @@ async def test_ensure_tws_starts_successfully():
     mock_proc.stderr = AsyncMock()
 
     with (
-        patch("forex_bot.broker.tws_launcher.is_tws_listening", side_effect=port_check),
+        patch("forex_bot.broker.tws_launcher.is_tws_listening_async", new=AsyncMock(side_effect=port_check)),
         patch("asyncio.create_subprocess_exec", return_value=mock_proc),
         patch("forex_bot.broker.tws_launcher.asyncio.sleep", new_callable=AsyncMock),
     ):
@@ -102,7 +102,7 @@ async def test_ensure_tws_timeout():
     mock_proc.stderr = AsyncMock()
 
     with (
-        patch("forex_bot.broker.tws_launcher.is_tws_listening", return_value=False),
+        patch("forex_bot.broker.tws_launcher.is_tws_listening_async", new=AsyncMock(return_value=False)),
         patch("asyncio.create_subprocess_exec", return_value=mock_proc),
         patch("forex_bot.broker.tws_launcher.asyncio.sleep", new_callable=AsyncMock),
     ):
@@ -113,7 +113,7 @@ async def test_ensure_tws_timeout():
 @pytest.mark.asyncio
 async def test_ensure_tws_script_not_found():
     """Returns False if restart script doesn't exist."""
-    with patch("forex_bot.broker.tws_launcher.is_tws_listening", return_value=False):
+    with patch("forex_bot.broker.tws_launcher.is_tws_listening_async", new=AsyncMock(return_value=False)):
         result = await ensure_tws_running(7497, script_path="/nonexistent/script.sh")
         assert result is False
 
@@ -159,7 +159,7 @@ async def test_tws_ensure_job_skips_when_running():
     jm = _make_job_manager()
     event = _make_event()
 
-    with patch("forex_bot.scheduler.jobs.is_tws_listening", return_value=True):
+    with patch("forex_bot.scheduler.jobs.is_tws_listening_async", new=AsyncMock(return_value=True)):
         with patch("forex_bot.scheduler.jobs.ensure_tws_running") as mock_ensure:
             await jm._tws_ensure(event)
             mock_ensure.assert_not_called()
@@ -173,7 +173,7 @@ async def test_tws_ensure_job_cold_starts():
     event = _make_event()
 
     with (
-        patch("forex_bot.scheduler.jobs.is_tws_listening", return_value=False),
+        patch("forex_bot.scheduler.jobs.is_tws_listening_async", new=AsyncMock(return_value=False)),
         patch("forex_bot.scheduler.jobs.ensure_tws_running", new_callable=AsyncMock, return_value=True),
     ):
         await jm._tws_ensure(event)

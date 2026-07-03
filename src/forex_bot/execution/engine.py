@@ -3,6 +3,7 @@ from __future__ import annotations
 from loguru import logger
 
 from forex_bot.broker.client import IBClient
+from forex_bot.broker.exceptions import DataError, OrderError
 from forex_bot.broker.orders import OrderService
 from forex_bot.broker.contracts import get_pip_size
 from forex_bot.broker.pricing import PricingService
@@ -43,19 +44,37 @@ class ExecutionEngine:
         """Set the current economic event context for notifications."""
         self._current_event = event
 
-    async def execute_signal(self, signal: Signal) -> Order | None:
+    async def execute_signal(
+        self, signal: Signal, event: EconomicEvent | None = None
+    ) -> Order | None:
         """Execute a trading signal through full risk validation pipeline."""
         logger.info(f"Processing signal: {signal.side} {signal.instrument} ({signal.strategy})")
+        # Never mutate the caller's signal — a retried signal must be re-sized
+        # against fresh account/rate data, not carry stale quantities.
+        signal = signal.model_copy()
+        event = event or self._current_event
 
         # Get current price for spread check
         try:
             price = await self._pricing_service.get_snapshot(signal.instrument)
-        except Exception as e:
+        except DataError as e:
             logger.error(f"Failed to get price for {signal.instrument}: {e}")
             return None
 
-        # Get quote currency conversion rate for correct position sizing
-        quote_to_cad = await self._pricing_service.get_quote_to_cad_rate(signal.instrument)
+        # Quote currency conversion rate for correct position sizing.
+        # Fail closed: sizing with a guessed rate can oversize by ~40%.
+        try:
+            quote_to_cad = await self._pricing_service.get_quote_to_cad_rate(signal.instrument)
+        except DataError as e:
+            logger.error(
+                f"Signal rejected: no quote-to-CAD rate for {signal.instrument}: {e}"
+            )
+            if self._notifier:
+                await self._notifier.notify_signal_rejected(
+                    signal.instrument, signal.strategy,
+                    [f"No quote-to-CAD rate available: {e}"], event,
+                )
+            return None
         logger.info(f"Quote-to-CAD rate for {signal.instrument}: {quote_to_cad:.6f}")
 
         # Calculate position size if not specified
@@ -63,12 +82,16 @@ class ExecutionEngine:
             pip = get_pip_size(signal.instrument)
             sl_pips = abs(signal.price - signal.stop_loss) / pip
             account = await self._client.get_account_summary()
-            signal.quantity = self._risk_manager.calculate_position_size(
-                account_balance=account.net_liquidation,
-                stop_loss_pips=sl_pips,
-                pair=signal.instrument,
-                quote_to_cad=quote_to_cad,
-            )
+            try:
+                signal.quantity = self._risk_manager.calculate_position_size(
+                    account_balance=account.net_liquidation,
+                    stop_loss_pips=sl_pips,
+                    pair=signal.instrument,
+                    quote_to_cad=quote_to_cad,
+                )
+            except ValueError as e:
+                logger.error(f"Signal rejected: {e}")
+                return None
 
         # Risk validation (mandatory)
         violations = await self._risk_manager.validate(signal, price, quote_to_cad=quote_to_cad)
@@ -76,7 +99,7 @@ class ExecutionEngine:
             logger.warning(f"Signal rejected by risk manager: {violations}")
             if self._notifier:
                 await self._notifier.notify_signal_rejected(
-                    signal.instrument, signal.strategy, violations, self._current_event,
+                    signal.instrument, signal.strategy, violations, event,
                 )
             return None
 
@@ -109,7 +132,7 @@ class ExecutionEngine:
 
         # Place with IB
         try:
-            if signal.take_profit and signal.price:
+            if signal.take_profit is not None and signal.price is not None:
                 trades = await self._order_service.place_bracket_order(
                     instrument=order.instrument,
                     side=order.side,
@@ -136,24 +159,31 @@ class ExecutionEngine:
                 account = await self._client.get_account_summary()
                 await self._notifier.notify_trade_opened(
                     order=order,
-                    event=self._current_event,
+                    event=event,
                     account=account,
                     spread_pips=entry_spread_pips,
                 )
 
             return order
 
-        except Exception as e:
+        except OrderError as e:
             order.status = OrderStatus.ERROR
             await self._journal.update_order_status(order_id, OrderStatus.ERROR)
             logger.error(f"Order execution failed: {e}")
+            if self._notifier:
+                await self._notifier.notify_signal_rejected(
+                    signal.instrument, signal.strategy,
+                    [f"Order execution failed: {e}"], event,
+                )
             return None
 
-    async def execute_signals(self, signals: list[Signal]) -> list[Order]:
+    async def execute_signals(
+        self, signals: list[Signal], event: EconomicEvent | None = None
+    ) -> list[Order]:
         """Execute multiple signals sequentially."""
         orders = []
         for signal in signals:
-            order = await self.execute_signal(signal)
+            order = await self.execute_signal(signal, event=event)
             if order:
                 orders.append(order)
         return orders
