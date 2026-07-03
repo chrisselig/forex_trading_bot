@@ -71,7 +71,10 @@ class TestPollActual:
     @pytest.mark.asyncio
     async def test_stops_when_actual_found(self, job_manager, event, scraper, event_store):
         """Polling stops (no reschedule) when the event's actual is populated."""
-        found_event = MagicMock(title="Non-Farm Employment Change", has_actual=True, actual="206K")
+        found_event = MagicMock(
+            title="Non-Farm Employment Change", has_actual=True, actual="206K"
+        )
+        found_event.country = event.country
         event_store.get_events_range = AsyncMock(return_value=[found_event])
 
         await job_manager._poll_actual(event, attempt=1)
