@@ -140,7 +140,7 @@ class PositionMonitor:
 
             if parent_id:
                 # Bracket child (TP or SL) filled -> the parent's position closed
-                self._spawn(self._handle_exit_fill(parent_id, fill_price))
+                self._spawn(self.record_exit_fill(parent_id, fill_price))
             else:
                 self._spawn(
                     self._handle_entry_fill(order_id, fill_price, slippage_pips)
@@ -192,7 +192,7 @@ class PositionMonitor:
         # Holding time counts from the fill, not from placement
         self._tracked_trades[ib_order_id] = datetime.now(UTC)
 
-    async def _handle_exit_fill(self, parent_ib_id: int, exit_price: float) -> None:
+    async def record_exit_fill(self, parent_ib_id: int, exit_price: float) -> None:
         """Close the trade whose entry order was parent_ib_id and feed the breaker."""
         order_rec = await self._journal.get_order_by_ib_id(parent_ib_id)
         if order_rec is None:
@@ -341,7 +341,7 @@ class PositionMonitor:
             f"{order_rec.instrument} (entry IB #{ib_id})"
         )
         ib_trade = await self._order_service.place_order(flatten)
-        fill_price = await self._await_fill(ib_trade, _FLATTEN_FILL_TIMEOUT_S)
+        fill_price = await self.await_fill(ib_trade)
         if fill_price is None:
             logger.critical(
                 f"Flatten order for {order_rec.instrument} (entry IB #{ib_id}) "
@@ -351,11 +351,13 @@ class PositionMonitor:
             )
             return  # stays tracked -> retried next monitoring cycle
 
-        await self._handle_exit_fill(ib_id, fill_price)
+        await self.record_exit_fill(ib_id, fill_price)
         self._tracked_trades.pop(ib_id, None)
         logger.info(f"Closed expired position for entry IB #{ib_id} at {fill_price}")
 
-    async def _await_fill(self, ib_trade: IBTrade, timeout: float) -> float | None:
+    async def await_fill(
+        self, ib_trade: IBTrade, timeout: float = _FLATTEN_FILL_TIMEOUT_S
+    ) -> float | None:
         """Poll an order until filled; return avg fill price or None on timeout."""
         loop = asyncio.get_event_loop()
         deadline = loop.time() + timeout

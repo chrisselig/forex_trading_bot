@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from forex_bot.broker.exceptions import OrderError
 from forex_bot.models.account import AccountSummary
 from forex_bot.models.market import PriceSnapshot
 from forex_bot.models.orders import OrderSide
@@ -46,6 +47,8 @@ def carry_manager(mock_settings):
 
     pricing = AsyncMock()
     monitor = MagicMock()
+    monitor.await_fill = AsyncMock(return_value=18.6)
+    monitor.record_exit_fill = AsyncMock()
     notifier = AsyncMock()
 
     return CarryManager(
@@ -408,14 +411,16 @@ class TestClosePosition:
 
             await carry_manager._close_position("USDZAR", pos, "test")
 
-            # SL child cancelled
-            mock_svc.cancel_order.assert_called_once_with(sl_trade)
-            # Reverse market order placed
+            # Reverse market order placed and verified filled first
             mock_svc.place_order.assert_called_once()
             close_order = mock_svc.place_order.call_args[0][0]
             assert close_order.instrument == "USDZAR"
             assert close_order.side == OrderSide.SELL
             assert close_order.quantity == 500
+            # SL child cancelled only after the flatten filled
+            mock_svc.cancel_order.assert_called_once_with(sl_trade)
+            # Close recorded in the journal / circuit breaker
+            carry_manager._monitor.record_exit_fill.assert_awaited_once_with(100, 18.6)
             assert "USDZAR" not in carry_manager._positions
 
     @pytest.mark.asyncio
@@ -466,8 +471,10 @@ class TestClosePosition:
             assert "USDZAR" not in carry_manager._positions
 
     @pytest.mark.asyncio
-    async def test_close_failure_still_removes_position(self, carry_manager):
-        """Position removed from tracking even if close order fails."""
+    async def test_close_failure_keeps_position_tracked(self, carry_manager):
+        """If the flatten order fails, the position stays tracked and its SL
+        is NOT cancelled — the old behavior (drop tracking, cancel SL first)
+        could strand a naked, invisible position."""
         pos = CarryPosition(
             pair="USDZAR", side=OrderSide.BUY, entry_price=18.5,
             quantity=500, stop_loss=17.575, ib_order_id=100,
@@ -477,9 +484,31 @@ class TestClosePosition:
 
         with patch("forex_bot.strategy.carry.OrderService") as MockOS:
             mock_svc = AsyncMock()
-            mock_svc.get_open_trades.side_effect = Exception("IB error")
+            mock_svc.place_order.side_effect = OrderError("IB error")
             MockOS.return_value = mock_svc
 
             await carry_manager._close_position("USDZAR", pos, "test")
 
-            assert "USDZAR" not in carry_manager._positions
+            assert "USDZAR" in carry_manager._positions
+            mock_svc.cancel_order.assert_not_called()
+            carry_manager._monitor.record_exit_fill.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_close_fill_timeout_keeps_position_and_sl(self, carry_manager):
+        """If the flatten order never fills, position and SL stay in place."""
+        pos = CarryPosition(
+            pair="USDZAR", side=OrderSide.BUY, entry_price=18.5,
+            quantity=500, stop_loss=17.575, ib_order_id=100,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._positions["USDZAR"] = pos
+        carry_manager._monitor.await_fill = AsyncMock(return_value=None)
+
+        with patch("forex_bot.strategy.carry.OrderService") as MockOS:
+            mock_svc = AsyncMock()
+            MockOS.return_value = mock_svc
+
+            await carry_manager._close_position("USDZAR", pos, "test")
+
+            assert "USDZAR" in carry_manager._positions
+            mock_svc.cancel_order.assert_not_called()
