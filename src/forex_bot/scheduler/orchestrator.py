@@ -116,7 +116,10 @@ class Orchestrator:
             notifier=self._notifier,
             scraper=self._scraper,
         )
-        self._shutdown_handler = ShutdownHandler(self._client, self._scheduler, self._monitor)
+        self._stop_event = asyncio.Event()
+        self._shutdown_handler = ShutdownHandler(
+            self._client, self._scheduler, self._monitor, stop_event=self._stop_event
+        )
         self._running = False
 
     async def start(self) -> None:
@@ -131,7 +134,7 @@ class Orchestrator:
 
         # 3. Reconcile state
         state = await self._reconciler.reconcile()
-        logger.info(f"Account NLV: ${state['net_liquidation']:,.2f}")
+        logger.info(f"Account NLV: ${state.net_liquidation:,.2f}")
 
         # 4. Start position monitoring
         self._monitor.start_monitoring()
@@ -347,19 +350,23 @@ class Orchestrator:
             logger.error(f"IB reconnection failed: {e}")
 
     async def run_forever(self) -> None:
-        """Start and run until interrupted."""
+        """Start and run until the shutdown handler signals stop.
+
+        SIGINT/SIGTERM are consumed by the loop's signal handlers (they never
+        raise KeyboardInterrupt here); the handler sets _stop_event, which is
+        what lets this coroutine — and the process — actually exit.
+        """
         await self.start()
         try:
-            while self._running:
-                await asyncio.sleep(1)
-        except (KeyboardInterrupt, SystemExit):
-            logger.info("Shutdown signal received")
+            await self._stop_event.wait()
+            logger.info("Stop signal received")
         finally:
             await self.stop()
 
     async def stop(self) -> None:
-        """Graceful shutdown."""
+        """Graceful shutdown (safe to call more than once)."""
         self._running = False
         await self._notifier.notify_bot_stopped()
         await self._shutdown_handler.shutdown()
+        await self._notifier.close()
         logger.info("Forex Trading Bot stopped.")
