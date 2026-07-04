@@ -22,6 +22,12 @@ class EventRecord(Base):
     previous: Mapped[str | None] = mapped_column(String(50), nullable=True)
     fred_series: Mapped[str | None] = mapped_column(String(50), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    # Which feed owns this row's scheduling data: "ff" (Forex Factory) or
+    # "static" (config/static_events.yaml). FF is authoritative whenever both
+    # sources cover the same event — this prevents the two refresh passes
+    # from repeatedly flipping scheduled_at back and forth (see
+    # EventStore.save_events).
+    source: Mapped[str] = mapped_column(String(10), default="ff")
 
 
 class CandleRecord(Base):

@@ -187,13 +187,13 @@ class Orchestrator:
             # Forex Factory events (USD, JPY majors)
             events = await self._scraper.fetch_week()
             filtered = self._parser.filter_events(events)
-            await self._event_store.save_events(filtered)
+            await self._event_store.save_events(filtered, source="ff")
             await self._event_store.update_actuals(events)
 
             # Static events (SARB, TCMB, SA CPI, BOJ — not on Forex Factory)
             static = load_static_events()
             static_filtered = self._parser.filter_events(static)
-            await self._event_store.save_events(static_filtered)
+            await self._event_store.save_events(static_filtered, source="static")
 
             total = len(filtered) + len(static_filtered)
             logger.info(

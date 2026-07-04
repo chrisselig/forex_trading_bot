@@ -20,7 +20,7 @@ class EventStore:
     def __init__(self, turso: TursoSyncer | None = None):
         self._turso = turso
 
-    async def save_events(self, events: list[EconomicEvent]) -> int:
+    async def save_events(self, events: list[EconomicEvent], source: str = "ff") -> int:
         """Save events to the database, deduplicating by title + country + date.
 
         Country is part of the identity: generic titles like "CPI y/y" exist
@@ -29,6 +29,16 @@ class EventStore:
 
         If a matching event exists on the same day (±1 day window) but at a
         different time, update its scheduled_at (time-change detection).
+
+        `source` identifies the feed calling this method: "ff" (Forex
+        Factory) or "static" (config/static_events.yaml). Some events (e.g.
+        BOJ Policy Rate) are covered by both feeds. FF is authoritative:
+        an FF save always wins a same-day time conflict and takes
+        ownership of the record (source is set to "ff"); a static save only
+        updates the time if the existing record is still static-owned —
+        this lets static_events.yaml corrections propagate for static-only
+        events (SARB, TCMB) without ever fighting FF for events that both
+        feeds cover.
         """
         saved = 0
         updated = 0
@@ -63,9 +73,25 @@ class EventStore:
                 existing_record = same_day.scalars().first()
 
                 if existing_record is not None:
+                    # A static save must never overwrite a record that FF has
+                    # already taken ownership of — FF is authoritative when
+                    # both feeds cover the same event. Skip silently; this is
+                    # expected steady-state behavior, not an error.
+                    if source == "static" and existing_record.source == "ff":
+                        logger.debug(
+                            f"Skipping static reschedule of FF-owned event: "
+                            f"{event.title} ({existing_record.scheduled_at} "
+                            f"stays, static wanted {event.scheduled_at})"
+                        )
+                        continue
+
                     # Time changed — update the record
                     old_time = existing_record.scheduled_at
                     existing_record.scheduled_at = event.scheduled_at
+                    if source == "ff":
+                        # FF takes ownership so a later static save can't
+                        # flip this record's time back.
+                        existing_record.source = "ff"
                     if event.forecast:
                         existing_record.forecast = event.forecast
                     if event.previous:
@@ -99,6 +125,7 @@ class EventStore:
                     forecast=event.forecast,
                     previous=event.previous,
                     fred_series=event.fred_series,
+                    source=source,
                 )
                 session.add(record)
                 await session.flush()  # Assign record.id before Turso push
