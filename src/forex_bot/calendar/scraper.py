@@ -34,13 +34,17 @@ class ForexFactoryScraper:
     def __init__(self, rate_limit_seconds: float = 2.0):
         self._rate_limit = rate_limit_seconds
         self._last_request: float = 0
+        # Serialize throttling: the 6-hourly refresh and actual-polling can
+        # overlap, and an unguarded check lets both skip the rate limit.
+        self._throttle_lock = asyncio.Lock()
 
     async def _throttle(self) -> None:
-        now = asyncio.get_event_loop().time()
-        elapsed = now - self._last_request
-        if elapsed < self._rate_limit:
-            await asyncio.sleep(self._rate_limit - elapsed)
-        self._last_request = asyncio.get_event_loop().time()
+        async with self._throttle_lock:
+            now = asyncio.get_running_loop().time()
+            elapsed = now - self._last_request
+            if elapsed < self._rate_limit:
+                await asyncio.sleep(self._rate_limit - elapsed)
+            self._last_request = asyncio.get_running_loop().time()
 
     async def _fetch_json(self, url: str) -> list[dict]:
         """Fetch and return JSON event list from the given URL."""
@@ -55,8 +59,13 @@ class ForexFactoryScraper:
             response.raise_for_status()
             return response.json()
 
-    async def fetch_week(self, date: datetime | None = None) -> list[EconomicEvent]:
-        """Fetch events for the current week and next week (2-week lookahead)."""
+    async def fetch_week(self) -> list[EconomicEvent]:
+        """Fetch events for the current week and next week (2-week lookahead).
+
+        Note: the API only exposes this-week/next-week snapshots. An event
+        from a week that has rolled over (e.g. polling a Friday-evening
+        release on Saturday) will not appear in these feeds.
+        """
         raw_events = await self._fetch_json(FF_JSON_THIS_WEEK)
         events = self._parse_json(raw_events)
 

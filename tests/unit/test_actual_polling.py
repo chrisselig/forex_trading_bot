@@ -119,8 +119,8 @@ class TestPollActual:
         job_manager._scheduler.add_job.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_fetches_correct_week(self, job_manager, event, scraper, event_store):
-        """Passes the event's scheduled_at to fetch_week for correct week lookup."""
+    async def test_fetches_week_snapshot(self, job_manager, event, scraper, event_store):
+        """Polls the FF week feeds (the API has no historical targeting)."""
         missing_event = MagicMock(
             title="Non-Farm Employment Change", has_actual=False, actual=None
         )
@@ -128,7 +128,7 @@ class TestPollActual:
 
         await job_manager._poll_actual(event, attempt=1)
 
-        scraper.fetch_week.assert_called_once_with(date=event.scheduled_at)
+        scraper.fetch_week.assert_called_once_with()
 
 
 class TestScheduleActualPoll:

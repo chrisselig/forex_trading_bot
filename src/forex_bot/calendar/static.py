@@ -1,7 +1,7 @@
 """Static calendar for events not covered by Forex Factory (SARB, TCMB, SA CPI, BOJ)."""
 from __future__ import annotations
 
-import importlib
+import importlib.util
 import sys
 from datetime import datetime, timedelta, timezone
 
@@ -72,8 +72,12 @@ def _load_master_dates() -> dict[str, list[str]]:
 
     try:
         spec = importlib.util.spec_from_file_location("download_dukascopy", DOWNLOAD_SCRIPT_PATH)
+        if spec is None or spec.loader is None:
+            logger.warning(f"Cannot load module spec for {DOWNLOAD_SCRIPT_PATH}")
+            return {}
         mod = importlib.util.module_from_spec(spec)
-        # Don't pollute sys.modules or run CLI code
+        # Registered temporarily so module internals resolve; removed again
+        # in the finally block below.
         sys.modules["download_dukascopy"] = mod
         spec.loader.exec_module(mod)
 

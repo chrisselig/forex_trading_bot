@@ -14,9 +14,9 @@ CONFIG_DIR = PROJECT_ROOT / "config"
 
 class BrokerConfig(BaseModel):
     host: str = "127.0.0.1"
-    port: int = 4002
-    client_id: int = 1
-    timeout: int = 30
+    port: int = Field(4002, ge=1, le=65535)
+    client_id: int = Field(1, ge=0)
+    timeout: int = Field(30, gt=0)
 
     @property
     def account_type(self) -> str:
@@ -25,23 +25,27 @@ class BrokerConfig(BaseModel):
 
 
 class TradingConfig(BaseModel):
-    instruments: list[str] = Field(default_factory=lambda: ["USDZAR", "USDTRY", "GBPJPY", "GBPUSD", "USDCAD"])
+    # Fallback if settings.yaml is missing the trading key. Only pairs the
+    # current MC analysis approves — never add walk-forward failures here.
+    instruments: list[str] = Field(default_factory=lambda: ["USDZAR", "USDTRY"])
     default_timeframe: str = "5 mins"
 
 
 class RiskConfig(BaseModel):
-    max_risk_per_trade_pct: float = 1.0
-    max_daily_drawdown_pct: float = 3.0
-    max_concurrent_positions: int = 3
+    # Bounds reject config typos (negative risk, 0-pip spreads) at startup
+    # instead of corrupting position sizing at trade time.
+    max_risk_per_trade_pct: float = Field(1.0, gt=0, le=10)
+    max_daily_drawdown_pct: float = Field(3.0, gt=0, le=50)
+    max_concurrent_positions: int = Field(3, ge=1)
     mandatory_stop_loss: bool = True
-    max_spread_pips: float = 3.0
-    max_spread_overrides: dict[str, float] = {}
+    max_spread_pips: float = Field(3.0, gt=0)
+    max_spread_overrides: dict[str, float] = Field(default_factory=dict)
 
 
 class StraddleParams(BaseModel):
-    distance_pips: float
-    tp_pips: float
-    sl_pips: float
+    distance_pips: float = Field(gt=0)
+    tp_pips: float = Field(gt=0)
+    sl_pips: float = Field(gt=0)
 
 
 class StraddlePairOverride(StraddleParams):
@@ -55,31 +59,42 @@ class StrategyConfig(BaseModel):
     # straddle. On a late start (bot restart inside the pre-event window) the
     # straddle is placed as a catch-up as long as at least this much lead
     # remains; below it, placement is skipped and a "missed" alert is sent.
-    min_pre_event_lead_seconds: int = 90
-    straddle_distance_pips: float = 20.0
-    straddle_tp_pips: float = 30.0
-    straddle_sl_pips: float = 15.0
+    min_pre_event_lead_seconds: int = Field(90, ge=0)
+    straddle_distance_pips: float = Field(20.0, gt=0)
+    straddle_tp_pips: float = Field(30.0, gt=0)
+    straddle_sl_pips: float = Field(15.0, gt=0)
     straddle_pair_overrides: dict[str, StraddlePairOverride] = Field(default_factory=dict)
-    surprise_threshold_pct: float = 10.0
-    surprise_entry_delay_seconds: int = 5
-    surprise_tp_pips: float = 25.0
-    surprise_sl_pips: float = 15.0
-    max_holding_minutes: int = 120
+    surprise_threshold_pct: float = Field(10.0, gt=0)
+    surprise_entry_delay_seconds: int = Field(5, ge=0)
+    surprise_tp_pips: float = Field(25.0, gt=0)
+    surprise_sl_pips: float = Field(15.0, gt=0)
+    max_holding_minutes: int = Field(120, gt=0)
 
     def get_straddle_params(
-        self, instrument: str, event_title: str = ""
+        self,
+        instrument: str,
+        event_title: str = "",
+        event_names: list[str] | None = None,
     ) -> tuple[float, float, float]:
         """Return (distance, tp, sl) in pips for the given instrument and event.
 
-        Checks event_overrides first (substring match on event title),
-        then falls back to the pair-level override, then global defaults.
+        Checks event_overrides first, then the pair-level override, then
+        global defaults. Override keys match by case-insensitive EXACT
+        equality against the event's canonical names (title, or the
+        resolved target name + aliases via Settings.resolve_event_names) —
+        substring matching applied US params to same-substring foreign
+        events ("CPI m/m" matched "Trimmed Mean CPI m/m") and silently
+        never matched abbreviations ("NFP" is not a substring of
+        "Non-Farm Employment Change").
         """
         override = self.straddle_pair_overrides.get(instrument)
         if override:
-            if event_title and override.event_overrides:
-                title_lower = event_title.lower()
+            if override.event_overrides and (event_title or event_names):
+                candidates = {
+                    n.lower().strip() for n in (event_names or [event_title]) if n
+                }
                 for key, params in override.event_overrides.items():
-                    if key.lower() in title_lower:
+                    if key.lower().strip() in candidates:
                         return params.distance_pips, params.tp_pips, params.sl_pips
             return override.distance_pips, override.tp_pips, override.sl_pips
         return self.straddle_distance_pips, self.straddle_tp_pips, self.straddle_sl_pips
@@ -116,11 +131,11 @@ class CarryConfig(BaseModel):
     instruments: list[str] = Field(
         default_factory=lambda: ["USDZAR", "USDTRY", "USDMXN", "AUDJPY", "NZDJPY"],
     )
-    min_differential_pct: float = 2.0
-    risk_budget_pct: float = 5.0
-    max_concurrent_carry: int = 5
-    max_risk_per_carry_pct: float = 1.5
-    stop_loss_pct: float = 5.0
+    min_differential_pct: float = Field(2.0, gt=0)
+    risk_budget_pct: float = Field(5.0, gt=0, le=20)
+    max_concurrent_carry: int = Field(5, ge=1)
+    max_risk_per_carry_pct: float = Field(1.5, gt=0, le=10)
+    stop_loss_pct: float = Field(5.0, gt=0)
     rebalance_day_of_week: str = "sun"  # Day of week (mon-sun)
     rebalance_hour_utc: int = 14  # 8 AM MT
     fallback_rates: dict[str, float] = Field(default_factory=lambda: {"TRY": 50.0})
@@ -160,6 +175,22 @@ class Settings(BaseSettings):
     turso_auth_token: str = ""
 
     model_config = {"env_file": str(PROJECT_ROOT / ".env"), "env_file_encoding": "utf-8", "extra": "ignore"}
+
+    def resolve_event_names(self, event_title: str, country: str = "") -> list[str]:
+        """Return the canonical name + aliases of the event target whose
+        name or aliases exactly match this title (case-insensitive).
+
+        Falls back to [event_title] when no target matches, so callers can
+        pass the result straight to get_straddle_params.
+        """
+        title = event_title.lower().strip()
+        for target in self.events.target_events:
+            if country and target.country and target.country != country:
+                continue
+            names = [target.name, *target.aliases]
+            if any(title == n.lower().strip() for n in names):
+                return names
+        return [event_title]
 
     def model_post_init(self, __context: Any) -> None:
         if self.ib_host:

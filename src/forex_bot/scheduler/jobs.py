@@ -419,7 +419,7 @@ class JobManager:
         logger.info(f"Polling actual for {event.title} (attempt {attempt}/{_ACTUAL_POLL_MAX_ATTEMPTS})")
 
         try:
-            ff_events = await self._scraper.fetch_week(date=event.scheduled_at)
+            ff_events = await self._scraper.fetch_week()
             updated = await self._event_store.update_actuals(ff_events)
 
             # Check if our target event now has an actual
