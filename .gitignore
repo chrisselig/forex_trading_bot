@@ -39,3 +39,7 @@ site/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local agent tooling
+.claude/
+nohup.out

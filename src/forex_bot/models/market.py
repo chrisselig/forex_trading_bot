@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Candle(BaseModel):
@@ -17,8 +17,10 @@ class Candle(BaseModel):
 class PriceSnapshot(BaseModel):
     instrument: str
     timestamp: datetime
-    bid: float
-    ask: float
+    # ib_async initializes absent quotes to NaN — reject them at the boundary
+    # so NaN can never propagate into order price math.
+    bid: float = Field(gt=0, allow_inf_nan=False)
+    ask: float = Field(gt=0, allow_inf_nan=False)
 
     @property
     def mid(self) -> float:
@@ -28,5 +30,7 @@ class PriceSnapshot(BaseModel):
     def spread(self) -> float:
         return self.ask - self.bid
 
-    def spread_pips(self, pip_size: float = 0.0001) -> float:
+    def spread_pips(self, pip_size: float) -> float:
+        """Spread in pips. pip_size is mandatory: a 0.0001 default silently
+        produced 100x errors for JPY-quoted pairs."""
         return self.spread / pip_size

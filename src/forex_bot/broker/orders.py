@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from loguru import logger
 from ib_async import IB, MarketOrder, LimitOrder, StopOrder, Trade as IBTrade
 
@@ -7,6 +9,10 @@ from forex_bot.broker.client import IBClient
 from forex_bot.broker.contracts import make_forex_contract, round_to_tick
 from forex_bot.broker.exceptions import OrderError
 from forex_bot.models.orders import Order, OrderSide, OrderType
+
+# Contract qualification should answer in well under a second; a wedged TWS
+# otherwise hangs the awaiting event job forever.
+_QUALIFY_TIMEOUT_S = 15.0
 
 
 class OrderService:
@@ -37,20 +43,75 @@ class OrderService:
         else:
             raise OrderError(f"Unsupported order type: {order.order_type}")
 
+    async def _qualify(self, contract) -> None:
+        """Qualify a contract with a hard timeout — a wedged TWS otherwise
+        hangs the awaiting event job forever."""
+        try:
+            await asyncio.wait_for(
+                self.ib.qualifyContractsAsync(contract), _QUALIFY_TIMEOUT_S
+            )
+        except TimeoutError as e:
+            raise OrderError(f"Timed out qualifying contract {contract}") from e
+
+    async def _verify_submission(
+        self, trades: list[IBTrade], wait_s: float = 3.0
+    ) -> None:
+        """Verify IB accepted the just-placed orders.
+
+        placeOrder() is non-blocking: rejections (tick size, margin,
+        permissions) arrive asynchronously as Inactive/Cancelled status.
+        Without this check a rejected SL child would go unnoticed and the
+        entry could later fill with no protective stop.
+        """
+        ok_states = {"PreSubmitted", "Submitted", "Filled", "PendingSubmit"}
+        deadline = asyncio.get_running_loop().time() + wait_s
+        while True:
+            rejected = [
+                t for t in trades
+                if t.orderStatus.status in ("Inactive", "Cancelled", "ApiCancelled")
+            ]
+            if rejected:
+                details = "; ".join(
+                    f"#{t.order.orderId} {t.orderStatus.status} "
+                    + " | ".join(entry.message for entry in t.log if entry.message)
+                    for t in rejected
+                )
+                raise OrderError(f"IB rejected order(s) after placement: {details}")
+            settled = all(
+                t.orderStatus.status in ("PreSubmitted", "Submitted", "Filled")
+                for t in trades
+            )
+            if settled:
+                return
+            if asyncio.get_running_loop().time() >= deadline:
+                pending = [
+                    t.order.orderId
+                    for t in trades
+                    if t.orderStatus.status not in ok_states
+                ]
+                if pending:
+                    logger.warning(
+                        f"Orders {pending} not confirmed by IB within {wait_s:.0f}s "
+                        f"— monitor for async rejection"
+                    )
+                return
+            await asyncio.sleep(0.25)
+
     async def place_order(self, order: Order) -> IBTrade:
         """Place a single order with IB."""
         await self._client.ensure_connected()
         contract = make_forex_contract(order.instrument)
-        await self.ib.qualifyContractsAsync(contract)
+        await self._qualify(contract)
         ib_order = self._create_ib_order(order)
         logger.info(f"Placing {order.order_type} {order.side} {order.quantity} {order.instrument}")
 
         try:
             trade = self.ib.placeOrder(contract, ib_order)
             order.ib_order_id = trade.order.orderId
-            return trade
         except Exception as e:
             raise OrderError(f"Failed to place order: {e}") from e
+        await self._verify_submission([trade])
+        return trade
 
     async def place_bracket_order(
         self,
@@ -76,7 +137,7 @@ class OrderService:
         """
         await self._client.ensure_connected()
         contract = make_forex_contract(instrument)
-        await self.ib.qualifyContractsAsync(contract)
+        await self._qualify(contract)
 
         # Round all prices to IB's minimum tick size
         entry_price = round_to_tick(entry_price, instrument)
@@ -146,50 +207,80 @@ class OrderService:
             for o in (parent, tp_order, sl_order):
                 trade = self.ib.placeOrder(contract, o)
                 trades.append(trade)
-            return trades
         except Exception as e:
             raise OrderError(f"Failed to place bracket order: {e}") from e
+        await self._verify_submission(trades)
+        return trades
 
     async def place_order_with_stop(self, order: Order) -> IBTrade:
-        """Place an order with an attached stop loss order."""
+        """Place an order with an attached stop loss (and optional take profit).
+
+        Transmit chain: parent (transmit=False) -> optional TP child
+        (transmit=False) -> SL child (transmit=True). IB holds the whole
+        group until the SL is delivered, so a mid-sequence failure cannot
+        leave an active entry without its stop. Children of the same parent
+        are OCA'd by IB automatically.
+        """
         if order.stop_loss is None:
             raise OrderError("Stop loss is required")
         await self._client.ensure_connected()
         contract = make_forex_contract(order.instrument)
-        await self.ib.qualifyContractsAsync(contract)
+        await self._qualify(contract)
 
         ib_order = self._create_ib_order(order)
-        ib_order.transmit = False  # Hold until child is attached
+        ib_order.transmit = False  # Hold until children are attached
         ib_order.tif = "GTC"
 
-        # Round SL to IB's minimum tick size
+        # Round child prices to IB's minimum tick size
         sl_price = round_to_tick(order.stop_loss, order.instrument)
 
         reverse_action = "SELL" if order.side == OrderSide.BUY else "BUY"
-        sl_order = StopOrder(
-            action=reverse_action,
-            totalQuantity=order.quantity,
-            stopPrice=sl_price,
-            parentId=0,  # Will be set after parent is placed
-            transmit=True,
-            tif="GTC",
+        children = []
+        if order.take_profit is not None:
+            # Previously a TP on a non-bracket order was silently dropped
+            tp_price = round_to_tick(order.take_profit, order.instrument)
+            children.append(
+                LimitOrder(
+                    action=reverse_action,
+                    totalQuantity=order.quantity,
+                    lmtPrice=tp_price,
+                    parentId=0,  # Set after parent is placed
+                    transmit=False,
+                    tif="GTC",
+                )
+            )
+        children.append(
+            StopOrder(
+                action=reverse_action,
+                totalQuantity=order.quantity,
+                stopPrice=sl_price,
+                parentId=0,  # Set after parent is placed
+                transmit=True,  # Last in chain transmits the whole group
+                tif="GTC",
+            )
         )
 
         logger.info(
             f"Placing {order.order_type} {order.side} {order.quantity} {order.instrument} "
             f"with SL={order.stop_loss}"
+            + (f" TP={order.take_profit}" if order.take_profit is not None else "")
         )
 
         try:
             parent_trade = self.ib.placeOrder(contract, ib_order)
-            sl_order.parentId = parent_trade.order.orderId
-            self.ib.placeOrder(contract, sl_order)
-            return parent_trade
+            order.ib_order_id = parent_trade.order.orderId
+            trades = [parent_trade]
+            for child in children:
+                child.parentId = parent_trade.order.orderId
+                trades.append(self.ib.placeOrder(contract, child))
         except Exception as e:
             raise OrderError(f"Failed to place order with stop: {e}") from e
+        await self._verify_submission(trades)
+        return parent_trade
 
     async def cancel_order(self, ib_trade: IBTrade) -> None:
         """Cancel an open order."""
+        await self._client.ensure_connected()
         logger.info(f"Cancelling order {ib_trade.order.orderId}")
         self.ib.cancelOrder(ib_trade.order)
 

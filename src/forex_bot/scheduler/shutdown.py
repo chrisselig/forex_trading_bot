@@ -11,10 +11,22 @@ from forex_bot.execution.monitor import PositionMonitor
 class ShutdownHandler:
     """Handles graceful shutdown on SIGINT/SIGTERM."""
 
-    def __init__(self, client: IBClient, scheduler, monitor: PositionMonitor):
+    def __init__(
+        self,
+        client: IBClient,
+        scheduler,
+        monitor: PositionMonitor,
+        stop_event: asyncio.Event | None = None,
+    ):
         self._client = client
         self._scheduler = scheduler
         self._monitor = monitor
+        # Signals the orchestrator's run_forever loop to exit. Without it,
+        # SIGTERM stopped the scheduler and disconnected IB but left the
+        # process spinning forever as a zombie (the documented "kill -9"
+        # workaround was this bug).
+        self._stop_event = stop_event
+        self._done = False
 
     def register(self) -> None:
         """Register signal handlers."""
@@ -24,7 +36,10 @@ class ShutdownHandler:
         logger.debug("Shutdown handlers registered")
 
     async def shutdown(self) -> None:
-        """Graceful shutdown sequence."""
+        """Graceful shutdown sequence (idempotent)."""
+        if self._done:
+            return
+        self._done = True
         logger.info("Initiating graceful shutdown...")
 
         # 1. Stop scheduler
@@ -37,5 +52,9 @@ class ShutdownHandler:
 
         # 3. Disconnect from IB
         await self._client.disconnect()
+
+        # 4. Let run_forever exit so the process actually terminates
+        if self._stop_event is not None:
+            self._stop_event.set()
 
         logger.info("Shutdown complete")

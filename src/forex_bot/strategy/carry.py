@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 
 from loguru import logger
 from pydantic import BaseModel
 
 from forex_bot.broker.client import IBClient
+from forex_bot.broker.exceptions import ForexBotError
 from forex_bot.broker.contracts import get_pip_size
 from forex_bot.broker.orders import OrderService
 from forex_bot.broker.pricing import PricingService
@@ -82,16 +84,29 @@ class CarryManager:
         self._positions: dict[str, CarryPosition] = {}  # pair -> position
 
     async def restore_state(self) -> None:
-        """Rebuild carry positions from database on startup."""
+        """Rebuild carry positions from database on startup.
+
+        Only orders with a real IB order ID and entry price are restored —
+        fabricating placeholders (ib_order_id=0 matches every parentless IB
+        order) would make later close/cancel logic dangerous.
+        """
         orders = await self._journal.get_open_orders_by_strategy("carry")
         for order in orders:
+            entry_price = order.fill_price or order.price
+            if not order.ib_order_id or entry_price is None:
+                logger.warning(
+                    f"Carry: cannot restore {order.instrument} position from "
+                    f"order #{order.id} (ib_order_id={order.ib_order_id}, "
+                    f"price={entry_price}) — manage it manually in TWS"
+                )
+                continue
             self._positions[order.instrument] = CarryPosition(
                 pair=order.instrument,
                 side=OrderSide(order.side),
-                entry_price=order.price or 0.0,
+                entry_price=entry_price,
                 quantity=order.quantity,
                 stop_loss=order.stop_loss or 0.0,
-                ib_order_id=order.ib_order_id or 0,
+                ib_order_id=order.ib_order_id,
                 opened_at=order.created_at,
             )
         if self._positions:
@@ -180,7 +195,7 @@ class CarryManager:
                     self._monitor.exclude_from_holding_check({order.ib_order_id})
                     entered.append(score.pair)
                     logger.info(f"Carry: entered {score.direction} {score.pair} (diff={score.differential:+.1f}%)")
-            except Exception as e:
+            except (ForexBotError, ValueError) as e:
                 logger.error(f"Carry: failed to enter {score.pair}: {e}")
 
         await self._send_rebalance_summary(scores, entered, closed)
@@ -217,12 +232,16 @@ class CarryManager:
         return rates
 
     async def _fetch_fred_rate(self, series_id: str) -> float | None:
-        """Fetch the latest value from a FRED series."""
+        """Fetch the latest value from a FRED series.
+
+        fredapi is synchronous (requests-based) — run it in a thread so a
+        slow FRED response cannot freeze the event loop.
+        """
         try:
             from forex_bot.calendar.fred_client import FredClient
 
             fred = FredClient()
-            data = fred.get_series(series_id)
+            data = await asyncio.to_thread(fred.get_series, series_id)
             if data:
                 latest = data[-1]
                 age_days = (datetime.now() - latest["date"]).days
@@ -308,6 +327,11 @@ class CarryManager:
         # risk validation, so leave headroom to avoid borderline rejections.
         pip_size = get_pip_size(score.pair)
         sl_pips = sl_distance / pip_size
+        if sl_pips <= 0 or quote_to_cad <= 0:
+            raise ValueError(
+                f"Carry sizing impossible for {score.pair}: "
+                f"sl_pips={sl_pips}, quote_to_cad={quote_to_cad}"
+            )
         risk_amount = nlv * (risk_pct / 100) * 0.95
         pip_value_cad = pip_size * quote_to_cad
         units = risk_amount / (sl_pips * pip_value_cad)
@@ -328,35 +352,55 @@ class CarryManager:
     async def _close_position(self, pair: str, position: CarryPosition, reason: str) -> None:
         """Close an active carry position.
 
-        Carry entries use place_order_with_stop (market + SL child) on IDEALPRO.
-        To close: cancel the SL child order, then place a reverse market order.
+        Ordering matters: flatten FIRST with a verified market order, then
+        cancel the SL child. The reverse (cancel first) can strand a naked
+        position if the flatten fails. On failure the position stays tracked
+        and protected, and the next rebalance retries.
         """
         logger.info(f"Carry: closing {pair} ({reason})")
-        try:
-            order_service = OrderService(self._client)
-            open_trades = await order_service.get_open_trades()
+        order_service = OrderService(self._client)
 
-            # Cancel the stop loss child order (parentId matches the entry)
+        reverse_side = OrderSide.SELL if position.side == OrderSide.BUY else OrderSide.BUY
+        close_order = Order(
+            instrument=pair,
+            side=reverse_side,
+            order_type=OrderType.MARKET,
+            quantity=position.quantity,
+            strategy="carry",
+        )
+        try:
+            ib_trade = await order_service.place_order(close_order)
+            fill_price = await self._monitor.await_fill(ib_trade)
+        except ForexBotError as e:
+            logger.error(f"Carry: failed to close {pair}, keeping position tracked: {e}")
+            return
+
+        if fill_price is None:
+            logger.error(
+                f"Carry: close order for {pair} did not fill — position and its "
+                f"stop loss remain in place, will retry next rebalance"
+            )
+            return
+
+        # Position is flat — now remove the working SL child so it cannot
+        # trigger later and open a fresh (reversed) position.
+        try:
+            open_trades = await order_service.get_open_trades()
             for trade in open_trades:
                 if trade.order.parentId == position.ib_order_id:
                     await order_service.cancel_order(trade)
                     logger.info(f"Carry: cancelled SL child for {pair}")
-
-            # Place reverse market order to flatten the position
-            reverse_side = OrderSide.SELL if position.side == OrderSide.BUY else OrderSide.BUY
-            close_order = Order(
-                instrument=pair,
-                side=reverse_side,
-                order_type=OrderType.MARKET,
-                quantity=position.quantity,
-                strategy="carry",
+        except ForexBotError as e:
+            logger.critical(
+                f"Carry: {pair} is flat but its SL child could not be "
+                f"cancelled — a working stop order remains at IB and can "
+                f"open a new position. Cancel it in TWS. Error: {e}"
             )
-            await order_service.place_order(close_order)
-            logger.info(f"Carry: closed {pair} via {reverse_side} {position.quantity}")
-        except Exception as e:
-            logger.error(f"Carry: failed to close {pair}: {e}")
-        finally:
-            self._positions.pop(pair, None)
+
+        # Record the close in the journal and feed the circuit breaker.
+        await self._monitor.record_exit_fill(position.ib_order_id, fill_price)
+        self._positions.pop(pair, None)
+        logger.info(f"Carry: closed {pair} via {reverse_side} {position.quantity} at {fill_price}")
 
     async def _send_rebalance_summary(
         self,

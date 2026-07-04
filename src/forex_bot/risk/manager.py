@@ -14,6 +14,7 @@ from forex_bot.risk.rules import (
     MaxConcurrentPositions,
     MandatoryStopLoss,
     MaxSpread,
+    PositiveQuantity,
 )
 from forex_bot.risk.circuit_breaker import CircuitBreaker
 from forex_bot.strategy.signals import Signal
@@ -28,9 +29,20 @@ class RiskManager:
         self._journal = journal
         settings = get_settings()
 
+        if not settings.risk.mandatory_stop_loss:
+            # The mandatory-stop-loss invariant is NON-NEGOTIABLE for this
+            # bot. The toggle exists only for backtest tooling — make any
+            # live use of it impossible to miss.
+            logger.critical(
+                "risk.mandatory_stop_loss is DISABLED in settings.yaml — "
+                "orders without stop losses will pass risk validation. "
+                "This violates a non-negotiable project invariant."
+            )
+
         # Straddle rules (existing behavior)
         self._straddle_rules: list[RiskRule] = [
             MandatoryStopLoss() if settings.risk.mandatory_stop_loss else None,
+            PositiveQuantity(),
             MaxRiskPerTrade(settings.risk.max_risk_per_trade_pct),
             MaxDailyDrawdown(settings.risk.max_daily_drawdown_pct),
             MaxConcurrentPositions(settings.risk.max_concurrent_positions),
@@ -42,6 +54,7 @@ class RiskManager:
         carry = settings.carry
         self._carry_rules: list[RiskRule] = [
             MandatoryStopLoss(),
+            PositiveQuantity(),
             MaxRiskPerTrade(carry.max_risk_per_carry_pct),
             MaxDailyDrawdown(settings.risk.max_daily_drawdown_pct),
             MaxConcurrentPositions(carry.max_concurrent_carry),
@@ -108,6 +121,13 @@ class RiskManager:
         """
         if risk_pct is None:
             risk_pct = get_settings().risk.max_risk_per_trade_pct
+
+        if stop_loss_pips <= 0 or quote_to_cad <= 0:
+            raise ValueError(
+                f"Cannot size position for {pair}: stop_loss_pips="
+                f"{stop_loss_pips}, quote_to_cad={quote_to_cad} "
+                f"(both must be positive)"
+            )
 
         pip_size = get_pip_size(pair)
         risk_amount = account_balance * (risk_pct / 100)

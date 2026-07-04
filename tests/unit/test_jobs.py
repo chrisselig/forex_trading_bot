@@ -88,9 +88,9 @@ class TestPreflightCheck:
     async def test_preflight_retries_on_failure(self, job_manager, event):
         jm, client, *_ = job_manager
         client.is_connected = False
-        from forex_bot.broker.exceptions import ConnectionError
+        from forex_bot.broker.exceptions import BrokerConnectionError
         client.connect = AsyncMock(
-            side_effect=[ConnectionError("fail"), ConnectionError("fail"), None]
+            side_effect=[BrokerConnectionError("fail"), BrokerConnectionError("fail"), None]
         )
 
         with patch("forex_bot.scheduler.jobs.asyncio.sleep", new_callable=AsyncMock):
@@ -101,8 +101,8 @@ class TestPreflightCheck:
     async def test_preflight_logs_critical_after_all_attempts_fail(self, job_manager, event):
         jm, client, *_ = job_manager
         client.is_connected = False
-        from forex_bot.broker.exceptions import ConnectionError
-        client.connect = AsyncMock(side_effect=ConnectionError("fail"))
+        from forex_bot.broker.exceptions import BrokerConnectionError
+        client.connect = AsyncMock(side_effect=BrokerConnectionError("fail"))
 
         with patch("forex_bot.scheduler.jobs.asyncio.sleep", new_callable=AsyncMock):
             await jm._preflight_check(event)
@@ -130,9 +130,9 @@ class TestEnsureConnectedWithRetry:
     async def test_retries_with_backoff_on_failure(self, job_manager):
         jm, client, *_ = job_manager
         client.is_connected = False
-        from forex_bot.broker.exceptions import ConnectionError
+        from forex_bot.broker.exceptions import BrokerConnectionError
         client.connect = AsyncMock(
-            side_effect=[ConnectionError("fail"), ConnectionError("fail"), None]
+            side_effect=[BrokerConnectionError("fail"), BrokerConnectionError("fail"), None]
         )
 
         with patch("forex_bot.scheduler.jobs.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
@@ -146,8 +146,8 @@ class TestEnsureConnectedWithRetry:
     async def test_returns_false_after_all_retries_exhausted(self, job_manager):
         jm, client, *_ = job_manager
         client.is_connected = False
-        from forex_bot.broker.exceptions import ConnectionError
-        client.connect = AsyncMock(side_effect=ConnectionError("fail"))
+        from forex_bot.broker.exceptions import BrokerConnectionError
+        client.connect = AsyncMock(side_effect=BrokerConnectionError("fail"))
 
         with patch("forex_bot.scheduler.jobs.asyncio.sleep", new_callable=AsyncMock):
             result = await jm._ensure_connected_with_retry()
@@ -172,8 +172,8 @@ class TestPreEventHandler:
     async def test_aborts_when_disconnected(self, job_manager, event):
         jm, client, pricing, engine, strategy = job_manager
         client.is_connected = False
-        from forex_bot.broker.exceptions import ConnectionError
-        client.connect = AsyncMock(side_effect=ConnectionError("fail"))
+        from forex_bot.broker.exceptions import BrokerConnectionError
+        client.connect = AsyncMock(side_effect=BrokerConnectionError("fail"))
 
         with patch("forex_bot.scheduler.jobs.asyncio.sleep", new_callable=AsyncMock):
             await jm._pre_event_handler(event)
@@ -229,8 +229,8 @@ class TestPostEventHandler:
     async def test_aborts_when_disconnected(self, job_manager, event):
         jm, client, pricing, engine, strategy = job_manager
         client.is_connected = False
-        from forex_bot.broker.exceptions import ConnectionError
-        client.connect = AsyncMock(side_effect=ConnectionError("fail"))
+        from forex_bot.broker.exceptions import BrokerConnectionError
+        client.connect = AsyncMock(side_effect=BrokerConnectionError("fail"))
 
         with patch("forex_bot.scheduler.jobs.asyncio.sleep", new_callable=AsyncMock):
             await jm._post_event_handler(event)

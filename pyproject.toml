@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "forex-bot"
 version = "0.1.0"
 description = "Event-driven forex trading bot for major US economic news releases"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "ib_async",
     "httpx",
@@ -23,6 +23,7 @@ dependencies = [
     "pyyaml",
     "loguru",
     "aiosqlite",
+    "libsql-experimental",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +31,7 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "pytest-mock",
+    "ruff",
 ]
 
 [project.scripts]
@@ -44,3 +46,6 @@ testpaths = ["tests"]
 markers = [
     "integration: requires IB Gateway running",
 ]
+
+[tool.ruff]
+target-version = "py312"

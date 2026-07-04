@@ -21,6 +21,8 @@ class OrderStatus(StrEnum):
     SUBMITTED = "SUBMITTED"
     FILLED = "FILLED"
     CANCELLED = "CANCELLED"
+    REJECTED = "REJECTED"
+    CLOSED = "CLOSED"  # filled entry whose position has been flattened
     ERROR = "ERROR"
 
 

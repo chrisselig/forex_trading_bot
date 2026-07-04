@@ -9,7 +9,7 @@ from loguru import logger
 
 from forex_bot.broker.client import IBClient
 from forex_bot.broker.pricing import PricingService
-from forex_bot.broker.tws_launcher import ensure_tws_running, is_tws_listening
+from forex_bot.broker.tws_launcher import ensure_tws_running, is_tws_listening_async
 from forex_bot.calendar.scraper import ForexFactoryScraper
 from forex_bot.calendar.store import EventStore
 from forex_bot.config import Settings
@@ -62,11 +62,23 @@ class JobManager:
         # when multiple events fire at the same scheduled time
         self._straddle_placed: set[tuple[str, datetime]] = set()
 
+    def _prune_stale_dedup_keys(self) -> None:
+        """Drop straddle dedup keys older than 24h.
+
+        Event times are stored as naive UTC, so the cutoff must be naive too
+        — comparing against an aware datetime raises TypeError, which used
+        to kill every pre-event handler after the first straddle.
+        """
+        cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=24)
+        self._straddle_placed = {k for k in self._straddle_placed if k[1] > cutoff}
+
     def _pairs_for_event(self, event: EconomicEvent) -> list[str]:
         """Return instruments to trade for this event.
 
         Uses target_pairs from the event if set, otherwise looks up the
-        matching EventTarget in config. Falls back to all instruments.
+        matching EventTarget in config. Fails closed: an event that matches
+        no configured target trades nothing — every pair/event combination
+        must be explicitly validated by MC analysis before it trades.
         """
         all_instruments = self._settings.trading.instruments
         target_pairs = event.target_pairs or self._lookup_target_pairs(event)
@@ -78,7 +90,12 @@ class JobManager:
                     f"target_pairs={target_pairs}, instruments={all_instruments}"
                 )
             return pairs
-        return all_instruments
+        logger.critical(
+            f"No configured target matches event '{event.title}' "
+            f"({event.country}) — trading nothing for it. Check events config "
+            f"for a renamed/missing alias."
+        )
+        return []
 
     def _lookup_target_pairs(self, event: EconomicEvent) -> list[str]:
         """Look up target pairs from events config by matching event title.
@@ -111,7 +128,7 @@ class JobManager:
                 self._tws_ensure,
                 DateTrigger(run_date=tws_ensure_time, timezone="UTC"),
                 args=[event],
-                id=f"tws_ensure_{event.title}_{event.scheduled_at.isoformat()}",
+                id=f"tws_ensure_{event.country}_{event.title}_{event.scheduled_at.isoformat()}",
                 replace_existing=True,
             )
             logger.info(f"Scheduled TWS ensure for {event.title} at {tws_ensure_time} UTC")
@@ -122,7 +139,7 @@ class JobManager:
                 self._preflight_check,
                 DateTrigger(run_date=preflight_time, timezone="UTC"),
                 args=[event],
-                id=f"preflight_{event.title}_{event.scheduled_at.isoformat()}",
+                id=f"preflight_{event.country}_{event.title}_{event.scheduled_at.isoformat()}",
                 replace_existing=True,
             )
             logger.info(f"Scheduled pre-flight check for {event.title} at {preflight_time} UTC")
@@ -146,7 +163,7 @@ class JobManager:
             self._pre_event_handler,
             DateTrigger(run_date=run_at, timezone="UTC"),
             args=[event],
-            id=f"pre_event_{event.title}_{event.scheduled_at.isoformat()}",
+            id=f"pre_event_{event.country}_{event.title}_{event.scheduled_at.isoformat()}",
             replace_existing=True,
         )
 
@@ -158,7 +175,7 @@ class JobManager:
                 self._post_event_handler,
                 DateTrigger(run_date=post_time, timezone="UTC"),
                 args=[event],
-                id=f"post_event_{event.title}_{event.scheduled_at.isoformat()}",
+                id=f"post_event_{event.country}_{event.title}_{event.scheduled_at.isoformat()}",
                 replace_existing=True,
             )
             logger.info(f"Scheduled post-event job for {event.title} at {post_time} UTC")
@@ -170,7 +187,7 @@ class JobManager:
         before the preflight check runs.
         """
         port = self._settings.broker.port
-        if is_tws_listening(port):
+        if await is_tws_listening_async(port):
             logger.info(f"TWS_ENSURE: TWS already listening on port {port} for {event.title}")
             return
 
@@ -228,7 +245,7 @@ class JobManager:
 
         # Last resort: try cold-starting TWS in case it's completely dead
         port = self._settings.broker.port
-        if not is_tws_listening(port):
+        if not await is_tws_listening_async(port):
             logger.warning(
                 f"PRE-FLIGHT: TWS not listening on port {port}, attempting cold-start as last resort"
             )
@@ -316,9 +333,7 @@ class JobManager:
             return
 
         self._engine.set_current_event(event)
-        # Prune stale dedup keys (older than 24h)
-        cutoff = datetime.now(UTC) - timedelta(hours=24)
-        self._straddle_placed = {k for k in self._straddle_placed if k[1] > cutoff}
+        self._prune_stale_dedup_keys()
 
         # Persistent guard against re-placing a straddle already resting on IB
         # (e.g. bot restarted after placement but before the event fired).
@@ -349,7 +364,7 @@ class JobManager:
                     price = await self._pricing.get_snapshot(pair)
                     signals = await strategy.evaluate_pre_event(event, price)
                     if signals:
-                        await self._engine.execute_signals(signals)
+                        await self._engine.execute_signals(signals, event=event)
                         if strategy.name == "straddle":
                             self._straddle_placed.add(dedup_key)
                 except Exception as e:
@@ -368,7 +383,12 @@ class JobManager:
             event.scheduled_at - timedelta(minutes=1),
             event.scheduled_at + timedelta(minutes=1),
         )
-        current_event = events[0] if events else event
+        # Multiple events can share the same timestamp (e.g. NFP + Average
+        # Hourly Earnings) — match on title, never take an arbitrary first.
+        current_event = next(
+            (e for e in events if e.title == event.title and e.country == event.country),
+            event,
+        )
 
         self._engine.set_current_event(current_event)
         pairs = self._pairs_for_event(current_event)
@@ -378,7 +398,7 @@ class JobManager:
                     price = await self._pricing.get_snapshot(pair)
                     signals = await strategy.evaluate_post_event(current_event, price)
                     if signals:
-                        await self._engine.execute_signals(signals)
+                        await self._engine.execute_signals(signals, event=event)
                 except Exception as e:
                     logger.error(f"Post-event error ({strategy.name}/{pair}): {e}")
 
@@ -391,7 +411,7 @@ class JobManager:
         poll_time = datetime.now(UTC).replace(tzinfo=None) + timedelta(
             minutes=_ACTUAL_POLL_INTERVAL_MINUTES
         )
-        job_id = f"poll_actual_{event.title}_{event.scheduled_at.isoformat()}"
+        job_id = f"poll_actual_{event.country}_{event.title}_{event.scheduled_at.isoformat()}"
         self._scheduler.add_job(
             self._poll_actual,
             DateTrigger(run_date=poll_time, timezone="UTC"),
@@ -406,7 +426,7 @@ class JobManager:
         logger.info(f"Polling actual for {event.title} (attempt {attempt}/{_ACTUAL_POLL_MAX_ATTEMPTS})")
 
         try:
-            ff_events = await self._scraper.fetch_week(date=event.scheduled_at)
+            ff_events = await self._scraper.fetch_week()
             updated = await self._event_store.update_actuals(ff_events)
 
             # Check if our target event now has an actual
@@ -414,7 +434,14 @@ class JobManager:
                 event.scheduled_at - timedelta(minutes=1),
                 event.scheduled_at + timedelta(minutes=1),
             )
-            target = next((e for e in refreshed if e.title == event.title), None)
+            target = next(
+                (
+                    e
+                    for e in refreshed
+                    if e.title == event.title and e.country == event.country
+                ),
+                None,
+            )
 
             if target and target.has_actual:
                 logger.info(
@@ -434,7 +461,7 @@ class JobManager:
             next_time = datetime.now(UTC).replace(tzinfo=None) + timedelta(
                 minutes=_ACTUAL_POLL_INTERVAL_MINUTES
             )
-            job_id = f"poll_actual_{event.title}_{event.scheduled_at.isoformat()}"
+            job_id = f"poll_actual_{event.country}_{event.title}_{event.scheduled_at.isoformat()}"
             self._scheduler.add_job(
                 self._poll_actual,
                 DateTrigger(run_date=next_time, timezone="UTC"),

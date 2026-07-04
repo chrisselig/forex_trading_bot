@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
 
+from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -67,14 +69,16 @@ def _add_missing_columns(connection) -> None:
     for table, column, col_type in migrations:
         try:
             connection.execute(
-                __import__("sqlalchemy").text(
-                    f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"
-                )
+                text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
             )
             logger.info(f"Added column {table}.{column}")
-        except Exception:
-            # Column already exists — expected on subsequent runs
-            pass
+        except OperationalError as e:
+            if "duplicate column" in str(e).lower():
+                continue  # already migrated — expected on subsequent runs
+            # Anything else (database locked, disk error) must surface:
+            # swallowing it leaves the schema silently incomplete and the
+            # failure appears much later, far from the root cause.
+            raise
 
 
 @asynccontextmanager

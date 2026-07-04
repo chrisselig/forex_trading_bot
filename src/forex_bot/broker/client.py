@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import asyncio
+
 from loguru import logger
-from ib_async import IB
+from ib_async import IB, Trade as IBTrade
+from ib_async.objects import Position
 
 from forex_bot.config import get_settings
-from forex_bot.broker.exceptions import ConnectionError
+from forex_bot.broker.exceptions import BrokerConnectionError, DataError
 from forex_bot.models.account import AccountSummary
+
+# Upper bound for IB data requests — a wedged TWS otherwise hangs callers.
+_IB_REQUEST_TIMEOUT_S = 30.0
 
 
 class IBClient:
@@ -15,10 +21,10 @@ class IBClient:
         settings = get_settings()
         self._host = host or settings.broker.host
         self._port = port or settings.broker.port
-        self._client_id = client_id or settings.broker.client_id
+        # 0 is a valid IB client id — do not use `or` here
+        self._client_id = client_id if client_id is not None else settings.broker.client_id
         self._timeout = settings.broker.timeout
         self.ib = IB()
-        self._connected = False
 
     @property
     def is_connected(self) -> bool:
@@ -37,16 +43,14 @@ class IBClient:
                 clientId=self._client_id,
                 timeout=self._timeout,
             )
-            self._connected = True
             logger.info("Successfully connected to IB Gateway")
         except Exception as e:
-            raise ConnectionError(f"Failed to connect to IB Gateway at {self._host}:{self._port}: {e}") from e
+            raise BrokerConnectionError(f"Failed to connect to IB Gateway at {self._host}:{self._port}: {e}") from e
 
     async def disconnect(self) -> None:
         """Disconnect from IB Gateway/TWS."""
         if self.is_connected:
             self.ib.disconnect()
-            self._connected = False
             logger.info("Disconnected from IB Gateway")
 
     async def ensure_connected(self) -> None:
@@ -58,7 +62,12 @@ class IBClient:
     async def get_account_summary(self) -> AccountSummary:
         """Fetch account summary from IB."""
         await self.ensure_connected()
-        summary_items = await self.ib.accountSummaryAsync()
+        try:
+            summary_items = await asyncio.wait_for(
+                self.ib.accountSummaryAsync(), _IB_REQUEST_TIMEOUT_S
+            )
+        except TimeoutError as e:
+            raise DataError("Timed out fetching account summary from IB") from e
         data: dict[str, str] = {}
         for item in summary_items:
             data[item.tag] = item.value
@@ -74,15 +83,20 @@ class IBClient:
             realized_pnl=float(data.get("RealizedPnL", 0)),
         )
 
-    async def get_positions(self) -> list:
+    async def get_positions(self) -> list[Position]:
         """Fetch current positions from IB."""
         await self.ensure_connected()
         return self.ib.positions()
 
-    async def get_open_orders(self) -> list:
+    async def get_open_orders(self) -> list[IBTrade]:
         """Fetch all open orders from IB."""
         await self.ensure_connected()
-        return await self.ib.reqAllOpenOrdersAsync()
+        try:
+            return await asyncio.wait_for(
+                self.ib.reqAllOpenOrdersAsync(), _IB_REQUEST_TIMEOUT_S
+            )
+        except TimeoutError as e:
+            raise DataError("Timed out fetching open orders from IB") from e
 
     async def __aenter__(self):
         await self.connect()

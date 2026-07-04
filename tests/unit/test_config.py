@@ -71,7 +71,9 @@ def test_event_overrides():
                 "tp_pips": 70,
                 "sl_pips": 10,
                 "event_overrides": {
-                    "TCMB": {"distance_pips": 20, "tp_pips": 60, "sl_pips": 10},
+                    "TCMB Interest Rate Decision": {
+                        "distance_pips": 20, "tp_pips": 60, "sl_pips": 10,
+                    },
                 },
             },
         },
@@ -80,9 +82,33 @@ def test_event_overrides():
     d, tp, sl = config.get_straddle_params("USDTRY", "Non-Farm Employment Change")
     assert (d, tp, sl) == (50, 70, 10)
 
-    # TCMB event — uses event override
+    # TCMB event — exact title match uses the event override
     d, tp, sl = config.get_straddle_params("USDTRY", "TCMB Interest Rate Decision")
     assert (d, tp, sl) == (20, 60, 10)
+
+    # Alias resolution: an aliased title matches via event_names
+    d, tp, sl = config.get_straddle_params(
+        "USDTRY",
+        "One-Week Repo Rate",
+        event_names=["TCMB Interest Rate Decision", "TCMB Rate", "One-Week Repo Rate"],
+    )
+    assert (d, tp, sl) == (20, 60, 10)
+
+    # Substring must NOT match — "CPI m/m" key vs "Trimmed Mean CPI m/m" title
+    config2 = StrategyConfig(
+        straddle_pair_overrides={
+            "AUDUSD": {
+                "distance_pips": 40,
+                "tp_pips": 70,
+                "sl_pips": 30,
+                "event_overrides": {
+                    "CPI m/m": {"distance_pips": 40, "tp_pips": 15, "sl_pips": 25},
+                },
+            },
+        },
+    )
+    d, tp, sl = config2.get_straddle_params("AUDUSD", "Trimmed Mean CPI m/m")
+    assert (d, tp, sl) == (40, 70, 30)  # AU params, NOT the US override
 
     # No event title — uses pair-level defaults
     d, tp, sl = config.get_straddle_params("USDTRY")
@@ -92,10 +118,34 @@ def test_event_overrides():
 def test_event_overrides_loaded_from_yaml():
     settings = load_settings()
     usdtry = settings.strategy.straddle_pair_overrides["USDTRY"]
-    assert "TCMB" in usdtry.event_overrides
-    assert usdtry.event_overrides["TCMB"].distance_pips == 20
-    assert usdtry.event_overrides["TCMB"].tp_pips == 60
-    assert usdtry.event_overrides["TCMB"].sl_pips == 10
+    key = "TCMB Interest Rate Decision"
+    assert key in usdtry.event_overrides
+    assert usdtry.event_overrides[key].distance_pips == 20
+    assert usdtry.event_overrides[key].tp_pips == 60
+    assert usdtry.event_overrides[key].sl_pips == 10
+
+
+def test_resolve_event_names_and_audusd_override_keys():
+    """Every AUDUSD/USDTRY event_overrides key must resolve from a real FF
+    title — a key that matches nothing is silently dead config."""
+    settings = load_settings()
+
+    # NFP title resolves to names containing the 'NFP' alias
+    names = settings.resolve_event_names("Non-Farm Employment Change", "USD")
+    assert "NFP" in names
+
+    # Every configured override key must be reachable via some target's names
+    all_names = {
+        n.lower().strip()
+        for t in settings.events.target_events
+        for n in [t.name, *t.aliases]
+    }
+    for pair, override in settings.strategy.straddle_pair_overrides.items():
+        for key in override.event_overrides:
+            assert key.lower().strip() in all_names, (
+                f"{pair} override key '{key}' matches no event target "
+                f"name/alias — it would never apply"
+            )
 
 
 def test_events_config_loaded():

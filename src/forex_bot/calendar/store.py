@@ -21,10 +21,14 @@ class EventStore:
         self._turso = turso
 
     async def save_events(self, events: list[EconomicEvent]) -> int:
-        """Save events to the database, deduplicating by title + date.
+        """Save events to the database, deduplicating by title + country + date.
 
-        If an event with the same title exists on the same day (±1 day window)
-        but at a different time, update its scheduled_at (time-change detection).
+        Country is part of the identity: generic titles like "CPI y/y" exist
+        for multiple countries in the same window, and matching on title
+        alone overwrote one country's event with another's schedule.
+
+        If a matching event exists on the same day (±1 day window) but at a
+        different time, update its scheduled_at (time-change detection).
         """
         saved = 0
         updated = 0
@@ -34,10 +38,11 @@ class EventStore:
                 exact = await session.execute(
                     select(EventRecord).where(
                         EventRecord.title == event.title,
+                        EventRecord.country == event.country,
                         EventRecord.scheduled_at == event.scheduled_at,
                     )
                 )
-                if exact.scalar_one_or_none() is not None:
+                if exact.scalars().first() is not None:
                     continue
 
                 # Same-day match — check if FF rescheduled the event
@@ -48,11 +53,14 @@ class EventStore:
                 same_day = await session.execute(
                     select(EventRecord).where(
                         EventRecord.title == event.title,
+                        EventRecord.country == event.country,
                         EventRecord.scheduled_at >= day_start,
                         EventRecord.scheduled_at <= day_end,
                     )
                 )
-                existing_record = same_day.scalar_one_or_none()
+                # first() not scalar_one_or_none(): two same-title rows in the
+                # window must not abort the whole calendar refresh
+                existing_record = same_day.scalars().first()
 
                 if existing_record is not None:
                     # Time changed — update the record
@@ -126,10 +134,11 @@ class EventStore:
                 result = await session.execute(
                     select(EventRecord).where(
                         EventRecord.title == event.title,
+                        EventRecord.country == event.country,
                         EventRecord.scheduled_at == event.scheduled_at,
                     )
                 )
-                record = result.scalar_one_or_none()
+                record = result.scalars().first()
                 if record and not record.actual:
                     record.actual = event.actual
                     if self._turso:

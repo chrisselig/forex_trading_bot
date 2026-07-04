@@ -9,7 +9,7 @@ from sqlalchemy import func, select, update
 from forex_bot.data.database import get_session
 from forex_bot.data.schemas import TradeRecord, OrderRecord
 from forex_bot.data.turso_sync import TursoSyncer
-from forex_bot.models.orders import Order, Trade, OrderStatus
+from forex_bot.models.orders import Order, OrderSide, OrderStatus, Trade
 
 if TYPE_CHECKING:
     from forex_bot.notifications.telegram import TelegramNotifier
@@ -82,7 +82,7 @@ class TradeJournal:
         fill_price: float | None = None,
         slippage_pips: float | None = None,
     ) -> None:
-        """Update an order's status in the journal."""
+        """Update an order's status in the journal, keyed by database ID."""
         async with get_session() as session:
             values: dict = {"status": status.value}
             if fill_price is not None:
@@ -103,6 +103,33 @@ class TradeJournal:
                 filled_at=datetime.utcnow() if fill_price is not None else None,
                 slippage_pips=slippage_pips,
             )
+
+    async def update_order_status_by_ib_id(
+        self,
+        ib_order_id: int,
+        status: OrderStatus,
+        fill_price: float | None = None,
+        slippage_pips: float | None = None,
+    ) -> int | None:
+        """Update an order's status keyed by IB order ID.
+
+        IB order IDs and database IDs are different ID spaces — callers that
+        only know the IB order ID (fill events) must use this method, never
+        update_order_status. Returns the database ID, or None if unknown.
+        """
+        async with get_session() as session:
+            result = await session.execute(
+                select(OrderRecord.id).where(OrderRecord.ib_order_id == ib_order_id)
+            )
+            db_id = result.scalar_one_or_none()
+        if db_id is None:
+            logger.warning(
+                f"No journal order found for IB order #{ib_order_id} "
+                f"(status update to {status.value} dropped)"
+            )
+            return None
+        await self.update_order_status(db_id, status, fill_price, slippage_pips)
+        return db_id
 
     async def update_commission(self, order_id: int, commission: float) -> None:
         """Accumulate commission on an order and its matching trade.
@@ -243,6 +270,76 @@ class TradeJournal:
                 if self._anomaly_detector:
                     await self._anomaly_detector.check_trade(trade)
 
+    async def get_order_by_ib_id(self, ib_order_id: int) -> OrderRecord | None:
+        """Fetch an order record by IB order ID (most recent if duplicated)."""
+        async with get_session() as session:
+            result = await session.execute(
+                select(OrderRecord)
+                .where(OrderRecord.ib_order_id == ib_order_id)
+                .order_by(OrderRecord.id.desc())
+            )
+            return result.scalars().first()
+
+    async def get_trade_by_order_db_id(self, db_order_id: int) -> Trade | None:
+        """Fetch the trade opened for a given order (by database order ID)."""
+        async with get_session() as session:
+            result = await session.execute(
+                select(TradeRecord)
+                .where(TradeRecord.order_id == db_order_id)
+                .order_by(TradeRecord.id.desc())
+            )
+            record = result.scalars().first()
+        return self._to_model(record) if record else None
+
+    async def open_trade_for_order(self, db_order_id: int) -> int | None:
+        """Create the trade record for a filled entry order (idempotent).
+
+        Returns the trade's database ID, or None if the order is unknown or
+        has no usable entry price.
+        """
+        async with get_session() as session:
+            existing = await session.execute(
+                select(TradeRecord.id).where(TradeRecord.order_id == db_order_id)
+            )
+            trade_id = existing.scalars().first()
+            if trade_id is not None:
+                return trade_id
+            result = await session.execute(
+                select(OrderRecord).where(OrderRecord.id == db_order_id)
+            )
+            rec = result.scalar_one_or_none()
+
+        if rec is None:
+            logger.warning(f"Cannot open trade: no order record #{db_order_id}")
+            return None
+        entry_price = rec.fill_price or rec.price
+        if entry_price is None:
+            logger.warning(
+                f"Cannot open trade for order #{db_order_id}: no fill or plan price"
+            )
+            return None
+
+        trade = Trade(
+            order_id=db_order_id,
+            instrument=rec.instrument,
+            side=OrderSide(rec.side),
+            quantity=rec.quantity,
+            entry_price=entry_price,
+            stop_loss=rec.stop_loss,
+            take_profit=rec.take_profit,
+            entry_spread_pips=rec.entry_spread_pips,
+            fill_price=rec.fill_price,
+            slippage_pips=rec.slippage_pips,
+            event_id=rec.event_id,
+            strategy=rec.strategy or "",
+        )
+        trade_id = await self.log_trade(trade)
+        if rec.fill_price is not None:
+            await self.update_fill(
+                db_order_id, rec.fill_price, rec.slippage_pips or 0.0
+            )
+        return trade_id
+
     async def get_trades(self, strategy: str | None = None, limit: int = 50) -> list[Trade]:
         """Retrieve recent trades from the journal."""
         async with get_session() as session:
@@ -270,13 +367,21 @@ class TradeJournal:
             for r in records if r.pnl is not None
         )
 
+    # Statuses that represent a live exposure: working at the broker or a
+    # filled entry whose position has not been closed yet.
+    _OPEN_STATUSES = (
+        OrderStatus.PENDING.value,
+        OrderStatus.SUBMITTED.value,
+        OrderStatus.FILLED.value,
+    )
+
     async def count_open_by_strategy(self, strategy: str) -> int:
         """Count open orders for a specific strategy."""
         async with get_session() as session:
             result = await session.execute(
                 select(func.count(OrderRecord.id)).where(
                     OrderRecord.strategy == strategy,
-                    OrderRecord.status == "submitted",
+                    OrderRecord.status.in_(self._OPEN_STATUSES),
                 )
             )
             return result.scalar_one()
@@ -287,7 +392,7 @@ class TradeJournal:
             result = await session.execute(
                 select(OrderRecord).where(
                     OrderRecord.strategy == strategy,
-                    OrderRecord.status == "submitted",
+                    OrderRecord.status.in_(self._OPEN_STATUSES),
                 )
             )
             return list(result.scalars().all())

@@ -71,7 +71,10 @@ class TestPollActual:
     @pytest.mark.asyncio
     async def test_stops_when_actual_found(self, job_manager, event, scraper, event_store):
         """Polling stops (no reschedule) when the event's actual is populated."""
-        found_event = MagicMock(title="Non-Farm Employment Change", has_actual=True, actual="206K")
+        found_event = MagicMock(
+            title="Non-Farm Employment Change", has_actual=True, actual="206K"
+        )
+        found_event.country = event.country
         event_store.get_events_range = AsyncMock(return_value=[found_event])
 
         await job_manager._poll_actual(event, attempt=1)
@@ -116,8 +119,8 @@ class TestPollActual:
         job_manager._scheduler.add_job.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_fetches_correct_week(self, job_manager, event, scraper, event_store):
-        """Passes the event's scheduled_at to fetch_week for correct week lookup."""
+    async def test_fetches_week_snapshot(self, job_manager, event, scraper, event_store):
+        """Polls the FF week feeds (the API has no historical targeting)."""
         missing_event = MagicMock(
             title="Non-Farm Employment Change", has_actual=False, actual=None
         )
@@ -125,7 +128,7 @@ class TestPollActual:
 
         await job_manager._poll_actual(event, attempt=1)
 
-        scraper.fetch_week.assert_called_once_with(date=event.scheduled_at)
+        scraper.fetch_week.assert_called_once_with()
 
 
 class TestScheduleActualPoll:

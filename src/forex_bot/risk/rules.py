@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from forex_bot.broker.contracts import get_pip_size
 from forex_bot.strategy.signals import Signal
 from forex_bot.models.account import AccountSummary
 from forex_bot.models.market import PriceSnapshot
@@ -75,7 +76,19 @@ class MaxSpread(RiskRule):
         if price is None:
             return None
         limit = self._overrides.get(signal.instrument, self.max_pips)
-        spread_pips = price.spread_pips()
+        # Use the pair's real pip size — a hardcoded 0.0001 overstates JPY
+        # pair spreads 100x and would reject every USDJPY signal.
+        spread_pips = price.spread_pips(get_pip_size(signal.instrument))
         if spread_pips > limit:
             return f"Spread {spread_pips:.1f} pips exceeds max {limit:.0f} pips for {signal.instrument}"
+        return None
+
+
+class PositiveQuantity(RiskRule):
+    """A zero/negative-quantity order is never valid — fail closed instead
+    of letting IB reject it asynchronously."""
+
+    def validate(self, signal, account, price=None, open_position_count=0, daily_pnl=0.0, quote_to_cad=1.0):
+        if signal.quantity <= 0:
+            return f"Order quantity must be positive (got {signal.quantity})"
         return None

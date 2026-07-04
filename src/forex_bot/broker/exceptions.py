@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 class ForexBotError(Exception):
     """Base exception for the forex trading bot."""
 
 
-class ConnectionError(ForexBotError):
+class BrokerConnectionError(ForexBotError):
     """Failed to connect to IB Gateway/TWS."""
 
 

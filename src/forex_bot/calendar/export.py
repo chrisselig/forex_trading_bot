@@ -63,7 +63,11 @@ async def build_calendar(days: int = 30) -> list[dict]:
         }
 
         for pair in pairs:
-            dist, tp, sl = settings.strategy.get_straddle_params(pair, event.title)
+            dist, tp, sl = settings.strategy.get_straddle_params(
+                pair,
+                event.title,
+                event_names=settings.resolve_event_names(event.title, event.country),
+            )
             entry["pairs"].append({
                 "instrument": pair,
                 "straddle_distance_pips": dist,

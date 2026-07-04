@@ -16,7 +16,9 @@ from forex_bot.risk.circuit_breaker import CircuitBreaker, CircuitState
 ET = ZoneInfo("America/New_York")
 MT = ZoneInfo("America/Edmonton")
 
-# Quiet hours in Mountain Time — ALL alerts suppressed (no exceptions)
+# Quiet hours in Mountain Time — routine alerts suppressed. Critical alerts
+# (circuit breaker, preflight failure, connection loss) always go through:
+# overnight events (SA CPI 2 AM MT, BOJ) trade inside this window.
 QUIET_START_HOUR = 20   # 8:30 PM MT
 QUIET_START_MINUTE = 30
 QUIET_END_HOUR = 5      # 5:00 AM MT (bot cron starts at 5 AM MT)
@@ -32,12 +34,28 @@ class TelegramNotifier:
         self._enabled = enabled and bool(bot_token) and bool(chat_id)
         self._base_url = f"https://api.telegram.org/bot{bot_token}"
         self._connection_lost_notified = False
+        self._client: httpx.AsyncClient | None = None
 
         if not self._enabled:
             logger.warning("Telegram notifications disabled (missing token or chat_id)")
 
+    def _get_client(self) -> httpx.AsyncClient:
+        """Shared HTTP client — one TLS handshake, reused across alerts."""
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(timeout=10)
+        return self._client
+
+    async def close(self) -> None:
+        """Release the HTTP client (call on shutdown)."""
+        if self._client is not None and not self._client.is_closed:
+            await self._client.aclose()
+
+    def _redact(self, text: str) -> str:
+        """Strip the bot token from any string destined for the logs."""
+        return text.replace(self._bot_token, "<token>") if self._bot_token else text
+
     def _is_quiet_hours(self) -> bool:
-        """Check if we're in the overnight quiet period (all alerts suppressed).
+        """Check if we're in the overnight quiet period (routine alerts suppressed).
 
         Uses Mountain Time (America/Edmonton) with proper DST handling.
         Quiet window: 8:30 PM MT to 5:00 AM MT.
@@ -55,30 +73,51 @@ class TelegramNotifier:
         Args:
             text: Message content (Markdown).
             silent: Send without sound (disable_notification).
-            critical: Unused — all alerts suppressed during quiet hours (8:30 PM - 5:00 AM MT).
+            critical: Bypass quiet hours. A circuit-breaker halt at 2 AM MT
+                during a BOJ straddle must reach the phone.
         """
         if not self._enabled:
             return
 
-        if self._is_quiet_hours():
+        if self._is_quiet_hours() and not critical:
             logger.debug(f"Telegram suppressed (quiet hours): {text[:80]}...")
             return
 
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            client = self._get_client()
+            resp = await client.post(
+                f"{self._base_url}/sendMessage",
+                json={
+                    "chat_id": self._chat_id,
+                    "text": text,
+                    "parse_mode": "Markdown",
+                    "disable_notification": silent,
+                },
+            )
+            if resp.status_code == 400:
+                # Almost always a Markdown parse failure from unescaped
+                # dynamic content (underscores in halt reasons, event
+                # titles). Retry as plain text — an ugly alert beats a
+                # dropped one.
+                logger.warning(
+                    f"Telegram rejected Markdown "
+                    f"({self._redact(resp.text)[:200]}) — retrying as plain text"
+                )
                 resp = await client.post(
                     f"{self._base_url}/sendMessage",
                     json={
                         "chat_id": self._chat_id,
                         "text": text,
-                        "parse_mode": "Markdown",
                         "disable_notification": silent,
                     },
                 )
-                if resp.status_code != 200:
-                    logger.error(f"Telegram API error {resp.status_code}: {resp.text}")
+            if resp.status_code != 200:
+                logger.error(
+                    f"Telegram API error {resp.status_code}: "
+                    f"{self._redact(resp.text)[:300]}"
+                )
         except Exception as e:
-            logger.error(f"Telegram send failed: {e}")
+            logger.error(f"Telegram send failed: {self._redact(str(e))}")
 
     # ------------------------------------------------------------------
     # Time formatting

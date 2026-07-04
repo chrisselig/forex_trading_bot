@@ -80,7 +80,7 @@ class TestPriceSnapshot:
             bid=1.08500,
             ask=1.08520,
         )
-        assert price.spread_pips() == pytest.approx(2.0)
+        assert price.spread_pips(pip_size=0.0001) == pytest.approx(2.0)
 
     def test_spread_pips_jpy(self):
         price = PriceSnapshot(

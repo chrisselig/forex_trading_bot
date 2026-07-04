@@ -1,0 +1,6 @@
+# Development/test dependencies (Python 3.12)
+# Install: pip install -r requirements-dev.txt
+pytest==9.0.3
+pytest-asyncio==1.4.0
+pytest-mock==3.15.1
+ruff==0.15.17
