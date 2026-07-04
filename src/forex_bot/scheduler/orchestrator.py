@@ -218,9 +218,19 @@ class Orchestrator:
         at all (SARB/TCMB/BOJ/RBA/AU events) resolve to None without ever
         touching the network, so this is cheap steady-state. Never lets a
         single event's failure abort the rest of the batch.
+
+        Lookback is wide (90 days) because actuals.resolve_actual now targets
+        the expected observation period rather than trusting the latest one,
+        so old events are resolvable again instead of being stuck forever
+        once a newer release supersedes them. Unmappable events short-circuit
+        before touching the network, and resolved events drop out of this
+        query on the next pass, so the wide window is cheap and
+        self-draining. (FredClient.get_series defaults to a 2-year fetch
+        window, so a 90-day-old monthly event still has its observation plus
+        12 months of prior history available for YOY.)
         """
         try:
-            events = await self._event_store.get_events_missing_actuals(168)
+            events = await self._event_store.get_events_missing_actuals(24 * 90)
         except SQLAlchemyError as e:
             logger.error(f"Backfill actuals: failed to load missing events: {e}")
             return

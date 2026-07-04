@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import StrEnum
 
 from loguru import logger
@@ -21,7 +21,7 @@ class Transform(StrEnum):
 
 
 class Frequency(StrEnum):
-    """FRED release cadence — drives the freshness guard below."""
+    """FRED release cadence — drives period-exact observation targeting below."""
 
     DAILY = "daily"
     WEEKLY = "weekly"
@@ -29,23 +29,14 @@ class Frequency(StrEnum):
     QUARTERLY = "quarterly"
 
 
-# Freshness window: how many days *before* the event's scheduled_at the
-# latest FRED observation's period date is allowed to be, before we treat it
-# as "not released yet" and refuse to use it (never store a stale
-# previous-period value as this event's actual).
-#
 # DAILY (Fed funds target range) is not a periodic index release — it's a
 # point-in-time level that only changes when the FOMC votes to change it.
 # A new target range takes effect the business day AFTER the announcement,
 # so daily series are resolved forward by _daily_level (first observation
-# dated after the event day), not by this backward-looking window; the
-# DAILY entry only caps how far after the event that observation may be.
-_FRESHNESS_WINDOW_DAYS: dict[Frequency, int] = {
-    Frequency.DAILY: 10,
-    Frequency.WEEKLY: 14,
-    Frequency.MONTHLY: 45,
-    Frequency.QUARTERLY: 120,
-}
+# dated after the event day), not by period matching like the other
+# frequencies; this constant only caps how far after the event that
+# observation may be before we give up and treat it as not released.
+_DAILY_MAX_LAG_DAYS = 10
 
 
 @dataclass(frozen=True)
@@ -196,7 +187,7 @@ def _daily_level(observations: list[dict], event_date: datetime) -> float | None
     until one exists — the recurring backfill pass picks it up the next day.
     """
     event_day = event_date.replace(hour=0, minute=0, second=0, microsecond=0)
-    max_days = _FRESHNESS_WINDOW_DAYS[Frequency.DAILY]
+    max_days = _DAILY_MAX_LAG_DAYS
     for obs in observations:
         if obs["date"] > event_day:
             if (obs["date"] - event_day).days > max_days:
@@ -205,24 +196,49 @@ def _daily_level(observations: list[dict], event_date: datetime) -> float | None
     return None
 
 
-def _is_fresh(obs_date: datetime, event_date: datetime, frequency: Frequency) -> bool:
-    """Freshness guard: refuse to use an observation that predates the event
-    by more than the frequency's window, and — for monthly/quarterly series
-    — refuse one that isn't from the period we'd expect this event to cover.
+def _target_slice(
+    observations: list[dict], event_date: datetime, frequency: Frequency
+) -> list[dict] | None:
+    """Truncate `observations` to the ones this event's release would have
+    reported, by targeting the *expected* period rather than trusting
+    whatever the latest observation happens to be.
+
+    This is what makes historical backfill possible: an event from weeks ago
+    still resolves correctly against the observation for the period it
+    covers, even though FRED's latest observation has since moved on to a
+    newer period. It also closes the weekly race where, on release morning
+    before FRED ingests the new week, the previous week's ICSA print could
+    otherwise be mistaken for this week's.
+
+    Returns None if no observation exists yet for the expected period —
+    i.e. "not released".
     """
-    window = _FRESHNESS_WINDOW_DAYS[frequency]
-    age_days = (event_date - obs_date).days
-    if age_days < 0 or age_days > window:
-        return False
+    if frequency == Frequency.WEEKLY:
+        # ICSA is released Thursdays and covers the week ENDING the most
+        # recent Saturday strictly before the event, dated by that
+        # week-ending Saturday. `(weekday - 5) % 7` gives the number of
+        # days back to that Saturday for any weekday; the `or 7` guard only
+        # matters if the event itself falls on a Saturday (weekday 5),
+        # where the formula would otherwise yield 0 and we need the
+        # *previous* Saturday (7 days back) instead.
+        days_back = (event_date.weekday() - 5) % 7 or 7
+        expected_date = (event_date - timedelta(days=days_back)).date()
+        for i in range(len(observations) - 1, -1, -1):
+            if observations[i]["date"].date() == expected_date:
+                return observations[: i + 1]
+        return None
 
-    if frequency in (Frequency.MONTHLY, Frequency.QUARTERLY):
-        diff = _period_index(event_date, frequency) - _period_index(obs_date, frequency)
-        # e.g. a July CPI release covers June (diff=1); GDP-style
-        # reporting lags are allowed up to diff=2.
-        if diff not in (1, 2):
-            return False
-
-    return True
+    # MONTHLY / QUARTERLY: a release in period N covers period N-1 (e.g. a
+    # July CPI release covers June). Some releases (GDP-style vintages) lag
+    # two periods instead of one — try diff=1 first, then diff=2. Scan from
+    # the end so the *last* matching observation wins if a period appears
+    # more than once.
+    expected = _period_index(event_date, frequency) - 1
+    for target in (expected, expected - 1):
+        for i in range(len(observations) - 1, -1, -1):
+            if _period_index(observations[i]["date"], frequency) == target:
+                return observations[: i + 1]
+    return None
 
 
 def _mom_pct(observations: list[dict]) -> float | None:
@@ -235,14 +251,23 @@ def _mom_pct(observations: list[dict]) -> float | None:
     return (latest - prior) / abs(prior) * 100
 
 
-def _yoy_pct(observations: list[dict]) -> float | None:
+def _yoy_pct(observations: list[dict], frequency: Frequency) -> float | None:
+    """YOY compares observations[-1] against observations[-13], which is
+    only correct if that's genuinely the same month one year earlier. FRED
+    monthly series have no gaps in practice, so index-based lookup is
+    normally fine — but now that truncation can land anywhere in history
+    (period-exact targeting for backfill), cheaply verify the period
+    alignment rather than assuming it.
+    """
     if len(observations) < 13:
         return None
-    latest = observations[-1]["value"]
-    year_ago = observations[-13]["value"]
-    if year_ago == 0:
+    latest = observations[-1]
+    year_ago = observations[-13]
+    if _period_index(latest["date"], frequency) - _period_index(year_ago["date"], frequency) != 12:
         return None
-    return (latest - year_ago) / abs(year_ago) * 100
+    if year_ago["value"] == 0:
+        return None
+    return (latest["value"] - year_ago["value"]) / abs(year_ago["value"]) * 100
 
 
 def _mom_diff_k(observations: list[dict]) -> float | None:
@@ -259,7 +284,7 @@ def _apply_transform(observations: list[dict], mapping: SeriesMapping) -> float 
     if mapping.transform == Transform.MOM_PCT:
         return _mom_pct(observations)
     if mapping.transform == Transform.YOY_PCT:
-        return _yoy_pct(observations)
+        return _yoy_pct(observations, mapping.frequency)
     if mapping.transform == Transform.MOM_DIFF_K:
         return _mom_diff_k(observations)
     return None
@@ -311,15 +336,15 @@ async def resolve_actual(event: EconomicEvent) -> str | None:
             return None
         return _format(value, mapping)
 
-    latest_date = observations[-1]["date"]
-
-    if not _is_fresh(latest_date, event.scheduled_at, mapping.frequency):
+    sliced = _target_slice(observations, event.scheduled_at, mapping.frequency)
+    if sliced is None:
         logger.info(
-            f"FRED observation for {event.title} ({mapping.series_id}, "
-            f"period {latest_date.date()}) not yet current for event on "
-            f"{event.scheduled_at} — treating as not released"
+            f"No FRED observation yet for the period {event.title} "
+            f"({mapping.series_id}, event {event.scheduled_at}) would cover "
+            f"— treating as not released"
         )
         return None
+    observations = sliced
 
     try:
         value = _apply_transform(observations, mapping)

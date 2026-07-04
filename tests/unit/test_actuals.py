@@ -177,9 +177,13 @@ class TestTransforms:
 
     @pytest.mark.asyncio
     async def test_level_k_format(self):
-        """Unemployment Claims (ICSA) — LEVEL_K, e.g. '227K'."""
+        """Unemployment Claims (ICSA) — LEVEL_K, e.g. '227K'.
+
+        2026-07-09 is a Thursday; the ICSA observation it covers is dated by
+        the week-ending Saturday strictly before it, 2026-07-04.
+        """
         event = _event("Unemployment Claims", datetime(2026, 7, 9))
-        obs = [_obs(datetime(2026, 7, 2), 227000.0)]
+        obs = [_obs(datetime(2026, 7, 4), 227000.0)]
         with _patched_fred(obs):
             result = await resolve_actual(event)
         assert result == "227K"
@@ -187,13 +191,14 @@ class TestTransforms:
 
 class TestFreshnessGuard:
     @pytest.mark.asyncio
-    async def test_stale_monthly_observation_returns_none(self):
-        """A monthly observation from 3+ months before the event (wrong
-        period, e.g. still last quarter's print) must never be reported."""
+    async def test_monthly_not_yet_released_returns_none(self):
+        """Latest observation is two-plus months older than the period this
+        event's release would cover (period-exact targeting found no match
+        at diff=1 or diff=2) — must never fall back to a stale print."""
         event = _event("CPI m/m", datetime(2026, 7, 10))
         obs = [
-            _obs(datetime(2026, 3, 1), 318.0),
-            _obs(datetime(2026, 4, 1), 319.0),
+            _obs(datetime(2026, 1, 1), 317.0),
+            _obs(datetime(2026, 2, 1), 318.0),
         ]
         with _patched_fred(obs):
             result = await resolve_actual(event)
@@ -225,6 +230,75 @@ class TestFreshnessGuard:
             _obs(datetime(2026, 7, 1), 320.0),
             _obs(datetime(2026, 8, 1), 321.0),
         ]
+        with _patched_fred(obs):
+            result = await resolve_actual(event)
+        assert result is None
+
+
+class TestPeriodExactTargeting:
+    @pytest.mark.asyncio
+    async def test_historical_monthly_backfill_uses_expected_period(self):
+        """An event from months ago must resolve against the observation for
+        the period IT covers, not whatever FRED's current latest observation
+        happens to be — this is what makes historical backfill possible."""
+        event = _event("CPI m/m", datetime(2026, 4, 10))
+        obs = [
+            _obs(datetime(2026, 2, 1), 318.0),
+            _obs(datetime(2026, 3, 1), 319.0),  # the period this April release covers
+            _obs(datetime(2026, 4, 1), 320.0),
+            _obs(datetime(2026, 5, 1), 321.0),
+            _obs(datetime(2026, 6, 1), 322.0),  # FRED's current latest — must be ignored
+        ]
+        with _patched_fred(obs):
+            result = await resolve_actual(event)
+        expected = (319.0 - 318.0) / 318.0 * 100
+        assert result == f"{expected:.1f}%"
+
+    @pytest.mark.asyncio
+    async def test_weekly_historical_picks_expected_saturday_not_latest(self):
+        """Historical backfill: both the expected week-ending Saturday and a
+        later Saturday are present in the series — must pick the expected
+        one, not the latest."""
+        event = _event("Unemployment Claims", datetime(2026, 7, 9))  # Thursday
+        obs = [
+            _obs(datetime(2026, 7, 4), 227000.0),  # expected week-ending Saturday
+            _obs(datetime(2026, 7, 11), 235000.0),  # a later week — must be ignored
+        ]
+        with _patched_fred(obs):
+            result = await resolve_actual(event)
+        assert result == "227K"
+
+    @pytest.mark.asyncio
+    async def test_weekly_release_morning_race_returns_none(self):
+        """Release morning, before FRED ingests the new week: only the
+        PREVIOUS week's Saturday is present. Must never be mistaken for this
+        week's actual (the hazard the old freshness-window design hit)."""
+        event = _event("Unemployment Claims", datetime(2026, 7, 9))  # Thursday
+        obs = [
+            _obs(datetime(2026, 6, 27), 220000.0),  # previous week only
+        ]
+        with _patched_fred(obs):
+            result = await resolve_actual(event)
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_yoy_guard_rejects_gap_in_history(self):
+        """If observations[-13] isn't exactly 12 periods before the latest
+        (e.g. a gap in the series), the YOY guard must refuse to compute
+        rather than silently comparing mismatched periods."""
+        event = _event("CPI y/y", datetime(2026, 7, 10))
+        base_value = 300.0
+        obs = []
+        year, month = 2025, 6
+        for i in range(13):
+            obs.append(_obs(datetime(year, month, 1), base_value + i * 2))
+            month += 1
+            if month > 12:
+                month = 1
+                year += 1
+        # Break the 12-period alignment by shifting the earliest observation
+        # an extra month back, opening a gap between it and its neighbor.
+        obs[0] = _obs(datetime(2025, 5, 1), base_value - 2)
         with _patched_fred(obs):
             result = await resolve_actual(event)
         assert result is None
