@@ -89,12 +89,33 @@ class TestLookupMapping:
 class TestTransforms:
     @pytest.mark.asyncio
     async def test_level_format(self):
-        """Federal Funds Rate (DFEDTARU) — LEVEL, 'X.XX%'."""
-        event = _event("Federal Funds Rate", datetime(2026, 7, 5))
-        obs = [_obs(datetime(2026, 7, 1), 4.50)]
+        """Federal Funds Rate (DFEDTARU) — LEVEL, 'X.XX%'.
+
+        A new target range takes effect the day AFTER the FOMC announcement,
+        so the resolver must use the first observation dated after the event
+        day — never the decision-day (pre-decision) value.
+        """
+        event = _event("Federal Funds Rate", datetime(2026, 7, 5, 18, 0))
+        obs = [
+            _obs(datetime(2026, 7, 5), 4.50),  # decision day: still the old rate
+            _obs(datetime(2026, 7, 6), 4.25),  # effective date: the new rate
+        ]
         with _patched_fred(obs):
             result = await resolve_actual(event)
-        assert result == "4.50%"
+        assert result == "4.25%"
+
+    @pytest.mark.asyncio
+    async def test_level_not_yet_effective_returns_none(self):
+        """No observation after the decision day yet → not released; the
+        pre-decision rate must never be stored as the actual."""
+        event = _event("Federal Funds Rate", datetime(2026, 7, 5, 18, 0))
+        obs = [
+            _obs(datetime(2026, 7, 4), 4.50),
+            _obs(datetime(2026, 7, 5), 4.50),  # decision day itself: old rate
+        ]
+        with _patched_fred(obs):
+            result = await resolve_actual(event)
+        assert result is None
 
     @pytest.mark.asyncio
     async def test_mom_pct_format(self):

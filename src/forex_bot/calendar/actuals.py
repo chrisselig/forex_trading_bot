@@ -35,11 +35,11 @@ class Frequency(StrEnum):
 # previous-period value as this event's actual).
 #
 # DAILY (Fed funds target range) is not a periodic index release — it's a
-# point-in-time level that only changes when the FOMC votes to change it, so
-# there's no "expected period" to check, only staleness. FRED/ALFRED can lag
-# the actual decision by a day or two, so 10 days is a generous-but-still-
-# meaningful staleness guard (catches genuinely broken fetches, not normal
-# publish lag).
+# point-in-time level that only changes when the FOMC votes to change it.
+# A new target range takes effect the business day AFTER the announcement,
+# so daily series are resolved forward by _daily_level (first observation
+# dated after the event day), not by this backward-looking window; the
+# DAILY entry only caps how far after the event that observation may be.
 _FRESHNESS_WINDOW_DAYS: dict[Frequency, int] = {
     Frequency.DAILY: 10,
     Frequency.WEEKLY: 14,
@@ -186,6 +186,25 @@ def _period_index(dt: datetime, frequency: Frequency) -> int:
     return dt.year * 12 + dt.month
 
 
+def _daily_level(observations: list[dict], event_date: datetime) -> float | None:
+    """Resolve a point-in-time daily series (DFEDTARU) for an event.
+
+    A new fed funds target range takes effect the business day AFTER the
+    FOMC announcement, so the observation dated on (or before) the decision
+    day still carries the PRE-decision rate. Take the first observation
+    dated after the event day instead, and treat the event as not released
+    until one exists — the recurring backfill pass picks it up the next day.
+    """
+    event_day = event_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    max_days = _FRESHNESS_WINDOW_DAYS[Frequency.DAILY]
+    for obs in observations:
+        if obs["date"] > event_day:
+            if (obs["date"] - event_day).days > max_days:
+                return None
+            return obs["value"]
+    return None
+
+
 def _is_fresh(obs_date: datetime, event_date: datetime, frequency: Frequency) -> bool:
     """Freshness guard: refuse to use an observation that predates the event
     by more than the frequency's window, and — for monthly/quarterly series
@@ -280,6 +299,18 @@ async def resolve_actual(event: EconomicEvent) -> str | None:
         return None
 
     observations = sorted(observations, key=lambda o: o["date"])
+
+    if mapping.frequency == Frequency.DAILY:
+        value = _daily_level(observations, event.scheduled_at)
+        if value is None:
+            logger.info(
+                f"No post-event FRED observation yet for {event.title} "
+                f"({mapping.series_id}, event {event.scheduled_at}) — "
+                f"treating as not released"
+            )
+            return None
+        return _format(value, mapping)
+
     latest_date = observations[-1]["date"]
 
     if not _is_fresh(latest_date, event.scheduled_at, mapping.frequency):
