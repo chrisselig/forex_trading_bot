@@ -83,6 +83,7 @@ _TITLE_MAP: dict[str, SeriesMapping | None] = {
     "consumer price index": SeriesMapping("CPIAUCSL", Transform.MOM_PCT, Frequency.MONTHLY, 1),
     "cpi y/y": SeriesMapping("CPIAUCSL", Transform.YOY_PCT, Frequency.MONTHLY, 1),
     "core cpi m/m": SeriesMapping("CPILFESL", Transform.MOM_PCT, Frequency.MONTHLY, 1),
+    "core cpi y/y": SeriesMapping("CPILFESL", Transform.YOY_PCT, Frequency.MONTHLY, 1),
     # --- Federal Funds Rate / FOMC ---
     # DFEDTARU (target range upper bound, daily/real-time) — NOT the
     # configured FEDFUNDS series, which is a lagged monthly average and
@@ -107,6 +108,12 @@ _TITLE_MAP: dict[str, SeriesMapping | None] = {
     "advance gdp": SeriesMapping("A191RL1Q225SBEA", Transform.LEVEL, Frequency.QUARTERLY, 1),
     "preliminary gdp": SeriesMapping("A191RL1Q225SBEA", Transform.LEVEL, Frequency.QUARTERLY, 1),
     "final gdp": SeriesMapping("A191RL1Q225SBEA", Transform.LEVEL, Frequency.QUARTERLY, 1),
+    # FF's live titles carry the q/q suffix — exact-equality matching means
+    # each variant needs its own entry.
+    "advance gdp q/q": SeriesMapping("A191RL1Q225SBEA", Transform.LEVEL, Frequency.QUARTERLY, 1),
+    "prelim gdp q/q": SeriesMapping("A191RL1Q225SBEA", Transform.LEVEL, Frequency.QUARTERLY, 1),
+    "preliminary gdp q/q": SeriesMapping("A191RL1Q225SBEA", Transform.LEVEL, Frequency.QUARTERLY, 1),
+    "final gdp q/q": SeriesMapping("A191RL1Q225SBEA", Transform.LEVEL, Frequency.QUARTERLY, 1),
     # --- Core PCE Price Index ---
     "core pce price index m/m": SeriesMapping("PCEPILFE", Transform.MOM_PCT, Frequency.MONTHLY, 1),
     "pce": SeriesMapping("PCEPILFE", Transform.MOM_PCT, Frequency.MONTHLY, 1),
@@ -241,39 +248,38 @@ def _target_slice(
     return None
 
 
-def _mom_pct(observations: list[dict]) -> float | None:
-    if len(observations) < 2:
-        return None
-    latest = observations[-1]["value"]
-    prior = observations[-2]["value"]
-    if prior == 0:
-        return None
-    return (latest - prior) / abs(prior) * 100
-
-
-def _yoy_pct(observations: list[dict], frequency: Frequency) -> float | None:
-    """YOY compares observations[-1] against observations[-13], which is
-    only correct if that's genuinely the same month one year earlier. FRED
-    monthly series have no gaps in practice, so index-based lookup is
-    normally fine — but now that truncation can land anywhere in history
-    (period-exact targeting for backfill), cheaply verify the period
-    alignment rather than assuming it.
+def _lookback_value(
+    observations: list[dict], frequency: Frequency, periods_back: int
+) -> float | None:
+    """Value of the observation exactly `periods_back` periods before the
+    last one, located by period index — never by list position. FRED series
+    can have holes (a month whose value is still pending publishes as NaN
+    and is filtered out by FredClient), and a positional lookup like
+    observations[-2] or observations[-13] silently lands on the wrong
+    period across such a gap.
     """
-    if len(observations) < 13:
-        return None
-    latest = observations[-1]
-    year_ago = observations[-13]
-    if _period_index(latest["date"], frequency) - _period_index(year_ago["date"], frequency) != 12:
-        return None
-    if year_ago["value"] == 0:
-        return None
-    return (latest["value"] - year_ago["value"]) / abs(year_ago["value"]) * 100
+    target = _period_index(observations[-1]["date"], frequency) - periods_back
+    for obs in reversed(observations[:-1]):
+        idx = _period_index(obs["date"], frequency)
+        if idx == target:
+            return obs["value"]
+        if idx < target:
+            return None
+    return None
 
 
-def _mom_diff_k(observations: list[dict]) -> float | None:
-    if len(observations) < 2:
+def _pct_change(observations: list[dict], frequency: Frequency, periods_back: int) -> float | None:
+    prior = _lookback_value(observations, frequency, periods_back)
+    if prior is None or prior == 0:
         return None
-    return observations[-1]["value"] - observations[-2]["value"]
+    return (observations[-1]["value"] - prior) / abs(prior) * 100
+
+
+def _mom_diff_k(observations: list[dict], frequency: Frequency) -> float | None:
+    prior = _lookback_value(observations, frequency, 1)
+    if prior is None:
+        return None
+    return observations[-1]["value"] - prior
 
 
 def _apply_transform(observations: list[dict], mapping: SeriesMapping) -> float | None:
@@ -282,11 +288,11 @@ def _apply_transform(observations: list[dict], mapping: SeriesMapping) -> float 
     if mapping.transform == Transform.LEVEL_K:
         return observations[-1]["value"] / 1000.0
     if mapping.transform == Transform.MOM_PCT:
-        return _mom_pct(observations)
+        return _pct_change(observations, mapping.frequency, 1)
     if mapping.transform == Transform.YOY_PCT:
-        return _yoy_pct(observations, mapping.frequency)
+        return _pct_change(observations, mapping.frequency, 12)
     if mapping.transform == Transform.MOM_DIFF_K:
-        return _mom_diff_k(observations)
+        return _mom_diff_k(observations, mapping.frequency)
     return None
 
 
