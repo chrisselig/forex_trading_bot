@@ -81,8 +81,14 @@ class TradeJournal:
         status: OrderStatus,
         fill_price: float | None = None,
         slippage_pips: float | None = None,
+        ib_order_id: int | None = None,
     ) -> None:
-        """Update an order's status in the journal, keyed by database ID."""
+        """Update an order's status in the journal, keyed by database ID.
+
+        Pass ``ib_order_id`` once it is known (post-placement) so later
+        fill/cancel/reject events — which only carry the IB order ID — can
+        be matched back to this row via update_order_status_by_ib_id.
+        """
         async with get_session() as session:
             values: dict = {"status": status.value}
             if fill_price is not None:
@@ -90,6 +96,8 @@ class TradeJournal:
                 values["filled_at"] = datetime.utcnow()
             if slippage_pips is not None:
                 values["slippage_pips"] = slippage_pips
+            if ib_order_id is not None:
+                values["ib_order_id"] = ib_order_id
             await session.execute(
                 update(OrderRecord).where(OrderRecord.id == order_id).values(**values)
             )
