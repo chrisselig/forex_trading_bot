@@ -1,10 +1,10 @@
-"""Unit tests for actual value polling logic."""
+"""Unit tests for actual value polling logic (FRED-backed resolver)."""
 
 from __future__ import annotations
 
 import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from forex_bot.scheduler.jobs import (
     JobManager,
@@ -25,6 +25,7 @@ def event_store():
     store.get_events_range = AsyncMock(return_value=[])
     store.update_actuals = AsyncMock(return_value=0)
     store.get_events_missing_actuals = AsyncMock(return_value=[])
+    store.set_actual = AsyncMock()
     return store
 
 
@@ -60,6 +61,7 @@ def event():
     return MagicMock(
         id=1,
         title="Non-Farm Employment Change",
+        country="USD",
         scheduled_at=datetime(2026, 6, 5, 12, 30, 0),
         target_pairs=["USDZAR"],
         has_actual=False,
@@ -69,29 +71,27 @@ def event():
 
 class TestPollActual:
     @pytest.mark.asyncio
-    async def test_stops_when_actual_found(self, job_manager, event, scraper, event_store):
-        """Polling stops (no reschedule) when the event's actual is populated."""
-        found_event = MagicMock(
-            title="Non-Farm Employment Change", has_actual=True, actual="206K"
-        )
-        found_event.country = event.country
-        event_store.get_events_range = AsyncMock(return_value=[found_event])
+    async def test_persists_and_stops_when_resolver_finds_value(self, job_manager, event, event_store):
+        """Polling persists the actual and does NOT reschedule when the resolver has a value."""
+        with patch("forex_bot.scheduler.jobs.actuals.lookup_mapping", return_value=object()), \
+             patch("forex_bot.scheduler.jobs.actuals.resolve_actual", new_callable=AsyncMock) as mock_resolve:
+            mock_resolve.return_value = "206K"
 
-        await job_manager._poll_actual(event, attempt=1)
+            await job_manager._poll_actual(event, attempt=1)
 
-        # Should NOT schedule another poll
+        event_store.set_actual.assert_awaited_once_with(1, "206K")
         job_manager._scheduler.add_job.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_reschedules_when_actual_missing(self, job_manager, event, event_store):
-        """Reschedules next attempt when actual is still missing."""
-        missing_event = MagicMock(
-            title="Non-Farm Employment Change", has_actual=False, actual=None
-        )
-        event_store.get_events_range = AsyncMock(return_value=[missing_event])
+    async def test_reschedules_when_resolver_returns_none(self, job_manager, event, event_store):
+        """Reschedules next attempt when the resolver has a mapping but no value yet."""
+        with patch("forex_bot.scheduler.jobs.actuals.lookup_mapping", return_value=object()), \
+             patch("forex_bot.scheduler.jobs.actuals.resolve_actual", new_callable=AsyncMock) as mock_resolve:
+            mock_resolve.return_value = None
 
-        await job_manager._poll_actual(event, attempt=3)
+            await job_manager._poll_actual(event, attempt=3)
 
+        event_store.set_actual.assert_not_awaited()
         job_manager._scheduler.add_job.assert_called_once()
         call_kwargs = job_manager._scheduler.add_job.call_args.kwargs
         assert call_kwargs["args"] == [event, 4]  # next attempt = 4
@@ -99,36 +99,44 @@ class TestPollActual:
     @pytest.mark.asyncio
     async def test_stops_after_max_attempts(self, job_manager, event, event_store):
         """Does not reschedule after exhausting all attempts."""
-        missing_event = MagicMock(
-            title="Non-Farm Employment Change", has_actual=False, actual=None
-        )
-        event_store.get_events_range = AsyncMock(return_value=[missing_event])
+        with patch("forex_bot.scheduler.jobs.actuals.lookup_mapping", return_value=object()), \
+             patch("forex_bot.scheduler.jobs.actuals.resolve_actual", new_callable=AsyncMock) as mock_resolve:
+            mock_resolve.return_value = None
 
-        await job_manager._poll_actual(event, attempt=_ACTUAL_POLL_MAX_ATTEMPTS)
+            await job_manager._poll_actual(event, attempt=_ACTUAL_POLL_MAX_ATTEMPTS)
 
         job_manager._scheduler.add_job.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_handles_scraper_error_gracefully(self, job_manager, event, scraper):
-        """Continues polling even if scraper raises an exception."""
-        scraper.fetch_week = AsyncMock(side_effect=Exception("FF down"))
+    async def test_no_mapping_skips_without_reschedule(self, job_manager, event, event_store):
+        """No FRED mapping (e.g. SARB/TCMB/BOJ/RBA/AU events) -> no poll, no reschedule."""
+        with patch("forex_bot.scheduler.jobs.actuals.lookup_mapping", return_value=None), \
+             patch("forex_bot.scheduler.jobs.actuals.resolve_actual", new_callable=AsyncMock) as mock_resolve:
+            await job_manager._poll_actual(event, attempt=1)
 
-        await job_manager._poll_actual(event, attempt=1)
+            mock_resolve.assert_not_called()
 
-        # Should still schedule next attempt
-        job_manager._scheduler.add_job.assert_called_once()
+        event_store.set_actual.assert_not_awaited()
+        job_manager._scheduler.add_job.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_fetches_week_snapshot(self, job_manager, event, scraper, event_store):
-        """Polls the FF week feeds (the API has no historical targeting)."""
-        missing_event = MagicMock(
-            title="Non-Farm Employment Change", has_actual=False, actual=None
+    async def test_missing_db_id_does_not_persist(self, job_manager, event_store):
+        """A resolved value can't be persisted if the event has no DB id."""
+        event = MagicMock(
+            id=None,
+            title="Non-Farm Employment Change",
+            country="USD",
+            scheduled_at=datetime(2026, 6, 5, 12, 30, 0),
         )
-        event_store.get_events_range = AsyncMock(return_value=[missing_event])
+        with patch("forex_bot.scheduler.jobs.actuals.lookup_mapping", return_value=object()), \
+             patch("forex_bot.scheduler.jobs.actuals.resolve_actual", new_callable=AsyncMock) as mock_resolve:
+            mock_resolve.return_value = "206K"
 
-        await job_manager._poll_actual(event, attempt=1)
+            await job_manager._poll_actual(event, attempt=1)
 
-        scraper.fetch_week.assert_called_once_with()
+        event_store.set_actual.assert_not_awaited()
+        # Still stops polling — the value was found, we just couldn't store it.
+        job_manager._scheduler.add_job.assert_not_called()
 
 
 class TestScheduleActualPoll:

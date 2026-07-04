@@ -65,6 +65,7 @@ def _add_missing_columns(connection) -> None:
         ("orders", "account_type", "VARCHAR(10) DEFAULT 'paper'"),
         ("trades", "commission", "REAL"),
         ("orders", "commission", "REAL"),
+        ("events", "source", "VARCHAR(10) DEFAULT 'ff'"),
     ]
     for table, column, col_type in migrations:
         try:

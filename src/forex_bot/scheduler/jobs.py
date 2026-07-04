@@ -10,6 +10,7 @@ from loguru import logger
 from forex_bot.broker.client import IBClient
 from forex_bot.broker.pricing import PricingService
 from forex_bot.broker.tws_launcher import ensure_tws_running, is_tws_listening_async
+from forex_bot.calendar import actuals
 from forex_bot.calendar.scraper import ForexFactoryScraper
 from forex_bot.calendar.store import EventStore
 from forex_bot.config import Settings
@@ -422,39 +423,34 @@ class JobManager:
         logger.info(f"Scheduled actual polling for {event.title} (attempt 1/{_ACTUAL_POLL_MAX_ATTEMPTS})")
 
     async def _poll_actual(self, event: EconomicEvent, attempt: int) -> None:
-        """Poll Forex Factory for the event's actual value."""
+        """Poll FRED (via the actuals resolver) for the event's actual value.
+
+        The Forex Factory feed never carries an `actual` field, so this no
+        longer re-fetches it. If the resolver has no FRED mapping for this
+        title at all (SARB/TCMB/BOJ/RBA/AU events), stop immediately instead
+        of burning all `_ACTUAL_POLL_MAX_ATTEMPTS` attempts.
+        """
+        if actuals.lookup_mapping(event.title, event.country) is None:
+            logger.info(f"No actuals source for {event.title} ({event.country}) — skipping poll")
+            return
+
         logger.info(f"Polling actual for {event.title} (attempt {attempt}/{_ACTUAL_POLL_MAX_ATTEMPTS})")
 
-        try:
-            ff_events = await self._scraper.fetch_week()
-            updated = await self._event_store.update_actuals(ff_events)
+        value = await actuals.resolve_actual(event)
 
-            # Check if our target event now has an actual
-            refreshed = await self._event_store.get_events_range(
-                event.scheduled_at - timedelta(minutes=1),
-                event.scheduled_at + timedelta(minutes=1),
+        if value is not None:
+            logger.info(
+                f"Actual found for {event.title}: {value} "
+                f"(attempt {attempt}/{_ACTUAL_POLL_MAX_ATTEMPTS})"
             )
-            target = next(
-                (
-                    e
-                    for e in refreshed
-                    if e.title == event.title and e.country == event.country
-                ),
-                None,
-            )
-
-            if target and target.has_actual:
-                logger.info(
-                    f"Actual found for {event.title}: {target.actual} "
-                    f"(attempt {attempt}/{_ACTUAL_POLL_MAX_ATTEMPTS})"
-                )
-                return  # Done — no more polling
-
-            if updated:
-                logger.info(f"Updated {updated} actuals, but {event.title} still missing")
-
-        except Exception as e:
-            logger.error(f"Actual poll failed for {event.title}: {e}")
+            if event.id is not None:
+                try:
+                    await self._event_store.set_actual(event.id, value)
+                except Exception as e:
+                    logger.error(f"Failed to persist actual for {event.title}: {e}")
+            else:
+                logger.warning(f"Cannot persist actual for {event.title}: event has no DB id")
+            return  # Done — no more polling
 
         # Schedule next attempt if not exhausted
         if attempt < _ACTUAL_POLL_MAX_ATTEMPTS:

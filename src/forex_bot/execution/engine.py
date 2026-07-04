@@ -152,7 +152,9 @@ class ExecutionEngine:
                 order.ib_order_id = ib_trade.order.orderId
                 order.status = OrderStatus.SUBMITTED
 
-            await self._journal.update_order_status(order_id, order.status)
+            await self._journal.update_order_status(
+                order_id, order.status, ib_order_id=order.ib_order_id
+            )
             logger.info(f"Order submitted: {order.side} {order.quantity} {order.instrument} (IB#{order.ib_order_id})")
 
             if self._notifier:
