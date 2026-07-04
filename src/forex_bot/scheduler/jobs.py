@@ -62,6 +62,16 @@ class JobManager:
         # when multiple events fire at the same scheduled time
         self._straddle_placed: set[tuple[str, datetime]] = set()
 
+    def _prune_stale_dedup_keys(self) -> None:
+        """Drop straddle dedup keys older than 24h.
+
+        Event times are stored as naive UTC, so the cutoff must be naive too
+        — comparing against an aware datetime raises TypeError, which used
+        to kill every pre-event handler after the first straddle.
+        """
+        cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=24)
+        self._straddle_placed = {k for k in self._straddle_placed if k[1] > cutoff}
+
     def _pairs_for_event(self, event: EconomicEvent) -> list[str]:
         """Return instruments to trade for this event.
 
@@ -323,10 +333,7 @@ class JobManager:
             return
 
         self._engine.set_current_event(event)
-        # Prune stale dedup keys (older than 24h). Event times are stored as
-        # naive UTC, so the cutoff must be naive too or the comparison raises.
-        cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=24)
-        self._straddle_placed = {k for k in self._straddle_placed if k[1] > cutoff}
+        self._prune_stale_dedup_keys()
 
         # Persistent guard against re-placing a straddle already resting on IB
         # (e.g. bot restarted after placement but before the event fired).
