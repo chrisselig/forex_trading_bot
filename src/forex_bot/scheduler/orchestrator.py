@@ -6,9 +6,11 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from loguru import logger
+from sqlalchemy.exc import SQLAlchemyError
 
 from forex_bot.broker.client import IBClient
 from forex_bot.broker.pricing import PricingService
+from forex_bot.calendar import actuals
 from forex_bot.calendar.export import export_calendar_json
 from forex_bot.calendar.scraper import ForexFactoryScraper
 from forex_bot.calendar.parser import EventParser
@@ -202,8 +204,44 @@ class Orchestrator:
 
             # Export calendar JSON for web dashboard
             await self._export_calendar()
+
+            # Backfill any past events still missing an actual (FRED-backed)
+            await self._backfill_actuals()
         except Exception as e:
             logger.error(f"Calendar refresh failed: {e}")
+
+    async def _backfill_actuals(self) -> None:
+        """Best-effort backfill of actuals for past events still missing one.
+
+        Runs after every calendar refresh (startup, the 6h interval job, the
+        daily re-schedule, and post-reconnect). Events with no FRED mapping
+        at all (SARB/TCMB/BOJ/RBA/AU events) resolve to None without ever
+        touching the network, so this is cheap steady-state. Never lets a
+        single event's failure abort the rest of the batch.
+        """
+        try:
+            events = await self._event_store.get_events_missing_actuals(168)
+        except SQLAlchemyError as e:
+            logger.error(f"Backfill actuals: failed to load missing events: {e}")
+            return
+
+        if not events:
+            return
+
+        backfilled = 0
+        for event in events:
+            if event.id is None:
+                continue
+            value = await actuals.resolve_actual(event)
+            if value is None:
+                continue
+            try:
+                await self._event_store.set_actual(event.id, value)
+                backfilled += 1
+            except SQLAlchemyError as e:
+                logger.error(f"Backfill actuals: failed to persist {event.title}: {e}")
+
+        logger.info(f"Backfilled {backfilled}/{len(events)} actuals")
 
     async def _export_calendar(self) -> None:
         """Export tradeable events calendar JSON for the web dashboard."""

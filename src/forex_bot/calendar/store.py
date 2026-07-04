@@ -180,6 +180,28 @@ class EventStore:
             logger.info(f"Updated actuals for {updated} events")
         return updated
 
+    async def set_actual(self, event_id: int, actual: str) -> None:
+        """Set the actual value for a single event by primary key.
+
+        Used by the FRED-backed actuals resolver (scheduled polling and the
+        startup/refresh backfill pass) — unlike `update_actuals`, which
+        matches by title/country/scheduled_at against a batch of scraped
+        events, this targets one already-known event directly by id.
+        """
+        title = None
+        async with get_session() as session:
+            record = await session.get(EventRecord, event_id)
+            if record is None:
+                logger.warning(f"set_actual: no event found with id={event_id}")
+                return
+            title = record.title
+            record.actual = actual
+            await session.commit()
+
+        if self._turso:
+            await self._turso.push_event_actual(event_id=event_id, actual=actual)
+        logger.info(f"Set actual for event #{event_id} ({title}): {actual}")
+
     async def get_upcoming(self, within_hours: int = 24) -> list[EconomicEvent]:
         """Get events scheduled within the next N hours."""
         now = datetime.now(UTC).replace(tzinfo=None)
