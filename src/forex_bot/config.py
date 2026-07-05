@@ -146,6 +146,33 @@ class CarryConfig(BaseModel):
     max_spread_overrides: dict[str, float] = Field(default_factory=dict)
 
 
+class MomentumConfig(BaseModel):
+    """Time-series (absolute) currency momentum — trade each pair in the
+    direction of its trailing return: long recent winners, short recent losers.
+
+    UNVALIDATED: no Monte Carlo walk-forward analysis backs this strategy yet.
+    Starts disabled; enable only for paper-trade evaluation.
+    """
+
+    enabled: bool = False
+    instruments: list[str] = Field(
+        default_factory=lambda: [
+            "EURUSD", "GBPUSD", "AUDUSD", "USDJPY", "USDCAD", "USDZAR", "USDTRY",
+        ],
+    )
+    lookback_months: int = Field(3, ge=1, le=12)  # trailing-return window
+    min_return_pct: float = Field(2.0, gt=0)  # min |trailing return| to trade
+    max_concurrent_momentum: int = Field(4, ge=1)
+    max_risk_per_momentum_pct: float = Field(1.0, gt=0, le=10)
+    stop_loss_pct: float = Field(5.0, gt=0)
+    # Rebalance weekly, AFTER the carry rebalance (carry fires at minute=7).
+    rebalance_day_of_week: str = "mon"  # Day of week (mon-sun)
+    rebalance_hour_utc: int = 14  # 14:00 UTC = 8 AM MT / 10 AM ET
+    rebalance_minute: int = Field(22, ge=0, le=59)  # after carry (minute 7)
+    max_spread_pips: float = 30.0
+    max_spread_overrides: dict[str, float] = Field(default_factory=dict)
+
+
 class TelegramConfig(BaseModel):
     bot_token: str = ""
     chat_id: str = ""
@@ -167,6 +194,7 @@ class Settings(BaseSettings):
     telegram: TelegramConfig = Field(default_factory=TelegramConfig)
     turso: TursoConfig = Field(default_factory=TursoConfig)
     carry: CarryConfig = Field(default_factory=CarryConfig)
+    momentum: MomentumConfig = Field(default_factory=MomentumConfig)
 
     fred_api_key: str = ""
     ib_host: str = ""

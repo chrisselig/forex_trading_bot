@@ -103,3 +103,23 @@ carry:
   max_spread_overrides:
     USDZAR: 60.0
     USDTRY: 80.0
+
+# Time-series currency momentum — long recent winners, short recent losers.
+# UNVALIDATED: no Monte Carlo walk-forward backs this yet. Keep disabled until
+# paper-trade evaluation. Set enabled: true to test. Rebalances weekly on
+# Monday at 14:22 UTC — 15 min AFTER the carry rebalance (14:07).
+momentum:
+  enabled: false
+  instruments: [EURUSD, GBPUSD, AUDUSD, USDJPY, USDCAD, USDZAR, USDTRY]
+  lookback_months: 3          # trailing-return window
+  min_return_pct: 2.0         # min |trailing return| to trade
+  max_concurrent_momentum: 4
+  max_risk_per_momentum_pct: 1.0
+  stop_loss_pct: 5.0
+  rebalance_day_of_week: mon
+  rebalance_hour_utc: 14
+  rebalance_minute: 22        # after carry (minute 7)
+  max_spread_pips: 30.0
+  max_spread_overrides:
+    USDZAR: 60.0
+    USDTRY: 80.0
