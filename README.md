@@ -398,6 +398,7 @@ The full documentation is at **[chrisselig.github.io/forex_trading_bot](https://
 - [Risk Management](https://chrisselig.github.io/forex_trading_bot/trading/risk-management/) — Rules, circuit breaker, position sizing
 - [Installation](https://chrisselig.github.io/forex_trading_bot/getting-started/installation/) — Detailed setup guide
 - [Auto-Start](https://chrisselig.github.io/forex_trading_bot/operations/auto-start/) — Unattended operation via cron + IBC
+- [Hosting Options](https://chrisselig.github.io/forex_trading_bot/operations/hosting-options/) — Cheap always-on hardware (mini PC, thin client, Raspberry Pi) + offshore broker/API comparison for Canada
 - [Telegram Notifications](https://chrisselig.github.io/forex_trading_bot/operations/telegram-notifications/) — Trade alert setup
 - [Monte Carlo Analysis](https://chrisselig.github.io/forex_trading_bot/research/04-monte-carlo-6yr/) — 6.5-year parameter optimization results
 - [Non-US Events](https://chrisselig.github.io/forex_trading_bot/research/06-non-us-events/) — SARB, TCMB, BOJ, SA CPI analysis
