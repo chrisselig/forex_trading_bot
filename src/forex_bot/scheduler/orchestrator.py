@@ -280,7 +280,7 @@ class Orchestrator:
         # Daily calendar refresh + re-schedule at 06:15 UTC (12:15 AM MT)
         self._scheduler.add_job(
             self._daily_calendar_refresh,
-            CronTrigger(hour=6, minute=15),
+            CronTrigger(hour=6, minute=15, timezone="UTC"),
             id="daily_calendar_refresh",
             replace_existing=True,
         )
@@ -304,7 +304,7 @@ class Orchestrator:
         # Daily circuit breaker reset at 00:00 UTC
         self._scheduler.add_job(
             self._circuit_breaker.reset_daily,
-            CronTrigger(hour=0, minute=0),
+            CronTrigger(hour=0, minute=0, timezone="UTC"),
             id="daily_cb_reset",
             replace_existing=True,
         )
@@ -312,7 +312,7 @@ class Orchestrator:
         # Nightly currency sweep at 03:30 UTC (10:30 PM ET)
         self._scheduler.add_job(
             self._nightly_currency_sweep,
-            CronTrigger(hour=3, minute=30),
+            CronTrigger(hour=3, minute=30, timezone="UTC"),
             id="nightly_currency_sweep",
             replace_existing=True,
         )
@@ -322,7 +322,12 @@ class Orchestrator:
             carry_cfg = self._settings.carry
             self._scheduler.add_job(
                 self._carry_manager.rebalance,
-                CronTrigger(day_of_week=carry_cfg.rebalance_day_of_week, hour=carry_cfg.rebalance_hour_utc, minute=7),
+                CronTrigger(
+                    day_of_week=carry_cfg.rebalance_day_of_week,
+                    hour=carry_cfg.rebalance_hour_utc,
+                    minute=7,
+                    timezone="UTC",
+                ),
                 id="carry_rebalance",
                 replace_existing=True,
             )
@@ -334,7 +339,7 @@ class Orchestrator:
         # Nightly Dukascopy data download at 04:00 UTC (11 PM ET)
         self._scheduler.add_job(
             self._nightly_data_download,
-            CronTrigger(hour=4, minute=0),
+            CronTrigger(hour=4, minute=0, timezone="UTC"),
             id="nightly_dukascopy_download",
             replace_existing=True,
         )
@@ -342,7 +347,7 @@ class Orchestrator:
         # Weekly performance report — Sunday 21:00 UTC (3 PM MT)
         self._scheduler.add_job(
             self._weekly_reporter.send_report,
-            CronTrigger(day_of_week="sun", hour=21, minute=0),
+            CronTrigger(day_of_week="sun", hour=21, minute=0, timezone="UTC"),
             id="weekly_performance_report",
             replace_existing=True,
         )

@@ -95,8 +95,8 @@ carry:
   max_concurrent_carry: 5
   max_risk_per_carry_pct: 1.5
   stop_loss_pct: 5.0
-  rebalance_day_of_week: sun
-  rebalance_hour_utc: 11
+  rebalance_day_of_week: mon  # Monday: TWS is up, FX is liquid (avoids weekend TWS-down + wide Sunday-open spreads)
+  rebalance_hour_utc: 14  # 14:00 UTC = 8 AM MT / 10 AM ET (London-NY overlap, tight spreads)
   fallback_rates:
     TRY: 50.0
   max_spread_pips: 30.0
