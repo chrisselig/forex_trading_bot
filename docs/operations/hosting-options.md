@@ -210,6 +210,73 @@ RoboForex, Tickmill — all MT4/MT5-only for automation, or block Canada.
 
 ---
 
+## Networking and display (home office)
+
+*Current setup: 3 monitors (1× HDMI + 2× DisplayPort — exact split to confirm),
+Wi-Fi 7, and wired Ethernet now, though the office may only support one Ethernet
+cable at a time (to verify later).*
+
+### Display — the host is headless, no monitor needed
+
+The bot host runs **headless** (IB Gateway under Xvfb, managed over SSH). It does
+**not** need a monitor of its own, so all 3 monitors stay with the laptop / main
+workstation. For first-time setup, temporarily attach **one** monitor + keyboard,
+or just SSH in from the laptop and never attach a display at all.
+
+Video-port compatibility is a non-issue either way:
+
+| Host | Typical outputs | Max displays |
+|---|---|---|
+| N100 / N150 mini PC | HDMI + DisplayPort (often + USB-C) | 2–3 |
+| Refurb ThinkCentre / EliteDesk / OptiPlex Mini | HDMI + DisplayPort (some add a 2nd DP) | 2 (3 on some configs) |
+| Dell Wyse 5070 | 2× DisplayPort (HDMI on some variants) | 2 |
+
+If you ever want the mini PC to *replace* the laptop and drive **all 3** monitors
+at once, that's a different requirement — check the specific unit's max-displays
+spec (most N100 boxes do 2–3; a refurb i5 mini may need a USB-C/DP hub or only do
+2). But for the always-on bot host, ignore this entirely.
+
+### Network — wired preferred, but Wi-Fi 7 is a fine fallback
+
+For an unattended bot, **connection stability matters more than speed**. The
+traffic is tiny (IB Gateway ↔ IB servers, plus Turso/Telegram sync), so bandwidth
+and latency are non-issues — the only risk is a dropout during a news event.
+
+**Solving the "only one Ethernet cable" constraint** (best → acceptable):
+
+1. **Add a small Gigabit switch (~$20–30 CAD).** One wall Ethernet drop → a
+   5-port switch → short cables to *both* the laptop and the mini PC. Gives
+   **both** devices wired reliability from a single drop, with no second cable run
+   to the wall. Cleanest fix — recommended.
+2. **Powerline adapter (~$40–70 CAD)** — carries Ethernet over the electrical
+   wiring; wired-like stability without running a cable.
+3. **Put the mini PC on Wi-Fi 7, keep the laptop wired** (or vice versa). For
+   this bot, Wi-Fi 7 is genuinely fine — huge headroom, low latency, and the bot
+   already tolerates brief blips (below).
+
+!!! note "The bot already survives short network blips"
+    Health check every 5 min with reconnect + backoff, an external watchdog
+    (`scripts/watchdog.sh`, restarts if the log goes stale >10 min), and a TWS
+    cold-start fallback before events. A momentary Wi-Fi drop won't lose the bot —
+    it reconnects. So Wi-Fi 7 is an acceptable primary link, though
+    wired-via-switch is more robust for overnight/weekend events.
+
+**Hardware caveat — Wi-Fi is not always built in:**
+
+- **N100 / N150 minis:** Wi-Fi built in (usually Wi-Fi 6/6E; **Wi-Fi 7 is rare on
+  cheap minis** — verify if it matters, though Wi-Fi 6 is plenty here).
+- **Refurb ThinkCentre / EliteDesk / OptiPlex minis:** often **ship without a
+  Wi-Fi card** (enterprise units were wired). Budget ~$15–25 CAD for an M.2 Wi-Fi
+  card, or just use Ethernet / the switch.
+- **Wyse 5070:** Wi-Fi optional by variant — check the listing.
+
+**For this office:** a **~$25 Gigabit switch off the existing Ethernet drop**
+feeds both the laptop and the new host over wired — simplest and most robust, and
+it sidesteps the two-cable constraint entirely. Wi-Fi 7 is a perfectly good
+fallback if running the switch is awkward.
+
+---
+
 ## Recommendation
 
 For the **current IBKR setup**, the migration is nearly a copy-paste — install
