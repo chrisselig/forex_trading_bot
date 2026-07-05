@@ -68,6 +68,7 @@ nav:
     - operations/index.md
     - operations/auto-start.md
     - operations/process-management.md
+    - operations/hosting-options.md
     - operations/telegram-notifications.md
   - Analysis:
     - research/12-mc-remaining-us.md
