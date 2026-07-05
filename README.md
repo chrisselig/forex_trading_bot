@@ -44,7 +44,7 @@ After installing, configure the API socket:
 5. Uncheck **"Read-Only API"** (the bot needs to place orders)
 6. Click **Apply / OK**
 
-#### 3. Python 3.11+
+#### 3. Python 3.12+
 
 === "Linux (Ubuntu/Debian)"
 
@@ -189,7 +189,7 @@ The bot will:
 2. Reconcile any open positions/orders
 3. Fetch the economic calendar from Forex Factory
 4. Schedule jobs for upcoming events (pre-event straddle + post-event surprise)
-5. Schedule weekly carry trade rebalance (every Sunday, 5 AM MT)
+5. Schedule weekly carry trade rebalance (every Monday, 8 AM MT / 14:00 UTC)
 6. Run health checks every 5 minutes (auto-reconnects on disconnect)
 7. Refresh the calendar every 6 hours
 8. Shut down gracefully on `Ctrl+C`
@@ -201,10 +201,12 @@ For unattended operation, see the [Auto-Start guide](https://chrisselig.github.i
 ```bash
 forex-bot run              # Start autonomous trading
 forex-bot status           # Show account summary and positions
-forex-bot events           # Show upcoming high-impact USD events
+forex-bot events           # Show upcoming high-impact economic events
 forex-bot history          # Show recent trades
 forex-bot performance      # Show P&L, win rate, Sharpe, per-strategy stats
 forex-bot test-connection  # Verify IB Gateway connectivity
+forex-bot calendar         # Export tradeable events calendar to JSON
+forex-bot backfill-actuals # Backfill missing event actual values
 forex-bot backtest         # Run historical backtest
 ```
 
@@ -227,7 +229,7 @@ forex-bot backtest         # Run historical backtest
        └──────┬──────────────┬──────────────┬────────┘
               │              │              │
    ┌──────────▼───────┐ ┌───▼──────────┐ ┌─▼──────────────┐
-   │ Pre-Event (T-30m)│ │Post-Event    │ │ Monthly (1st)   │
+   │ Pre-Event (T-30m)│ │Post-Event    │ │ Weekly (Mon)    │
    │  Straddle Strat  │ │ Surprise     │ │  Carry Strat    │
    └──────────┬───────┘ └───┬──────────┘ └─┬──────────────┘
               │              │              │
@@ -262,7 +264,7 @@ forex-bot backtest         # Run historical backtest
 
 ## Active Trading Pairs
 
-Based on Monte Carlo walk-forward analysis with 6.5 years of 1-minute Dukascopy data (819+ event/pair combos, Jan 2020 — Jun 2026). Only pairs that pass out-of-sample walk-forward validation are enabled.
+Based on Monte Carlo walk-forward analysis with 6.5 years of 1-minute Dukascopy data (1,016 event/pair combinations, Jan 2020 — Jun 2026). Only pairs that pass out-of-sample walk-forward validation are enabled.
 
 **Active pairs** trade up to 9 US events (NFP, CPI, FOMC, PPI, GDP, PCE, Unemployment Claims, ISM Manufacturing PMI, Retail Sales) plus non-US domestic events:
 
@@ -300,7 +302,7 @@ Signal → RiskManager.validate() → CircuitBreaker.check() → ExecutionEngine
 | Mandatory Stop Loss | always on | Every order must have a [stop loss](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#sl-stop-loss) |
 | Max Risk Per Trade | 1% | Max account risk per trade |
 | Max Daily Drawdown | 3% | Halts trading for the day |
-| Max Concurrent Positions | 3 | Limits open position count |
+| Max Concurrent Positions | 4 | Limits open position count |
 | Max Spread | 15 [pips](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#pip-percentage-in-point) (per-pair: USDZAR=60, USDTRY=80, USDJPY=20) | Rejects trades during wide [spreads](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#spread) |
 
 The [circuit breaker](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#circuit-breaker) has three states: **ACTIVE → COOLDOWN → HALTED**. HALTED requires manual reset — the bot will not auto-resume. This is intentional.
@@ -316,9 +318,9 @@ forex_trading_bot/
 ├── config/
 │   ├── settings.yaml          # Trading params, risk limits, IB config
 │   ├── events.yaml            # Target events (9 US + 7 non-US)
-│   └── static_events.yaml    # Non-US event calendar (SARB, TCMB, BOJ, SA CPI)
+│   └── static_events.yaml    # Non-US event calendar (SARB, TCMB, BOJ, SA CPI, RBA, AU CPI/Employment)
 ├── src/forex_bot/
-│   ├── cli.py                 # Typer CLI (7 commands)
+│   ├── cli.py                 # Typer CLI (9 commands)
 │   ├── config.py              # Pydantic settings loader
 │   ├── models/                # Pydantic data models
 │   ├── broker/                # IB connection, orders, pricing, contracts
