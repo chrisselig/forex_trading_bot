@@ -317,7 +317,7 @@ class Orchestrator:
             replace_existing=True,
         )
 
-        # Weekly carry rebalance (Sunday at configured hour)
+        # Weekly carry rebalance (configured day/hour, default Monday 14:00 UTC)
         if self._carry_manager:
             carry_cfg = self._settings.carry
             self._scheduler.add_job(

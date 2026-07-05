@@ -6,8 +6,8 @@
                         I M P A C T
                  Low          Medium          High
             ┌────────────┬────────────┬────────────┐
-    High    │            │ Trump      │ Web        │
-            │            │ Strategy   │ Dashboard  │
+    High    │            │ Trump      │ ✓ Web      │
+            │            │ Strategy   │  Dashboard │
    E        ├────────────┼────────────┼────────────┤
    F        │ ✓ Multiple│ Model Drift│ ✓ Telegram │
    F        │  Testing  │ Detection  │  Alerts    │
@@ -50,11 +50,11 @@
 
 ## Schedule (Medium Impact)
 
-- ~~**Carry trade strategy**~~ — **DONE**: `CarryManager` in `src/forex_bot/strategy/carry.py`. Fetches interest rates from FRED (with config fallbacks), scores pairs by differential, monthly rebalances through existing ExecutionEngine/RiskManager pipeline. Strategy-aware risk routing (separate carry/straddle rule sets). Default basket: USDZAR, USDTRY, USDMXN, AUDJPY, NZDJPY. Starts disabled (`carry.enabled: false`) — enable after paper-trade validation. 23 unit tests. PR #44.
+- ~~**Carry trade strategy**~~ — **DONE (enabled, in paper-trade validation)**: `CarryManager` in `src/forex_bot/strategy/carry.py`. Fetches interest rates from FRED (with config fallbacks), scores pairs by differential, **weekly (Monday 14:00 UTC) rebalances** through existing ExecutionEngine/RiskManager pipeline. Strategy-aware risk routing (separate carry/straddle rule sets). Default basket: USDZAR, USDTRY, USDMXN, AUDJPY, NZDJPY. **Now `carry.enabled: true`** — monitor a few clean weekly rebalances before trusting it live. (Rebalance timezone + Sunday→Monday schedule fixed in PR #55.) 23 unit tests. PR #44.
 - **Currency momentum strategy** — Buy recent winners, sell recent losers (1-12 month look-back). Sharpe ~0.95, returns up to 10% p.a. ([BIS Working Paper 366](https://www.bis.org/publ/work366.pdf), [ScienceDirect](https://www.sciencedirect.com/science/article/abs/pii/S0304405X12001353)). Uncorrelated with carry (even -31% during crises), so combining them diversifies risk ([Kellogg/Northwestern](https://www.kellogg.northwestern.edu/faculty/rebelo/htm/carry.pdf)). Likely driven by behavioral underreaction then overreaction. Implementation: monthly rebalancing of a currency basket ranked by trailing returns. IB supports all major and exotic pairs needed.
 - **Value / Purchasing Power Parity (PPP) strategy** — Buy undervalued currencies, sell overvalued ones based on fair-value models (PPP, BEER, FEER). OECD publishes PPP estimates; compare actual exchange rates to model-implied rates and bet on mean reversion. Sharpe ~0.5 standalone, but adds diversification when combined with carry + momentum (the classic institutional "factor portfolio"). **Main risk**: currencies can stay mispriced for years — requires patience and deep pockets. Implementation: monthly/quarterly rebalancing, long horizon (months to years). Research needed: backtest PPP signals on IB-available pairs, determine rebalancing frequency and position sizing.
 - **Statistical arbitrage / mean reversion** — Find correlated currency pairs (e.g., AUDUSD vs NZDUSD) that normally move together. When the spread between them widens beyond a statistical threshold (e.g., 2 standard deviations), buy the cheap one and sell the expensive one. Close when they converge. Market-neutral — uncorrelated with directional strategies. Sharpe ~1.0+ when it works. **Main risk**: correlations break permanently (e.g., 2015 CHF de-peg). Implementation: identify cointegrated pairs, calculate z-scores, set entry/exit thresholds. Research needed: cointegration tests on IB forex pairs, regime-change detection to avoid broken correlations. Timeframe: days to weeks.
-- Model drift detection
+- **Model drift detection** — **PARTIALLY COVERED**: the weekly report (`src/forex_bot/reporting/weekly.py`) already compares live avg pips/trade against the Monte Carlo CIs and flags `BELOW CI` / `ABOVE CI` / `IN RANGE` per pair, and `AnomalyDetector` (`src/forex_bot/reporting/alerts.py`) fires on high slippage (>2× historical) and 3-loss streaks; the `trade-review` skill does live-vs-backtest comparison. Remaining for a "full" system: CIs are hardcoded for only USDZAR/USDTRY (not data-driven or all-pairs), and there is no dedicated regime/drift module or automated param-refresh trigger.
 - ~~**FOMC-specific parameter split**~~ — **DONE**: All three event types (NFP, CPI, FOMC) are independently profitable for both active pairs. FOMC optimal TP is slightly tighter (55-65 vs 70 pips) due to press conference reversal risk, but the marginal improvement doesn't justify splitting params yet. All 6 walk-forwards pass. See [Event-Type Split Analysis](05-event-type-split.md).
 - ~~**Automatic event data download**~~ — **DONE**: Nightly cron job at 04:00 UTC (11 PM ET) runs `download_dukascopy.py --skip-existing --timeframe 1min` via `asyncio.create_subprocess_exec`. Appends new event data to existing CSVs automatically. See `src/forex_bot/data/dukascopy.py`.
 - ~~**Remove Telegram alerts for IB connect/disconnect**~~ — **DONE**: Demoted to log-only. Daily TWS restart no longer sends Telegram alerts.
@@ -99,7 +99,7 @@
 Paper trading does not require 2FA, so the IBC auto-start pipeline is fully unattended. **Live trading will require 2FA via the IBKR Mobile app.** Before switching to live:
 
 1. Test the IBC auto-start with live credentials and confirm the 2FA push notification arrives
-2. Verify `TWOFA_TIMEOUT_ACTION=restart` correctly re-triggers the push if missed
+2. Verify 2FA-timeout relogin re-triggers the push if missed — `ReloginAfterSecondFactorAuthenticationTimeout=yes` is **already set** in `~/ibc/config.ini` (alongside `SecondFactorAuthenticationTimeout=180`); note the earlier `TWOFA_TIMEOUT_ACTION=restart` reference was not a real IBC config key
 3. Confirm `ReloginAfterSecondFactorAuthenticationTimeout=yes` works as expected
 4. Time the full login flow (TWS launch > 2FA approval > API socket ready) to ensure the 1-hour pre-market window is sufficient
 5. Consider whether the nightly TWS restart also requires 2FA re-authentication on live accounts

@@ -126,7 +126,7 @@ class CarryManager:
         return currencies
 
     async def rebalance(self) -> None:
-        """Monthly rebalance entry point.
+        """Weekly rebalance entry point.
 
         1. Fetch interest rates
         2. Score pairs by differential
