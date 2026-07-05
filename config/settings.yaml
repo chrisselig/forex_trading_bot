@@ -109,7 +109,7 @@ carry:
 # paper-trade evaluation. Set enabled: true to test. Rebalances weekly on
 # Monday at 14:22 UTC — 15 min AFTER the carry rebalance (14:07).
 momentum:
-  enabled: false
+  enabled: true  # PAPER-TRADE EVALUATION — still unvalidated; MC walk-forward pending
   instruments: [EURUSD, GBPUSD, AUDUSD, USDJPY, USDCAD, USDZAR, USDTRY]
   lookback_months: 3          # trailing-return window
   min_return_pct: 2.0         # min |trailing return| to trade
