@@ -136,8 +136,11 @@ class CarryConfig(BaseModel):
     max_concurrent_carry: int = Field(5, ge=1)
     max_risk_per_carry_pct: float = Field(1.5, gt=0, le=10)
     stop_loss_pct: float = Field(5.0, gt=0)
-    rebalance_day_of_week: str = "sun"  # Day of week (mon-sun)
-    rebalance_hour_utc: int = 14  # 8 AM MT
+    # Rebalance on Monday morning (UTC) when TWS is up and FX is liquid.
+    # Weekend/Sunday-morning windows are unusable: TWS is not started until the
+    # Sunday afternoon cron and FX spreads are wide at the Sunday open.
+    rebalance_day_of_week: str = "mon"  # Day of week (mon-sun)
+    rebalance_hour_utc: int = 14  # 14:00 UTC = 8 AM MT / 10 AM ET (London-NY overlap)
     fallback_rates: dict[str, float] = Field(default_factory=lambda: {"TRY": 50.0})
     max_spread_pips: float = 30.0
     max_spread_overrides: dict[str, float] = Field(default_factory=dict)
