@@ -71,6 +71,7 @@ nav:
     - operations/hosting-options.md
     - operations/telegram-notifications.md
   - Analysis:
+    - research/14-mc-value-ppp.md
     - research/13-mc-momentum.md
     - research/12-mc-remaining-us.md
     - research/11-mc-audusd-australia.md
