@@ -1,62 +1,117 @@
-# Monte Carlo — Currency Momentum Strategy
+# Monte Carlo — Currency Momentum Strategy (expanded pair universe)
 
 **Analysis date:** 2026-07-05
 **Strategy:** `src/forex_bot/strategy/momentum.py` — time-series (absolute) momentum
 **Data:** Dukascopy continuous daily close, resampled weekly
-**Basket:** EURUSD, GBPUSD, AUDUSD, USDJPY, USDCAD, USDZAR, USDTRY
+**Universe (17 pairs):** EURUSD, GBPUSD, AUDUSD, USDJPY, USDCAD, NZDUSD, EURJPY, EURGBP, GBPJPY, AUDJPY, CADJPY, NZDJPY, EURCAD, GBPCAD, USDMXN, USDZAR, USDTRY
 **Range:** 2019-05-27 .. 2026-06-29  (371 weeks)
-**Walk-forward:** train < 2025-01, test >= 2025-01
+**Walk-forward:** train < 2025-01, test >= 2025-01 (out-of-sample)
+
+This reevaluates momentum across a broader universe — including pairs that
+**failed the event-straddle evaluation** (GBPJPY, CADJPY, EURCAD, GBPCAD) —
+because momentum is a different edge and a straddle failure says nothing about it.
 
 ---
 
-## Verdict: **BORDERLINE (paper-trade only)**
+## Key finding
 
-Recommended params (best in-sample by Sharpe): **lookback = 6 months, min_return = 5.0%**, top 4 concurrent, weekly Monday rebalance.
+**Momentum's out-of-sample edge is concentrated in USDTRY** (OOS Sharpe 5.91,
++20.4%/yr), far ahead of the next pair (EURCAD, OOS Sharpe 0.48).
+Only **3 of 17** pairs have a positive out-of-sample momentum
+Sharpe above 0.3.
 
-> Time-series momentum: each week, rank the basket by trailing return, go long
-> the strongest uptrends / short the strongest downtrends, hold the top 4.
-> Costs modeled as round-trip bps of notional on turnover (majors 2-3 bps,
-> USDZAR 15 bps, USDTRY 35 bps).
+- **Broadening the basket HURTS.** The full 17-pair universe scores OOS
+  Sharpe -0.09 — *worse* than the original 7 — because the added majors and
+  crosses mostly fail out-of-sample and dilute the signal.
+- **The star result is a concentration bet, not diversified momentum.** The
+  in-sample-selected basket's strong OOS number is dominated by **USDTRY** (an exotic USD trend).
+  USDTRY is already a **carry** pair — its persistent trend is the same lira-depreciation
+  move the carry book captures — so this momentum "edge" **overlaps the carry strategy**
+  and carries the same regime/tail risk (a Turkish-policy reversal breaks it violently).
+- **Straddle-failed crosses under momentum:** GBPJPY and EURCAD show *weak-positive*
+  OOS momentum (Sharpe ~0.3-0.5) but nothing compelling; CADJPY, GBPCAD, NZDJPY fail.
 
-## Walk-forward results
+**Recommendation:** do **not** broaden the live momentum basket. There is no robust
+*diversified* momentum edge across majors OOS; the only strong signal (USDTRY) is
+already owned by carry, making broad momentum largely redundant. Keep the current
+paper-trade evaluation, and if momentum is pursued, treat it as a small USDTRY-centric
+sleeve with explicit concentration limits — not a diversified 7- or 17-pair book.
 
-| Period | Sharpe | Ann. return | Total | Win rate | Max DD | Weeks |
-|--------|--------|-------------|-------|----------|--------|-------|
-| In-sample (2020-2024) | 1.14 | +13.0% | +81.6% | 58% | -9.6% | 266 |
-| **Out-of-sample (2025-2026)** | **0.14** | **+0.7%** | **+0.9%** | 56% | -4.3% | 78 |
+---
 
-## Monte Carlo (10,000 bootstrap resamples of the OOS weekly-return sequence)
+## Per-pair diagnostics (single-pair time-series momentum, at lookback=12m / min_return=2.0%)
 
-| Metric | Value |
-|--------|-------|
-| Total return — median | +0.9% |
-| Total return — 5th percentile | -8.4% |
-| Total return — 95th percentile | +11.2% |
-| Sharpe — median | 0.14 |
-| Sharpe — 5th percentile | -1.17 |
-| P(negative OOS total) | 44% |
+Which pairs individually carry a momentum edge, sorted by out-of-sample Sharpe.
+"pass" = OOS Sharpe > 0.3; "weak+" = positive but marginal; "fail" = non-positive OOS.
 
-## Top in-sample parameter sets (by Sharpe)
+| Pair | IS Sharpe | IS ann. | OOS Sharpe | OOS ann. | Verdict |
+|------|-----------|---------|------------|----------|---------|
+| USDTRY | +1.53 | +47.8% | +5.91 | +20.4% | ✅ pass |
+| EURCAD | -0.16 | -0.9% | +0.48 | +2.6% | ✅ pass |
+| GBPJPY | +0.04 | +0.4% | +0.30 | +1.5% | ✅ pass |
+| AUDJPY | -0.48 | -4.8% | +0.24 | +2.3% | ~ weak+ |
+| GBPUSD | -0.06 | -0.5% | +0.05 | +0.3% | ~ weak+ |
+| GBPCAD | -0.09 | -0.6% | -0.02 | -0.1% | ❌ fail |
+| CADJPY | -0.17 | -1.5% | -0.08 | -0.5% | ❌ fail |
+| NZDJPY | -0.32 | -3.1% | -0.14 | -1.4% | ❌ fail |
+| USDJPY | +0.55 | +4.9% | -0.26 | -1.4% | ❌ fail |
+| AUDUSD | -0.35 | -3.0% | -0.27 | -2.5% | ❌ fail |
+| NZDUSD | -0.06 | -0.6% | -0.29 | -2.7% | ❌ fail |
+| USDMXN | +0.21 | +2.5% | -0.30 | -2.6% | ❌ fail |
+| EURUSD | +0.18 | +1.2% | -0.36 | -2.4% | ❌ fail |
+| EURJPY | +0.20 | +1.5% | -0.48 | -2.6% | ❌ fail |
+| USDCAD | +0.12 | +0.6% | -0.60 | -2.9% | ❌ fail |
+| EURGBP | -0.63 | -2.6% | -0.73 | -2.4% | ❌ fail |
+| USDZAR | -0.15 | -2.0% | -0.80 | -6.9% | ❌ fail |
 
-| Lookback | Min return | IS Sharpe | IS ann. return |
-|----------|-----------|-----------|----------------|
-| 6m | 5.0% | 1.14 | +13.0% |
-| 12m | 5.0% | 1.14 | +11.8% |
-| 12m | 2.0% | 0.89 | +8.1% |
-| 12m | 3.0% | 0.87 | +8.0% |
-| 12m | 0.0% | 0.83 | +7.5% |
-| 12m | 1.0% | 0.83 | +7.4% |
-| 6m | 3.0% | 0.82 | +8.4% |
-| 3m | 5.0% | 0.76 | +14.2% |
+> Note: single-pair diagnostics use the basket-optimal params for comparability;
+> they indicate *contribution*, not a standalone tradeable per-pair strategy.
 
-## Notes & caveats
+## Basket comparison (walk-forward: params optimized in-sample, tested OOS)
 
-- **Units differ from the straddle reports.** Momentum is a multi-pair portfolio
-  strategy, so results are in **% return / Sharpe**, not pips-per-trade.
-- Costs are modeled on turnover but slippage on exotics (ZAR/TRY) at weekly
-  rebalance is uncertain; the OOS figure is sensitive to the cost assumptions.
-- Daily Dukascopy close (BID) is a proxy; live fills use IB mid with spread.
-- Single train/test split (matching the project convention). A rolling
-  multi-fold walk-forward would add confidence.
-- The verdict gates whether momentum should stay enabled beyond paper-trade
-  evaluation. Re-run with `/trade-review` once live paper data accumulates.
+| Basket | Params | IS Sharpe | OOS Sharpe | OOS ann. | MC 5th %ile | P(losing OOS) | Verdict |
+|--------|--------|-----------|------------|----------|-------------|---------------|---------|
+| Original 7 | 6m / 5.0% | 1.14 | 0.14 | +0.7% | -8.4% | 44% | **BORDERLINE (paper-trade only)** |
+| Expanded (all) | 12m / 2.0% | 0.71 | -0.09 | -0.4% | -10.4% | 55% | **AVOID** |
+| IS-selected (2) | 12m / 5.0% | 1.88 | 3.87 | +14.4% | +15.0% | 0% | **PASS** |
+
+- **Original 7** — the report-13 basket (EURUSD, GBPUSD, AUDUSD, USDJPY, USDCAD, USDZAR, USDTRY).
+- **Expanded (all)** — the full 17-pair universe.
+- **IS-selected** — pairs with positive **in-sample** Sharpe only (selection done on
+  train data, no out-of-sample peeking): USDTRY, USDJPY.
+
+**Best out-of-sample basket:** IS-selected (2) (OOS Sharpe 3.87).
+
+## Top in-sample parameter sets (expanded universe, by Sharpe)
+
+| Lookback | Min return | IS Sharpe | IS ann. |
+|----------|-----------|-----------|---------|
+| 12m | 2.0% | 0.71 | +6.4% |
+| 12m | 0.0% | 0.70 | +6.4% |
+| 12m | 1.0% | 0.70 | +6.4% |
+| 12m | 3.0% | 0.70 | +6.4% |
+| 12m | 5.0% | 0.66 | +6.0% |
+| 6m | 5.0% | 0.63 | +7.3% |
+| 6m | 3.0% | 0.55 | +6.0% |
+| 6m | 2.0% | 0.47 | +5.1% |
+
+## Takeaways
+
+- The highest OOS *basket* Sharpe (IS-selected (2)) is driven by the
+  concentration effect described in **Key finding** above — it is not evidence of a
+  broad, diversifiable momentum edge.
+- Diversified currency momentum across majors/crosses is **absent out-of-sample**
+  here, consistent with the well-documented post-2015 weakening of the factor.
+- Use the per-pair table to see which currencies actually trend-follow OOS rather
+  than trading a basket blindly — but note the winners overlap the carry book.
+- All results remain **paper-trade evidence only** until the live paper period
+  confirms (or kills) the edge.
+
+## Caveats
+
+- Units are **% return / Sharpe** (portfolio strategy), not pips-per-trade.
+- Costs modeled on turnover; exotic (ZAR/TRY/MXN) slippage at weekly rebalance is
+  uncertain and the OOS figures are sensitive to it.
+- Daily Dukascopy BID close is a proxy; live fills use IB mid + spread.
+- Single train/test split; a rolling multi-fold walk-forward would add confidence.
+- Re-run with `/trade-review` once live paper data accumulates.
