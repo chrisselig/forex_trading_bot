@@ -4,7 +4,7 @@
 
 **[Documentation](https://chrisselig.github.io/forex_trading_bot/)** | [Glossary](https://chrisselig.github.io/forex_trading_bot/trading/glossary/) | [Strategies](https://chrisselig.github.io/forex_trading_bot/trading/strategies/) | [Risk Management](https://chrisselig.github.io/forex_trading_bot/trading/risk-management/) | [Monte Carlo Analysis](https://chrisselig.github.io/forex_trading_bot/research/04-monte-carlo-6yr/) | [Roadmap](https://chrisselig.github.io/forex_trading_bot/research/todo/)
 
-An event-driven forex trading bot that automatically trades major economic news releases — [NFP](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#nfp-non-farm-payrolls), [CPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#cpi-consumer-price-index), [FOMC](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#fomc-federal-open-market-committee), [PPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#ppi-producer-price-index), GDP, PCE, Unemployment Claims, ISM Manufacturing PMI, Retail Sales, plus non-US events (SARB, TCMB, SA CPI, BOJ, RBA, AU CPI, AU Employment) — using [Interactive Brokers](https://www.interactivebrokers.com). The bot places [straddle](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#straddle) orders around news events, evaluates post-release surprises, runs a weekly carry trade strategy exploiting interest rate differentials, and a weekly currency momentum strategy (trend-following, currently in paper-trade evaluation). It enforces strict risk management, sends real-time [Telegram alerts](https://chrisselig.github.io/forex_trading_bot/operations/telegram-notifications/) to your phone, and logs everything to a trade journal.
+An event-driven forex trading bot that automatically trades major economic news releases — [NFP](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#nfp-non-farm-payrolls), [CPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#cpi-consumer-price-index), [FOMC](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#fomc-federal-open-market-committee), [PPI](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#ppi-producer-price-index), GDP, PCE, Unemployment Claims, ISM Manufacturing PMI, Retail Sales, plus non-US events (SARB, TCMB, SA CPI, BOJ, RBA, AU CPI, AU Employment) — using [Interactive Brokers](https://www.interactivebrokers.com). The bot places [straddle](https://chrisselig.github.io/forex_trading_bot/trading/glossary/#straddle) orders around news events, evaluates post-release surprises, and runs a weekly carry trade strategy exploiting interest rate differentials. It enforces strict risk management, sends real-time [Telegram alerts](https://chrisselig.github.io/forex_trading_bot/operations/telegram-notifications/) to your phone, and logs everything to a trade journal.
 
 Built for a Canadian trader in Alberta where OANDA is not available due to provincial regulatory constraints.
 
@@ -190,10 +190,9 @@ The bot will:
 3. Fetch the economic calendar from Forex Factory
 4. Schedule jobs for upcoming events (pre-event straddle + post-event surprise)
 5. Schedule weekly carry trade rebalance (every Monday, 8 AM MT / 14:00 UTC)
-6. Schedule weekly currency momentum rebalance (every Monday, 8:22 AM MT / 14:22 UTC — after carry)
-7. Run health checks every 5 minutes (auto-reconnects on disconnect)
-8. Refresh the calendar every 6 hours
-9. Shut down gracefully on `Ctrl+C`
+6. Run health checks every 5 minutes (auto-reconnects on disconnect)
+7. Refresh the calendar every 6 hours
+8. Shut down gracefully on `Ctrl+C`
 
 For unattended operation, see the [Auto-Start guide](https://chrisselig.github.io/forex_trading_bot/operations/auto-start/).
 
@@ -231,7 +230,7 @@ forex-bot backtest         # Run historical backtest
               │              │              │
    ┌──────────▼───────┐ ┌───▼──────────┐ ┌─▼──────────────┐
    │ Pre-Event (T-30m)│ │Post-Event    │ │ Weekly (Mon)    │
-   │  Straddle Strat  │ │ Surprise     │ │  Carry/Momentum │
+   │  Straddle Strat  │ │ Surprise     │ │  Carry Strat    │
    └──────────┬───────┘ └───┬──────────┘ └─┬──────────────┘
               │              │              │
               └──────────────┼──────────────┘
@@ -326,7 +325,7 @@ forex_trading_bot/
 │   ├── models/                # Pydantic data models
 │   ├── broker/                # IB connection, orders, pricing, contracts
 │   ├── calendar/              # Forex Factory scraper, FRED client
-│   ├── strategy/              # BaseStrategy, straddle, surprise, carry, momentum
+│   ├── strategy/              # BaseStrategy, straddle, surprise, carry
 │   ├── risk/                  # Risk rules, circuit breaker
 │   ├── execution/             # Signal → order pipeline
 │   ├── data/                  # SQLAlchemy schemas, trade journal
@@ -395,7 +394,7 @@ The full documentation is at **[chrisselig.github.io/forex_trading_bot](https://
 - [Glossary](https://chrisselig.github.io/forex_trading_bot/trading/glossary/) — Every term, abbreviation, and metric explained in plain language
 - [Market Structure](https://chrisselig.github.io/forex_trading_bot/trading/market-structure/) — How forex works
 - [News Trading](https://chrisselig.github.io/forex_trading_bot/trading/news-trading/) — Why economic releases are the highest-edge opportunity
-- [Trading Strategies](https://chrisselig.github.io/forex_trading_bot/trading/strategies/) — Straddle, surprise, carry, and currency momentum strategy details
+- [Trading Strategies](https://chrisselig.github.io/forex_trading_bot/trading/strategies/) — Straddle, surprise, and carry trade strategy details
 - [Risk Management](https://chrisselig.github.io/forex_trading_bot/trading/risk-management/) — Rules, circuit breaker, position sizing
 - [Installation](https://chrisselig.github.io/forex_trading_bot/getting-started/installation/) — Detailed setup guide
 - [Auto-Start](https://chrisselig.github.io/forex_trading_bot/operations/auto-start/) — Unattended operation via cron + IBC

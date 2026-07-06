@@ -1,5 +1,11 @@
 # Monte Carlo — Currency Momentum Strategy (expanded pair universe)
 
+> **Status: strategy REMOVED (2026-07-05).** This analysis led to removing the
+> momentum strategy from the bot — its only out-of-sample edge (USDTRY) is
+> carry-redundant, and no diversifying pair was found. This report is retained
+> as the record of why. `scripts/mc_momentum.py` remains runnable for reference.
+
+
 **Analysis date:** 2026-07-05
 **Strategy:** `src/forex_bot/strategy/momentum.py` — time-series (absolute) momentum
 **Data:** Dukascopy continuous daily close, resampled weekly

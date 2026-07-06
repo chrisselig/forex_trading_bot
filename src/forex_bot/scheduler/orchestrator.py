@@ -33,7 +33,6 @@ from forex_bot.risk.manager import RiskManager
 from forex_bot.scheduler.jobs import JobManager
 from forex_bot.scheduler.shutdown import ShutdownHandler
 from forex_bot.strategy.carry import CarryManager
-from forex_bot.strategy.momentum import MomentumManager
 from forex_bot.strategy.registry import create_default_registry
 
 
@@ -101,18 +100,6 @@ class Orchestrator:
                 notifier=self._notifier,
             )
 
-        # Momentum manager (schedule-driven, not event-driven)
-        self._momentum_manager: MomentumManager | None = None
-        if self._settings.momentum.enabled:
-            self._momentum_manager = MomentumManager(
-                client=self._client,
-                execution_engine=self._execution_engine,
-                journal=self._journal,
-                pricing=PricingService(self._client),
-                monitor=self._monitor,
-                notifier=self._notifier,
-            )
-
         self._reconciler = Reconciler(self._client)
         self._pricing = PricingService(self._client)
         self._scraper = ForexFactoryScraper()
@@ -160,12 +147,6 @@ class Orchestrator:
             carry_ids = self._carry_manager.get_carry_order_ids()
             if carry_ids:
                 self._monitor.exclude_from_holding_check(carry_ids)
-
-        if self._momentum_manager:
-            await self._momentum_manager.restore_state()
-            momentum_ids = self._momentum_manager.get_momentum_order_ids()
-            if momentum_ids:
-                self._monitor.exclude_from_holding_check(momentum_ids)
 
         # 5. Validate static calendar against master event list
         missing = validate_static_calendar()
@@ -355,26 +336,6 @@ class Orchestrator:
                 f"hour={carry_cfg.rebalance_hour_utc} UTC"
             )
 
-        # Weekly momentum rebalance — fires AFTER carry (later minute) so the
-        # two schedule-driven strategies don't race for account/pricing calls.
-        if self._momentum_manager:
-            mom_cfg = self._settings.momentum
-            self._scheduler.add_job(
-                self._momentum_manager.rebalance,
-                CronTrigger(
-                    day_of_week=mom_cfg.rebalance_day_of_week,
-                    hour=mom_cfg.rebalance_hour_utc,
-                    minute=mom_cfg.rebalance_minute,
-                    timezone="UTC",
-                ),
-                id="momentum_rebalance",
-                replace_existing=True,
-            )
-            logger.info(
-                f"Momentum rebalance scheduled: day_of_week={mom_cfg.rebalance_day_of_week} "
-                f"hour={mom_cfg.rebalance_hour_utc} minute={mom_cfg.rebalance_minute} UTC"
-            )
-
         # Nightly Dukascopy data download at 04:00 UTC (11 PM ET)
         self._scheduler.add_job(
             self._nightly_data_download,
@@ -409,14 +370,8 @@ class Orchestrator:
             if not self._client.is_connected:
                 logger.warning("Currency sweep skipped: IB not connected")
                 return
-            # Never sweep currencies held by a schedule-driven strategy —
-            # doing so would flatten its positions' quote/base balances.
-            exclude: set[str] = set()
-            if self._carry_manager:
-                exclude |= self._carry_manager.get_active_currencies()
-            if self._momentum_manager:
-                exclude |= self._momentum_manager.get_active_currencies()
-            results = await sweep_to_cad(self._client, exclude_currencies=exclude or None)
+            exclude = self._carry_manager.get_active_currencies() if self._carry_manager else None
+            results = await sweep_to_cad(self._client, exclude_currencies=exclude)
             if results:
                 logger.info(f"Currency sweep completed: {len(results)} conversion(s)")
         except Exception as e:
