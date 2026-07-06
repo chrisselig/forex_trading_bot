@@ -61,17 +61,6 @@ class RiskManager:
             MaxSpread(carry.max_spread_pips, carry.max_spread_overrides),
         ]
 
-        # Momentum rules (own limits, separate position count)
-        momentum = settings.momentum
-        self._momentum_rules: list[RiskRule] = [
-            MandatoryStopLoss(),
-            PositiveQuantity(),
-            MaxRiskPerTrade(momentum.max_risk_per_momentum_pct),
-            MaxDailyDrawdown(settings.risk.max_daily_drawdown_pct),
-            MaxConcurrentPositions(momentum.max_concurrent_momentum),
-            MaxSpread(momentum.max_spread_pips, momentum.max_spread_overrides),
-        ]
-
     async def validate(
         self, signal: Signal, price: PriceSnapshot | None = None, quote_to_cad: float = 1.0,
     ) -> list[str]:
@@ -88,9 +77,6 @@ class RiskManager:
         if signal.strategy == "carry":
             rules = self._carry_rules
             open_count = await self._journal.count_open_by_strategy("carry")
-        elif signal.strategy == "momentum":
-            rules = self._momentum_rules
-            open_count = await self._journal.count_open_by_strategy("momentum")
         else:
             rules = self._straddle_rules
             positions = await self._client.get_positions()
