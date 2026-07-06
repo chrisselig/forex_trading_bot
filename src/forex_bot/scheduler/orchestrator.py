@@ -33,6 +33,7 @@ from forex_bot.risk.manager import RiskManager
 from forex_bot.scheduler.jobs import JobManager
 from forex_bot.scheduler.shutdown import ShutdownHandler
 from forex_bot.strategy.carry import CarryManager
+from forex_bot.strategy.value import ValueManager
 from forex_bot.strategy.registry import create_default_registry
 
 
@@ -100,6 +101,18 @@ class Orchestrator:
                 notifier=self._notifier,
             )
 
+        # Value / PPP manager (schedule-driven, not event-driven)
+        self._value_manager: ValueManager | None = None
+        if self._settings.value.enabled:
+            self._value_manager = ValueManager(
+                client=self._client,
+                execution_engine=self._execution_engine,
+                journal=self._journal,
+                pricing=PricingService(self._client),
+                monitor=self._monitor,
+                notifier=self._notifier,
+            )
+
         self._reconciler = Reconciler(self._client)
         self._pricing = PricingService(self._client)
         self._scraper = ForexFactoryScraper()
@@ -147,6 +160,12 @@ class Orchestrator:
             carry_ids = self._carry_manager.get_carry_order_ids()
             if carry_ids:
                 self._monitor.exclude_from_holding_check(carry_ids)
+
+        if self._value_manager:
+            await self._value_manager.restore_state()
+            value_ids = self._value_manager.get_value_order_ids()
+            if value_ids:
+                self._monitor.exclude_from_holding_check(value_ids)
 
         # 5. Validate static calendar against master event list
         missing = validate_static_calendar()
@@ -336,6 +355,25 @@ class Orchestrator:
                 f"hour={carry_cfg.rebalance_hour_utc} UTC"
             )
 
+        # Monthly value / PPP rebalance (Nth of month)
+        if self._value_manager:
+            val_cfg = self._settings.value
+            self._scheduler.add_job(
+                self._value_manager.rebalance,
+                CronTrigger(
+                    day=val_cfg.rebalance_day_of_month,
+                    hour=val_cfg.rebalance_hour_utc,
+                    minute=val_cfg.rebalance_minute,
+                    timezone="UTC",
+                ),
+                id="value_rebalance",
+                replace_existing=True,
+            )
+            logger.info(
+                f"Value rebalance scheduled: day={val_cfg.rebalance_day_of_month} "
+                f"hour={val_cfg.rebalance_hour_utc} minute={val_cfg.rebalance_minute} UTC"
+            )
+
         # Nightly Dukascopy data download at 04:00 UTC (11 PM ET)
         self._scheduler.add_job(
             self._nightly_data_download,
@@ -370,8 +408,14 @@ class Orchestrator:
             if not self._client.is_connected:
                 logger.warning("Currency sweep skipped: IB not connected")
                 return
-            exclude = self._carry_manager.get_active_currencies() if self._carry_manager else None
-            results = await sweep_to_cad(self._client, exclude_currencies=exclude)
+            # Never sweep currencies held by a schedule-driven strategy —
+            # doing so would flatten its positions' quote/base balances.
+            exclude: set[str] = set()
+            if self._carry_manager:
+                exclude |= self._carry_manager.get_active_currencies()
+            if self._value_manager:
+                exclude |= self._value_manager.get_active_currencies()
+            results = await sweep_to_cad(self._client, exclude_currencies=exclude or None)
             if results:
                 logger.info(f"Currency sweep completed: {len(results)} conversion(s)")
         except Exception as e:

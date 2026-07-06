@@ -325,7 +325,7 @@ forex_trading_bot/
 │   ├── models/                # Pydantic data models
 │   ├── broker/                # IB connection, orders, pricing, contracts
 │   ├── calendar/              # Forex Factory scraper, FRED client
-│   ├── strategy/              # BaseStrategy, straddle, surprise, carry
+│   ├── strategy/              # BaseStrategy, straddle, surprise, carry, value (PPP)
 │   ├── risk/                  # Risk rules, circuit breaker
 │   ├── execution/             # Signal → order pipeline
 │   ├── data/                  # SQLAlchemy schemas, trade journal
