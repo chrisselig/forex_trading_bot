@@ -107,6 +107,27 @@ Which pairs individually carry a momentum edge, sorted by out-of-sample Sharpe.
 - All results remain **paper-trade evidence only** until the live paper period
   confirms (or kills) the edge.
 
+## Additional pairs screened (2026-07-05) — none recommended
+
+Single-pair momentum was also screened on every additional exotic USD pair
+Dukascopy can serve daily history for. None produced a robust, tradeable edge:
+
+| Pair | OOS Sharpe (6m/5%) | OOS Sharpe (12m/2%) | Note |
+|------|--------------------|---------------------|------|
+| USDILS | +0.76 | +1.35 | war-driven regime trend (2023-24); thin; IB tradeability unclear |
+| USDCNH | 0.00 | +1.44 | PBOC-managed — intervention / peg-break tail risk |
+| USDSGD | −0.52 | +0.40 | MAS-managed; param-sensitive |
+| USDTHB | −0.94 | +0.34 | managed; param-sensitive |
+| USDHUF | −0.44 | +0.05 | negative-to-flat |
+| USDMXN, USDPLN, USDCZK, USDNOK, USDSEK | negative | negative | no edge |
+
+The high-inflation EM depreciators most likely to trend (USDBRL, USDINR, USDIDR,
+USDPHP, USDCLP, USDCOP, USDRUB) are **not available in Dukascopy**, so they could
+not be validated — and, like USDTRY, they would overlap the carry book. The
+apparent winners (ILS, CNH) are regime / intervention artifacts that only pass at
+one param set and fail the data-snooping smell test given the pairs×params
+screened. **No new momentum pair is recommended.**
+
 ## Caveats
 
 - Units are **% return / Sharpe** (portfolio strategy), not pips-per-trade.
