@@ -53,6 +53,23 @@ return is not yet a reason to trade it. If pursued, test a **longer holding hori
 | Total return — 95th percentile | +23.7% |
 | P(negative OOS total) | 5% |
 
+## Longer-horizon test (does PPP work when given time to revert?)
+
+PPP reversion is slow, so a 1-month hold may be too fast. This sweeps holding
+horizons with **non-overlapping** formations (honest stats, fewer points at
+large H). The **information coefficient** is corr(z, forward-H-month return),
+pooled over pairs/dates — **negative = mean-reversion (the value bet works)**;
+positive = the signal is anti-predictive at that horizon.
+
+| Hold | IC (z→fwd) | t-stat | IC obs | Backtest Sharpe | Ann. | Rebalances |
+|------|-----------|--------|--------|-----------------|------|------------|
+| 1 mo | -0.02 | -0.4 | 716 | +0.20 | +1.3% | 129 |
+| 3 mo | -0.04 | -0.6 | 238 | +0.04 | +0.3% | 44 |
+| 6 mo | +0.00 | +0.0 | 119 | +0.14 | +0.9% | 22 |
+| 12 mo | -0.03 | -0.2 | 55 | +0.25 | +1.6% | 10 |
+
+**Conclusion:** **no horizon shows statistically meaningful reversion** (all ICs are near zero or not significant) — lengthening the hold does not rescue the signal.
+
 ## Value vs. carry correlation
 
 **-0.47** over 137 common months (a simple G10 carry factor on the same

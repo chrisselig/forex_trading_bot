@@ -53,6 +53,7 @@ TRAIN_END = pd.Timestamp("2025-01-01")
 LOOKBACK_YEARS_GRID = [5, 8]
 Z_THRESHOLD_GRID = [0.5, 1.0, 1.5, 2.0]
 MIN_WINDOW = 24  # months of trailing history needed to trust a z-score
+HOLDING_HORIZONS = [1, 3, 6, 12]  # months — PPP reversion is slow, so test longer holds
 
 
 def _instrument(pair: str) -> str:
@@ -220,6 +221,63 @@ def optimize_is(price_panel, rer_panel):
     return results
 
 
+def horizon_analysis(price_panel, rer_panel, lookback_years, z_threshold):
+    """Test whether the PPP signal predicts reversion at longer holding
+    horizons. For each horizon H (months), using NON-OVERLAPPING formations:
+
+    - Information coefficient: corr(z, forward H-month pair return), pooled over
+      pairs/dates. NEGATIVE = mean-reversion (the value bet works); positive =
+      the signal is anti-predictive at that horizon.
+    - A non-overlapping portfolio backtest at frequency H (long undervalued /
+      short overvalued, hold H months), annualized.
+
+    Non-overlapping formation keeps the statistics honest (no autocorrelation
+    from overlapping windows), at the cost of fewer observations at large H.
+    """
+    lb = lookback_years * 12
+    months = price_panel.index
+    rows = []
+    for H in HOLDING_HORIZONS:
+        zs, fwd, rets = [], [], []
+        for i in range(lb, len(months) - H, H):  # step H → non-overlapping
+            z_by = {}
+            for pair in MAJORS:
+                window = rer_panel[pair].iloc[i - lb:i + 1].dropna()
+                if len(window) < MIN_WINDOW or window.std(ddof=0) <= 0:
+                    continue
+                z = (window.iloc[-1] - window.mean()) / window.std(ddof=0)
+                p1, p2 = price_panel[pair].iloc[i], price_panel[pair].iloc[i + H]
+                if pd.isna(p1) or pd.isna(p2) or p1 <= 0:
+                    continue
+                z_by[pair] = z
+                zs.append(z)
+                fwd.append(p2 / p1 - 1)
+            # portfolio: most mis-valued above threshold, long undervalued
+            ranked = sorted(z_by.items(), key=lambda kv: abs(kv[1]), reverse=True)
+            sel = [(p, z) for p, z in ranked if abs(z) >= z_threshold][:TOP_N]
+            if sel:
+                pnl = sum(
+                    (-1 if z > 0 else 1) * (price_panel[p].iloc[i + H] / price_panel[p].iloc[i] - 1)
+                    for p, z in sel
+                )
+                rets.append(pnl / len(sel))
+
+        n_ic = len(zs)
+        ic = float(np.corrcoef(zs, fwd)[0, 1]) if n_ic > 3 else float("nan")
+        t_ic = (ic * np.sqrt(max(n_ic - 2, 1)) / np.sqrt(max(1 - ic * ic, 1e-9))
+                if n_ic > 3 else float("nan"))
+        ppy = 12 / H
+        arr = np.array(rets)
+        if len(arr) > 1 and arr.std(ddof=1) > 0:
+            sharpe = arr.mean() / arr.std(ddof=1) * np.sqrt(ppy)
+        else:
+            sharpe = 0.0
+        ann = (1 + arr.mean()) ** ppy - 1 if len(arr) else 0.0
+        rows.append({"H": H, "ic": ic, "t_ic": t_ic, "n_ic": n_ic,
+                     "sharpe": float(sharpe), "ann": float(ann), "n_bt": len(arr)})
+    return rows
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--refresh-data", action="store_true")
@@ -259,9 +317,19 @@ def main() -> None:
     corr = aligned["value"].corr(aligned["carry"]) if len(aligned) > 2 else float("nan")
     print(f"\n=== VALUE vs CARRY correlation: {corr:+.2f}  (n={len(aligned)} months) ===")
 
+    # Longer-horizon test (the real question for a slow factor like PPP)
+    horizons = horizon_analysis(price_panel, rer_panel, best_ly, best_zt)
+    print("\n=== HOLDING-HORIZON SWEEP (non-overlapping) ===")
+    print("  H(mo)  IC(z→fwd)  t-stat  IC-n   Sharpe   ann     bt-n")
+    for h in horizons:
+        print(f"  {h['H']:>4}  {h['ic']:+8.2f}  {h['t_ic']:+6.1f}  {h['n_ic']:>4}  "
+              f"{h['sharpe']:+7.2f}  {h['ann']*100:+6.1f}%  {h['n_bt']:>4}")
+    print("  (IC negative = mean-reversion works; positive = anti-predictive)")
+
     verdict = _verdict(m_is, m_oos, mc)
     print(f"\n=== VERDICT: {verdict} ===")
-    _write_report(price_panel, best_ly, best_zt, m_is, m_oos, mc, ranking, corr, len(aligned), verdict)
+    _write_report(price_panel, best_ly, best_zt, m_is, m_oos, mc, ranking, corr,
+                  len(aligned), verdict, horizons)
 
 
 def _verdict(is_: dict, oos: dict, mc: dict) -> str:
@@ -279,10 +347,24 @@ def _verdict(is_: dict, oos: dict, mc: dict) -> str:
     return "AVOID"
 
 
-def _write_report(price_panel, ly, zt, m_is, m_oos, mc, ranking, corr, n_corr, verdict) -> None:
+def _write_report(price_panel, ly, zt, m_is, m_oos, mc, ranking, corr, n_corr, verdict,
+                  horizons) -> None:
     report = Path(__file__).parent.parent / "docs" / "research" / "14-mc-value-ppp.md"
     grid = "\n".join(
         f"| {r[0]}y | {r[1]} | {r[2]:.2f} | {r[3]*100:+.1f}% |" for r in ranking[:8]
+    )
+    hz_rows = "\n".join(
+        f"| {h['H']} mo | {h['ic']:+.2f} | {h['t_ic']:+.1f} | {h['n_ic']} | "
+        f"{h['sharpe']:+.2f} | {h['ann']*100:+.1f}% | {h['n_bt']} |"
+        for h in horizons
+    )
+    best_ic = min(horizons, key=lambda h: h["ic"] if h["ic"] == h["ic"] else 1.0)
+    hz_conclusion = (
+        f"the strongest reversion is at the **{best_ic['H']}-month** horizon "
+        f"(IC {best_ic['ic']:+.2f}, t={best_ic['t_ic']:+.1f})"
+        if best_ic["ic"] < -0.1 and abs(best_ic["t_ic"]) > 2
+        else "**no horizon shows statistically meaningful reversion** (all ICs are "
+             "near zero or not significant) — lengthening the hold does not rescue the signal"
     )
     report.write_text(f"""# Monte Carlo — Value / PPP Strategy
 
@@ -338,6 +420,20 @@ return is not yet a reason to trade it. If pursued, test a **longer holding hori
 | Total return — 5th percentile | {mc['p5_total']*100:+.1f}% |
 | Total return — 95th percentile | {mc['p95_total']*100:+.1f}% |
 | P(negative OOS total) | {mc['p_negative']*100:.0f}% |
+
+## Longer-horizon test (does PPP work when given time to revert?)
+
+PPP reversion is slow, so a 1-month hold may be too fast. This sweeps holding
+horizons with **non-overlapping** formations (honest stats, fewer points at
+large H). The **information coefficient** is corr(z, forward-H-month return),
+pooled over pairs/dates — **negative = mean-reversion (the value bet works)**;
+positive = the signal is anti-predictive at that horizon.
+
+| Hold | IC (z→fwd) | t-stat | IC obs | Backtest Sharpe | Ann. | Rebalances |
+|------|-----------|--------|--------|-----------------|------|------------|
+{hz_rows}
+
+**Conclusion:** {hz_conclusion}.
 
 ## Value vs. carry correlation
 
