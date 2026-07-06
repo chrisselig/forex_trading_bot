@@ -103,3 +103,22 @@ carry:
   max_spread_overrides:
     USDZAR: 60.0
     USDTRY: 80.0
+
+# Value / PPP — long undervalued currencies, short overvalued ones, judged by
+# the real exchange rate's deviation from its long-run mean (relative PPP).
+# Developed-market majors only (their real rates mean-revert; exotics trend).
+# UNVALIDATED: no Monte Carlo walk-forward backs this yet — keep disabled until
+# validated. Rebalances monthly on the 1st at 14:37 UTC.
+value:
+  enabled: false
+  instruments: [EURUSD, GBPUSD, USDJPY, USDCAD, AUDUSD, NZDUSD, USDCHF]
+  lookback_years: 8         # window for the real-exchange-rate mean
+  z_threshold: 1.0          # min |z-score| of RER deviation to trade
+  max_concurrent_value: 4
+  max_risk_per_value_pct: 1.0
+  stop_loss_pct: 8.0        # wide — value positions held for months
+  rebalance_day_of_month: 1
+  rebalance_hour_utc: 14
+  rebalance_minute: 37
+  max_spread_pips: 20.0
+  max_spread_overrides: {}

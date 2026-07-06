@@ -146,6 +146,38 @@ class CarryConfig(BaseModel):
     max_spread_overrides: dict[str, float] = Field(default_factory=dict)
 
 
+class ValueConfig(BaseModel):
+    """Value / Purchasing Power Parity — long undervalued currencies, short
+    overvalued ones, judged by the real exchange rate's deviation from its
+    long-run mean (relative-PPP mean-reversion).
+
+    Developed-market majors only: exotic real exchange rates trend rather than
+    mean-revert (persistent real depreciation), so they belong to carry, not
+    value. This keeps the value book genuinely uncorrelated with carry.
+
+    UNVALIDATED: no Monte Carlo walk-forward backs this yet. Disabled by default;
+    enable only for paper-trade evaluation.
+    """
+
+    enabled: bool = False
+    instruments: list[str] = Field(
+        default_factory=lambda: [
+            "EURUSD", "GBPUSD", "USDJPY", "USDCAD", "AUDUSD", "NZDUSD", "USDCHF",
+        ],
+    )
+    lookback_years: int = Field(8, ge=3, le=20)  # window for the RER mean
+    z_threshold: float = Field(1.0, gt=0)  # min |z-score| of RER deviation to trade
+    max_concurrent_value: int = Field(4, ge=1)
+    max_risk_per_value_pct: float = Field(1.0, gt=0, le=10)
+    stop_loss_pct: float = Field(8.0, gt=0)  # wide — value positions held for months
+    # Monthly rebalance (Nth of month), after carry's weekly Monday job.
+    rebalance_day_of_month: int = Field(1, ge=1, le=28)
+    rebalance_hour_utc: int = 14  # 14:00 UTC = 8 AM MT / 10 AM ET
+    rebalance_minute: int = Field(37, ge=0, le=59)
+    max_spread_pips: float = 20.0
+    max_spread_overrides: dict[str, float] = Field(default_factory=dict)
+
+
 class TelegramConfig(BaseModel):
     bot_token: str = ""
     chat_id: str = ""
@@ -167,6 +199,7 @@ class Settings(BaseSettings):
     telegram: TelegramConfig = Field(default_factory=TelegramConfig)
     turso: TursoConfig = Field(default_factory=TursoConfig)
     carry: CarryConfig = Field(default_factory=CarryConfig)
+    value: ValueConfig = Field(default_factory=ValueConfig)
 
     fred_api_key: str = ""
     ib_host: str = ""
