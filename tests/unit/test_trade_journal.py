@@ -5,9 +5,9 @@ from sqlalchemy import select
 
 from forex_bot.data import database as db_module
 from forex_bot.data.database import get_session, init_db
-from forex_bot.data.schemas import OrderRecord
+from forex_bot.data.schemas import OrderRecord, TradeRecord
 from forex_bot.data.trade_journal import TradeJournal
-from forex_bot.models.orders import Order, OrderSide, OrderStatus, OrderType
+from forex_bot.models.orders import Order, OrderSide, OrderStatus, OrderType, Trade
 
 
 @pytest.fixture
@@ -126,3 +126,54 @@ class TestUpdateOrderStatusByIbIdEndToEnd:
         db_id = await journal.update_order_status_by_ib_id(999, OrderStatus.FILLED)
 
         assert db_id is None
+
+
+class TestCommissionBeforeTradeOrdering:
+    """A commission report can arrive BEFORE the trade row is created (it lands
+    on the order first). log_trade must backfill it onto the new trade record so
+    the commission isn't lost — the bug where the dashboard showed no commission
+    on carry fills whose commission report preceded trade creation."""
+
+    async def test_commission_before_trade_is_backfilled(self, journal_db):
+        journal = TradeJournal()
+        order = _make_order(ib_order_id=555, strategy="carry")
+        db_order_id = await journal.log_order(order)
+
+        # Commission arrives before the trade row exists → recorded on the order.
+        await journal.update_commission(555, 2.84)
+
+        # Trade row created afterwards (on fill).
+        trade = Trade(
+            order_id=db_order_id, instrument="USDZAR", side=OrderSide.BUY,
+            quantity=1000, entry_price=18.0, strategy="carry",
+        )
+        trade_id = await journal.log_trade(trade)
+
+        async with get_session() as session:
+            rec = (
+                await session.execute(
+                    select(TradeRecord).where(TradeRecord.id == trade_id)
+                )
+            ).scalar_one()
+            assert rec.commission == pytest.approx(2.84)
+
+    async def test_commission_after_trade_still_updates(self, journal_db):
+        """The normal ordering (commission after the trade exists) still works."""
+        journal = TradeJournal()
+        order = _make_order(ib_order_id=556, strategy="carry")
+        db_order_id = await journal.log_order(order)
+        trade = Trade(
+            order_id=db_order_id, instrument="USDZAR", side=OrderSide.BUY,
+            quantity=1000, entry_price=18.0, strategy="carry",
+        )
+        trade_id = await journal.log_trade(trade)
+
+        await journal.update_commission(556, 3.10)
+
+        async with get_session() as session:
+            rec = (
+                await session.execute(
+                    select(TradeRecord).where(TradeRecord.id == trade_id)
+                )
+            ).scalar_one()
+            assert rec.commission == pytest.approx(3.10)

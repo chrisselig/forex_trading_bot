@@ -177,8 +177,14 @@ class TursoSyncer:
         event_id: int | None,
         strategy: str,
         opened_at: datetime,
+        commission: float | None = None,
     ) -> None:
-        """Push a new trade to Turso."""
+        """Push a new trade to Turso.
+
+        `commission` covers the case where the commission report arrived before
+        the trade row was created (it was recorded on the order); passing it here
+        means the trade row is inserted with the commission already set.
+        """
         ok = await self._push(
             "push_trade",
             [(
@@ -186,14 +192,15 @@ class TursoSyncer:
                 "(id, order_id, instrument, side, quantity, entry_price, "
                 "exit_price, stop_loss, take_profit, pnl, pnl_pips, "
                 "event_id, strategy, opened_at, closed_at, notes, "
-                "entry_spread_pips, fill_price, slippage_pips, account_type) "
-                "VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, NULL, ?, ?, ?, NULL, NULL, ?, NULL, NULL, ?)",
+                "entry_spread_pips, fill_price, slippage_pips, account_type, commission) "
+                "VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, NULL, ?, ?, ?, NULL, NULL, ?, NULL, NULL, ?, ?)",
                 (
                     trade_id, order_id, instrument, side, quantity,
                     entry_price, stop_loss, take_profit, event_id, strategy,
                     opened_at.isoformat() if opened_at else None,
                     entry_spread_pips,
                     self._account_type,
+                    commission,
                 ),
             )],
         )
