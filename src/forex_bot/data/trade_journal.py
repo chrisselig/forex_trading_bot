@@ -193,6 +193,21 @@ class TradeJournal:
                 account_type=self._account_type,
             )
             session.add(record)
+
+            # Commission reports can arrive BEFORE the trade row is created
+            # (they land on the order first). Backfill any commission already
+            # recorded on the linked order so it isn't lost on the trade.
+            commission = None
+            if trade.order_id is not None:
+                order_rec = (
+                    await session.execute(
+                        select(OrderRecord).where(OrderRecord.id == trade.order_id)
+                    )
+                ).scalar_one_or_none()
+                if order_rec is not None and order_rec.commission:
+                    record.commission = order_rec.commission
+                    commission = order_rec.commission
+
             await session.commit()
             logger.info(f"Logged trade #{record.id}: {trade.side} {trade.quantity} {trade.instrument} @ {trade.entry_price} (spread={trade.entry_spread_pips:.1f} pips)" if trade.entry_spread_pips else f"Logged trade #{record.id}: {trade.side} {trade.quantity} {trade.instrument} @ {trade.entry_price}")
             db_id = record.id
@@ -211,6 +226,7 @@ class TradeJournal:
                 event_id=trade.event_id,
                 strategy=trade.strategy,
                 opened_at=datetime.utcnow(),
+                commission=commission,
             )
 
         return db_id

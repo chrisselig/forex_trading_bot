@@ -116,8 +116,10 @@ class TestTursoSyncerEnabled:
         sql = mock_conn.execute.call_args[0][0]
         assert "INSERT OR REPLACE INTO trades" in sql
         assert "account_type" in sql
+        assert "commission" in sql
         params = mock_conn.execute.call_args[0][1]
-        assert params[-1] == "paper"
+        assert params[-2] == "paper"  # account_type
+        assert params[-1] is None  # commission (not supplied in this test)
 
     @pytest.mark.asyncio
     async def test_push_trade_close_executes_update(self):
