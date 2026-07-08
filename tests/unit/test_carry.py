@@ -123,14 +123,16 @@ class TestCalculateScores:
 
 class TestFetchRates:
     @pytest.mark.asyncio
-    async def test_fallback_when_fred_unavailable(self, carry_manager):
-        """TRY uses fallback rate when no FRED series exists."""
+    async def test_try_resolves_via_fred(self, carry_manager):
+        """TRY now has a live FRED series (IRSTCI01TRM156N), so the FRED value is
+        used rather than the config fallback. (The fallback-on-failure path is
+        covered by test_fred_failure_falls_back below.)"""
         carry_manager._settings.instruments = ["USDTRY"]
         with patch.object(carry_manager, "_fetch_fred_rate", new_callable=AsyncMock) as mock_fred:
-            mock_fred.return_value = 5.0  # USD rate
+            mock_fred.return_value = 5.0  # stand-in FRED value for every series
             rates = await carry_manager._fetch_rates()
-            assert "TRY" in rates
-            assert rates["TRY"] == 50.0  # from fallback_rates config
+            assert rates["TRY"] == 5.0  # from FRED, not the config fallback
+            assert rates["USD"] == 5.0
 
     @pytest.mark.asyncio
     async def test_fred_failure_falls_back(self, carry_manager):
