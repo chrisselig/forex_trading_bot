@@ -19,15 +19,28 @@ from forex_bot.models.orders import Order, OrderSide, OrderType
 from forex_bot.notifications.telegram import TelegramNotifier
 from forex_bot.strategy.signals import Signal
 
-# FRED series for central bank policy rates
+# FRED series for central-bank policy rates.
+#
+# Uses the OECD "Immediate rates: less than 24 hours: call money / interbank
+# rate" family (IRSTCI01*), which tracks each central bank's policy rate and is
+# the correct proxy for the overnight carry roll (tom-next FX swap). Keeping a
+# single methodology across all currencies means systematic biases cancel in the
+# differential.
+#
+# NOTE: the previous IRSTCB01* ("central bank rates") series were discontinued by
+# the OECD — AUD/NZD/MXN returned "series does not exist" and ZAR/JPY went stale
+# in Dec 2023, which silently collapsed the tradeable universe to TRY-on-fallback.
+# Verify any change here still returns recent observations before deploying.
 FRED_RATE_SERIES: dict[str, str] = {
-    "USD": "FEDFUNDS",
-    "ZAR": "IRSTCB01ZAM156N",
-    "AUD": "IRSTCB01AUM156N",
-    "JPY": "IRSTCB01JPM156N",
-    "NZD": "IRSTCB01NZM156N",
-    "MXN": "IRSTCB01MXM156N",
-    # TRY: no reliable FRED series — use fallback_rates in config
+    "USD": "IRSTCI01USM156N",
+    "ZAR": "IRSTCI01ZAM156N",
+    "AUD": "IRSTCI01AUM156N",
+    "JPY": "IRSTCI01JPM156N",
+    "MXN": "IRSTCI01MXM156N",
+    "TRY": "IRSTCI01TRM156N",
+    # NZD immediate-rate series is stale (last obs 2024-12); the 3-month
+    # interbank rate is the closest currently-updated proxy for the RBNZ OCR.
+    "NZD": "IR3TIB01NZM156N",
 }
 
 
@@ -245,7 +258,11 @@ class CarryManager:
             if data:
                 latest = data[-1]
                 age_days = (datetime.now() - latest["date"]).days
-                if age_days > 60:
+                # OECD monthly series are stamped first-of-month and published
+                # with a 1-2 month lag, so ~90 days of "age" is normal for fresh
+                # data. Warn only past 120 days to flag a genuinely stalled
+                # series (the discontinued IRSTCB01* ones ran 900+ days stale).
+                if age_days > 120:
                     logger.warning(f"FRED {series_id} data is {age_days} days old")
                 return latest["value"]
         except (ImportError, ValueError) as e:

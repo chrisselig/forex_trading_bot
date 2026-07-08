@@ -98,7 +98,9 @@ carry:
   rebalance_day_of_week: mon  # Monday: TWS is up, FX is liquid (avoids weekend TWS-down + wide Sunday-open spreads)
   rebalance_hour_utc: 14  # 14:00 UTC = 8 AM MT / 10 AM ET (London-NY overlap, tight spreads)
   fallback_rates:
-    TRY: 50.0
+    # Safety net only — TRY now resolves live via FRED IRSTCI01TRM156N (OECD
+    # call money, ~35.5% as of 2026-03). Used solely if the FRED fetch fails.
+    TRY: 35.0
   max_spread_pips: 30.0
   max_spread_overrides:
     USDZAR: 60.0
