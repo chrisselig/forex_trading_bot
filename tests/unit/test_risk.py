@@ -3,13 +3,16 @@
 import pytest
 from datetime import UTC, datetime
 
+from forex_bot.broker.contracts import get_pip_size
 from forex_bot.models.account import AccountSummary
 from forex_bot.models.market import PriceSnapshot
 from forex_bot.models.orders import OrderSide
+from forex_bot.risk.manager import RiskManager
 from forex_bot.risk.rules import (
     MaxDailyDrawdown,
     MaxConcurrentPositions,
     MandatoryStopLoss,
+    MaxRiskPerTrade,
     MaxSpread,
 )
 from forex_bot.risk.circuit_breaker import CircuitBreaker, CircuitState
@@ -120,3 +123,56 @@ class TestCircuitBreaker:
         cb.record_trade_result(200.0, 100000.0)
         cb.record_trade_result(-100.0, 100000.0)
         assert cb.state == CircuitState.ACTIVE
+
+
+class TestCalculatePositionSize:
+    """Regression tests for the mini-lot rounding boundary.
+
+    calculate_position_size floors to whole mini-lots so the sized position's
+    risk can never exceed the max-risk-per-trade cap. The previous behavior
+    rounded to the nearest mini-lot, which rounded *up* about half the time,
+    tripping the strict ``>`` check in MaxRiskPerTrade and silently rejecting
+    the trade (observed live on USDTRY straddles: $246.92 vs $246.91 cap).
+    """
+
+    @staticmethod
+    def _rejection(nlv, risk_pct, sl_pips, pair, quote_to_cad):
+        """Size a position, then run it through MaxRiskPerTrade. Returns the
+        rejection string, or None if the sized position is within the cap."""
+        # calculate_position_size uses no instance state.
+        rm = RiskManager.__new__(RiskManager)
+        units = rm.calculate_position_size(
+            account_balance=nlv,
+            stop_loss_pips=sl_pips,
+            pair=pair,
+            risk_pct=risk_pct,
+            quote_to_cad=quote_to_cad,
+        )
+        price = 46.87
+        signal = Signal(
+            instrument=pair,
+            side=OrderSide.BUY,
+            quantity=units,
+            price=price,
+            stop_loss=price - sl_pips * get_pip_size(pair),
+        )
+        account = AccountSummary(net_liquidation=nlv)
+        return MaxRiskPerTrade(max_pct=risk_pct).validate(
+            signal, account, quote_to_cad=quote_to_cad
+        )
+
+    def test_usdtry_straddle_within_cap(self):
+        """The exact scenario that was rejected live is now accepted."""
+        assert self._rejection(
+            nlv=4938.2, risk_pct=5.0, sl_pips=10.0,
+            pair="USDTRY", quote_to_cad=0.030226,
+        ) is None
+
+    @pytest.mark.parametrize("nlv", [4800.0 + i * 3.7 for i in range(60)])
+    def test_never_exceeds_cap_across_balances(self, nlv):
+        """Flooring guarantees sized risk <= cap for every balance; the old
+        nearest-rounding failed for roughly half of these."""
+        assert self._rejection(
+            nlv=nlv, risk_pct=5.0, sl_pips=10.0,
+            pair="USDTRY", quote_to_cad=0.030226,
+        ) is None

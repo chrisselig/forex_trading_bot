@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from loguru import logger
 
 from forex_bot.config import get_settings
@@ -146,6 +148,11 @@ class RiskManager:
         pip_size = get_pip_size(pair)
         risk_amount = account_balance * (risk_pct / 100)
         units = risk_amount / (stop_loss_pips * pip_size * quote_to_cad)
-        # Round to nearest 1000 (mini lot)
-        units = round(units / 1000) * 1000
+        # Floor to a whole mini lot (1000 units). Flooring — not rounding to the
+        # nearest — guarantees the sized position never exceeds the risk budget.
+        # Rounding up could push the position's risk a fraction of a cent over
+        # the limit and trip the strict `>` check in MaxRiskPerTrade, which
+        # silently rejected every such trade (e.g. USDTRY straddles: computed
+        # risk $246.92 vs $246.91 cap).
+        units = math.floor(units / 1000) * 1000
         return max(units, 1000)  # Minimum 1 micro lot (1000 units)
