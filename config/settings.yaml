@@ -15,8 +15,8 @@ trading:
   default_timeframe: "5 mins"
 
 risk:
-  max_risk_per_trade_pct: 5.0
-  max_daily_drawdown_pct: 15.0
+  max_risk_per_trade_pct: 1.5
+  max_daily_drawdown_pct: 5.0
   max_concurrent_positions: 4
   mandatory_stop_loss: true
   max_spread_pips: 15.0          # Default for majors
