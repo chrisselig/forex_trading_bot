@@ -92,3 +92,26 @@ class PositiveQuantity(RiskRule):
         if signal.quantity <= 0:
             return f"Order quantity must be positive (got {signal.quantity})"
         return None
+
+
+class MaxOrderSize(RiskRule):
+    """Absolute per-order unit ceiling — a bug-catcher backstop.
+
+    With TWS precautionary size limits bypassed for API orders (needed so
+    exotic-pair straddles, which legitimately require millions of units, are
+    not rejected), this rule replaces the broker-side ceiling with one tuned
+    above real sizing. An order beyond this ceiling signals a sizing bug, not a
+    genuine trade, so reject it rather than let it reach the market — fail
+    closed, since the risk-per-trade rule alone can't catch a bad quote_to_cad
+    or pip-math error that inflates the unit count."""
+
+    def __init__(self, max_units: float):
+        self.max_units = max_units
+
+    def validate(self, signal, account, price=None, open_position_count=0, daily_pnl=0.0, quote_to_cad=1.0):
+        if signal.quantity > self.max_units:
+            return (
+                f"Order size {signal.quantity:,.0f} units exceeds sanity cap "
+                f"({self.max_units:,.0f}) — likely a sizing bug"
+            )
+        return None
