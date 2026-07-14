@@ -40,6 +40,11 @@ class RiskConfig(BaseModel):
     mandatory_stop_loss: bool = True
     max_spread_pips: float = Field(3.0, gt=0)
     max_spread_overrides: dict[str, float] = Field(default_factory=dict)
+    # Absolute per-order unit ceiling — a bug-catcher backstop for when TWS
+    # precautionary size limits are bypassed for API orders. Set well above
+    # legitimate exotic-pair sizing (USDTRY straddles need ~2.5M units); an
+    # order beyond this is a sizing bug, not a real trade.
+    max_order_units: float = Field(10_000_000, gt=0)
 
 
 class StraddleParams(BaseModel):

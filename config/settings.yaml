@@ -19,6 +19,10 @@ risk:
   max_daily_drawdown_pct: 5.0
   max_concurrent_positions: 4
   mandatory_stop_loss: true
+  # Bug-catcher backstop now that TWS precautionary size limits are bypassed
+  # for API orders (IBC BypassOrderPrecautions=yes). Above legit exotic-pair
+  # sizing (USDTRY straddles ~2.5M units); an order past this is a sizing bug.
+  max_order_units: 10000000
   max_spread_pips: 15.0          # Default for majors
   max_spread_overrides:           # Per-pair overrides for exotics
     USDZAR: 60.0                  # Event-time spreads routinely 25-50 pips

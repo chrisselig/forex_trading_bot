@@ -12,6 +12,7 @@ from forex_bot.risk.rules import (
     MaxDailyDrawdown,
     MaxConcurrentPositions,
     MandatoryStopLoss,
+    MaxOrderSize,
     MaxRiskPerTrade,
     MaxSpread,
 )
@@ -80,6 +81,33 @@ class TestMaxDailyDrawdown:
         rule = MaxDailyDrawdown(max_pct=3.0)
         signal = Signal(instrument="EURUSD", side=OrderSide.BUY)
         assert rule.validate(signal, account, daily_pnl=-1000.0) is None
+
+
+class TestMaxOrderSize:
+    def test_rejects_oversized_order(self, account):
+        rule = MaxOrderSize(max_units=10_000_000)
+        signal = Signal(
+            instrument="USDTRY", side=OrderSide.SELL, quantity=12_000_000,
+            price=47.0, stop_loss=47.001,
+        )
+        assert rule.validate(signal, account) is not None
+
+    def test_allows_legit_exotic_size(self, account):
+        # A real USDTRY straddle leg (~2.5M units) must pass.
+        rule = MaxOrderSize(max_units=10_000_000)
+        signal = Signal(
+            instrument="USDTRY", side=OrderSide.SELL, quantity=2_453_000,
+            price=47.0, stop_loss=47.001,
+        )
+        assert rule.validate(signal, account) is None
+
+    def test_allows_at_exact_cap(self, account):
+        rule = MaxOrderSize(max_units=10_000_000)
+        signal = Signal(
+            instrument="USDTRY", side=OrderSide.SELL, quantity=10_000_000,
+            price=47.0, stop_loss=47.001,
+        )
+        assert rule.validate(signal, account) is None
 
 
 class TestCircuitBreaker:

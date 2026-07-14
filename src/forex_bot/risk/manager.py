@@ -15,6 +15,7 @@ from forex_bot.risk.rules import (
     MaxDailyDrawdown,
     MaxConcurrentPositions,
     MandatoryStopLoss,
+    MaxOrderSize,
     MaxSpread,
     PositiveQuantity,
 )
@@ -45,6 +46,7 @@ class RiskManager:
         self._straddle_rules: list[RiskRule] = [
             MandatoryStopLoss() if settings.risk.mandatory_stop_loss else None,
             PositiveQuantity(),
+            MaxOrderSize(settings.risk.max_order_units),
             MaxRiskPerTrade(settings.risk.max_risk_per_trade_pct),
             MaxDailyDrawdown(settings.risk.max_daily_drawdown_pct),
             MaxConcurrentPositions(settings.risk.max_concurrent_positions),
@@ -57,6 +59,7 @@ class RiskManager:
         self._carry_rules: list[RiskRule] = [
             MandatoryStopLoss(),
             PositiveQuantity(),
+            MaxOrderSize(settings.risk.max_order_units),
             MaxRiskPerTrade(carry.max_risk_per_carry_pct),
             MaxDailyDrawdown(settings.risk.max_daily_drawdown_pct),
             MaxConcurrentPositions(carry.max_concurrent_carry),
@@ -68,6 +71,7 @@ class RiskManager:
         self._value_rules: list[RiskRule] = [
             MandatoryStopLoss(),
             PositiveQuantity(),
+            MaxOrderSize(settings.risk.max_order_units),
             MaxRiskPerTrade(value.max_risk_per_value_pct),
             MaxDailyDrawdown(settings.risk.max_daily_drawdown_pct),
             MaxConcurrentPositions(value.max_concurrent_value),
