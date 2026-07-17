@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import math
 
 from loguru import logger
 from ib_async import IB, MarketOrder, LimitOrder, StopOrder, Trade as IBTrade
@@ -112,6 +113,54 @@ class OrderService:
             raise OrderError(f"Failed to place order: {e}") from e
         await self._verify_submission([trade])
         return trade
+
+    async def whatif_init_margin(
+        self,
+        instrument: str,
+        side: OrderSide,
+        quantity: float,
+        order_type: OrderType = OrderType.MARKET,
+        price: float | None = None,
+    ) -> float | None:
+        """Ask IB what initial margin a hypothetical order would require.
+
+        Uses the whatIf order facility — nothing is placed. Returns the
+        initial margin change in account currency (CAD), or None when the
+        answer is unavailable (timeout, unparseable response, IB's
+        Double.MAX_VALUE "unknown" sentinel). Callers must treat None as
+        "unknown", never as zero.
+        """
+        await self._client.ensure_connected()
+        contract = make_forex_contract(instrument)
+        await self._qualify(contract)
+
+        action = side.value
+        if order_type == OrderType.STOP and price is not None:
+            ib_order = StopOrder(
+                action=action, totalQuantity=quantity,
+                stopPrice=round_to_tick(price, instrument),
+            )
+        elif order_type == OrderType.LIMIT and price is not None:
+            ib_order = LimitOrder(
+                action=action, totalQuantity=quantity,
+                lmtPrice=round_to_tick(price, instrument),
+            )
+        else:
+            ib_order = MarketOrder(action=action, totalQuantity=quantity)
+
+        try:
+            state = await asyncio.wait_for(
+                self.ib.whatIfOrderAsync(contract, ib_order), _QUALIFY_TIMEOUT_S
+            )
+            margin = float(state.initMarginChange)
+        except (TimeoutError, ValueError, TypeError, ConnectionError, OSError) as e:
+            logger.warning(f"whatIf margin query failed for {instrument}: {e}")
+            return None
+        # IB reports "unknown" as Double.MAX_VALUE (~1.8e308)
+        if not math.isfinite(margin) or margin >= 1e300:
+            logger.warning(f"whatIf margin for {instrument} unavailable (got {margin})")
+            return None
+        return margin
 
     async def place_bracket_order(
         self,

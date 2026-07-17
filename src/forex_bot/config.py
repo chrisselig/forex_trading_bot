@@ -45,6 +45,11 @@ class RiskConfig(BaseModel):
     # legitimate exotic-pair sizing (USDTRY straddles need ~2.5M units); an
     # order beyond this is a sizing bug, not a real trade.
     max_order_units: float = Field(10_000_000, gt=0)
+    # Max share of AvailableFunds a single order's initial margin may consume.
+    # Risk-based sizing ignores margin entirely, so exotic pairs (USDTRY needs
+    # ~30% initial margin) can demand orders IB rejects with Error 201; the
+    # execution engine scales quantity down to fit under this cap instead.
+    max_margin_pct_per_trade: float = Field(25.0, gt=0, le=100)
 
 
 class StraddleParams(BaseModel):

@@ -8,6 +8,7 @@ class AccountSummary(BaseModel):
     net_liquidation: float = 0.0
     total_cash: float = 0.0
     buying_power: float = 0.0
+    available_funds: float = 0.0
     gross_position_value: float = 0.0
     maintenance_margin: float = 0.0
     unrealized_pnl: float = 0.0
