@@ -23,6 +23,13 @@ risk:
   # for API orders (IBC BypassOrderPrecautions=yes). Above legit exotic-pair
   # sizing (USDTRY straddles ~2.5M units); an order past this is a sizing bug.
   max_order_units: 10000000
+  # Max % of AvailableFunds one order's initial margin may consume. Exotic
+  # pairs carry huge margin rates (USDTRY ~30%, USDZAR ~10%), so risk-sized
+  # orders can demand far more margin than the account holds — IB rejects
+  # those with Error 201. The engine whatIf-checks margin before placing and
+  # scales quantity down to fit under this cap. 25% leaves headroom for
+  # concurrent event pairs (up to 4) each holding one filled straddle leg.
+  max_margin_pct_per_trade: 25.0
   max_spread_pips: 15.0          # Default for majors
   max_spread_overrides:           # Per-pair overrides for exotics
     USDZAR: 60.0                  # Event-time spreads routinely 25-50 pips

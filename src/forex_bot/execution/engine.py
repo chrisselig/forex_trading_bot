@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import math
+
 from loguru import logger
 
 from forex_bot.broker.client import IBClient
+from forex_bot.config import get_settings
 from forex_bot.broker.exceptions import DataError, OrderError
 from forex_bot.broker.orders import OrderService
 from forex_bot.broker.contracts import get_pip_size
@@ -93,6 +96,20 @@ class ExecutionEngine:
                 logger.error(f"Signal rejected: {e}")
                 return None
 
+        # Margin feasibility cap. Risk-based sizing ignores margin, so exotic
+        # pairs can demand orders whose initial margin dwarfs the account
+        # (2.5M USDTRY ≈ $1M CAD margin on a $5K account) — IB rejects those
+        # with Error 201 at submission. Scale down to fit instead of losing
+        # the trade.
+        margin_error = await self._apply_margin_cap(signal)
+        if margin_error:
+            logger.warning(f"Signal rejected by margin cap: {margin_error}")
+            if self._notifier:
+                await self._notifier.notify_signal_rejected(
+                    signal.instrument, signal.strategy, [margin_error], event,
+                )
+            return None
+
         # Risk validation (mandatory)
         violations = await self._risk_manager.validate(signal, price, quote_to_cad=quote_to_cad)
         if violations:
@@ -178,6 +195,63 @@ class ExecutionEngine:
                     [f"Order execution failed: {e}"], event,
                 )
             return None
+
+    # Absorbs margin drift between the whatIf query and execution (price moves,
+    # other legs filling) so the scaled order doesn't land exactly at the cap.
+    _MARGIN_SAFETY = 0.95
+
+    async def _apply_margin_cap(self, signal: Signal) -> str | None:
+        """Scale signal quantity so its initial margin fits available funds.
+
+        Mutates signal.quantity in place when scaling is needed. Returns a
+        rejection reason when the order cannot fit at any size, else None.
+        whatIf being unavailable is not a rejection — IB's own submission
+        check remains the backstop, so a whatIf outage must not turn into
+        lost trades.
+        """
+        max_pct = get_settings().risk.max_margin_pct_per_trade
+        margin = await self._order_service.whatif_init_margin(
+            instrument=signal.instrument,
+            side=signal.side,
+            quantity=signal.quantity,
+            order_type=signal.order_type,
+            price=signal.price,
+        )
+        if margin is None:
+            logger.warning(
+                f"whatIf margin unavailable for {signal.instrument} — "
+                f"placing at risk-sized quantity {signal.quantity:,.0f}"
+            )
+            return None
+        if margin <= 0:
+            return None  # Order reduces or frees margin — no cap needed
+
+        account = await self._client.get_account_summary()
+        cap = account.available_funds * max_pct / 100
+        if cap <= 0:
+            return (
+                f"No available funds for margin "
+                f"(AvailableFunds={account.available_funds:,.2f} CAD)"
+            )
+        if margin <= cap:
+            return None
+
+        # Margin scales ~linearly with quantity for forex
+        scaled = math.floor(signal.quantity * (cap / margin) * self._MARGIN_SAFETY)
+        if scaled < 1:
+            return (
+                f"Cannot fit margin: {signal.quantity:,.0f} units need "
+                f"{margin:,.0f} CAD initial margin, cap is {cap:,.0f} CAD "
+                f"({max_pct}% of AvailableFunds {account.available_funds:,.2f})"
+            )
+        logger.warning(
+            f"Margin cap: {signal.instrument} {signal.quantity:,.0f} -> "
+            f"{scaled:,} units (initial margin {margin:,.0f} CAD exceeds cap "
+            f"{cap:,.0f} CAD = {max_pct}% of AvailableFunds "
+            f"{account.available_funds:,.2f})"
+        )
+        signal.quantity = float(scaled)
+        return None
 
     async def execute_signals(
         self, signals: list[Signal], event: EconomicEvent | None = None

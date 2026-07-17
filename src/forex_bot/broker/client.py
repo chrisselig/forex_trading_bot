@@ -77,6 +77,7 @@ class IBClient:
             net_liquidation=float(data.get("NetLiquidation", 0)),
             total_cash=float(data.get("TotalCashValue", 0)),
             buying_power=float(data.get("BuyingPower", 0)),
+            available_funds=float(data.get("AvailableFunds", 0)),
             gross_position_value=float(data.get("GrossPositionValue", 0)),
             maintenance_margin=float(data.get("MaintMarginReq", 0)),
             unrealized_pnl=float(data.get("UnrealizedPnL", 0)),
