@@ -51,7 +51,8 @@ confirmation** — parked in the PR with a comment until approved.
 
 | # | Branch | Scope | Status |
 |---|---|---|---|
-| 1 | `feat/mc-surprise-validation` | Validate existing `surprise.py` (spec: [15-mc-surprise-spec.md](specs/15-mc-surprise-spec.md)) | in progress |
+| 1 | `feat/mc-surprise-validation` | Validate existing `surprise.py` (spec: [15-mc-surprise-spec.md](specs/15-mc-surprise-spec.md)) | **FAIL — report 15 merged; remove surprise.py** |
+| 1.5 | `fix/dukascopy-timezone` | **URGENT (found during #1)**: `download_dukascopy.py` naive-datetime bug shifted all event windows ~+6h — re-download + re-validate MC reports 04-12 | in progress |
 | 2 | `feat/economic-surprise-index` | ESI construction + weekly tilt backtest | pending |
 | 3 | `feat/fix-flow-strategy` | Month-end/London-fix drift backtest | pending |
 | 4 | `feat/commodity-tot-signal` | Commodity momentum → AUD/CAD/ZAR tilt | pending |
