@@ -57,9 +57,11 @@ def test_straddle_pair_overrides_loaded_from_yaml():
     assert overrides["USDZAR"].distance_pips == 50
     assert overrides["USDZAR"].tp_pips == 70
     assert overrides["USDZAR"].sl_pips == 10
-    assert "USDJPY" in overrides
-    assert overrides["USDJPY"].distance_pips == 25
-    assert overrides["USDJPY"].tp_pips == 15
+    # AUDUSD and USDJPY were removed 2026-07-24 (report 16: no WF-valid edge)
+    assert "AUDUSD" not in overrides
+    assert "USDJPY" not in overrides
+    assert "USDTRY" in overrides
+    assert overrides["USDTRY"].distance_pips == 50
 
 
 def test_event_overrides():
@@ -120,8 +122,9 @@ def test_event_overrides_loaded_from_yaml():
     usdtry = settings.strategy.straddle_pair_overrides["USDTRY"]
     key = "TCMB Interest Rate Decision"
     assert key in usdtry.event_overrides
-    assert usdtry.event_overrides[key].distance_pips == 20
-    assert usdtry.event_overrides[key].tp_pips == 60
+    # 35/70/10 = report 16 optimum on corrected data (was 20/60/10)
+    assert usdtry.event_overrides[key].distance_pips == 35
+    assert usdtry.event_overrides[key].tp_pips == 70
     assert usdtry.event_overrides[key].sl_pips == 10
 
 
