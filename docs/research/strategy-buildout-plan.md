@@ -53,6 +53,7 @@ confirmation** — parked in the PR with a comment until approved.
 |---|---|---|---|
 | 1 | `feat/mc-surprise-validation` | Validate existing `surprise.py` (spec: [15-mc-surprise-spec.md](specs/15-mc-surprise-spec.md)) | **FAIL — report 15 merged; remove surprise.py** |
 | 1.5 | `fix/dukascopy-timezone` | Dukascopy tz bug — re-validated all combos on corrected data (report 16). USDZAR/USDTRY survive; USDJPY+AUDUSD fail (removal = user decision); **edge is ambient vol harvesting, not events** | **DONE — report 16 merged** |
+| 1.6 | `feat/ambient-bracket-analysis` | Ambient bracket deep analysis with MEASURED spreads (spec: [17-ambient-bracket-spec.md](specs/17-ambient-bracket-spec.md)) — user-prioritized after report 16 | in progress |
 | 2 | `feat/economic-surprise-index` | ESI construction + weekly tilt backtest | pending |
 | 3 | `feat/fix-flow-strategy` | Month-end/London-fix drift backtest | pending |
 | 4 | `feat/commodity-tot-signal` | Commodity momentum → AUD/CAD/ZAR tilt | pending |
