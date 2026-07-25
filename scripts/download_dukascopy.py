@@ -937,9 +937,19 @@ def fetch_event_bars(
         DataFrame with OHLCV data, or None on failure.
     """
     instrument = DUKASCOPY_INSTRUMENTS[pair]
+    # event["utc_dt"] is a *naive* datetime whose wall-clock value already
+    # represents UTC (see get_all_events()). dukascopy_python.fetch() calls
+    # `.timestamp()` on the datetimes it's given, which for a naive datetime
+    # is interpreted in the *system local* timezone (America/Edmonton here),
+    # silently shifting every request by +6h/+7h. Attach tzinfo=UTC right
+    # before the fetch call so `.timestamp()` resolves correctly, while
+    # keeping `event_utc` (and everything derived from it, e.g. the
+    # `event_utc` CSV column) naive-but-UTC for consistency with the rest of
+    # this script and downstream consumers (monte_carlo_dukascopy.py etc.)
+    # that expect naive-UTC timestamps.
     event_utc = event["utc_dt"]
-    start = event_utc - timedelta(hours=PRE_EVENT_HOURS)
-    end = event_utc + timedelta(hours=POST_EVENT_HOURS)
+    start = (event_utc - timedelta(hours=PRE_EVENT_HOURS)).replace(tzinfo=UTC)
+    end = (event_utc + timedelta(hours=POST_EVENT_HOURS)).replace(tzinfo=UTC)
 
     interval = dp.INTERVAL_MIN_1 if timeframe == "1min" else dp.INTERVAL_MIN_5
 
@@ -989,12 +999,19 @@ def download_pair(
     events: list[dict],
     timeframe: str,
     skip_existing: bool,
+    limit: int | None = None,
 ) -> int:
-    """Download all event windows for a single pair.
+    """Download event windows for a single pair.
 
     Only downloads events where this pair is in the event's pair mapping.
+    Events already present in the output CSV (per ``skip_existing``) and
+    future events (no data yet) are excluded up front, so ``limit`` (if
+    given) bounds the number of *new* fetches actually attempted this run
+    -- this makes the download resumable in bounded-time foreground chunks:
+    rerun with the same args + --skip-existing until this returns 0 with
+    "0 remaining" logged.
 
-    Returns the number of events successfully downloaded.
+    Returns the number of events successfully downloaded (bars found).
     """
     csv_path = output_path(pair, timeframe)
     existing = load_existing_events(csv_path) if skip_existing else set()
@@ -1002,35 +1019,51 @@ def download_pair(
     # Filter events to only those relevant to this pair
     relevant = [e for e in events if pair in EVENT_PAIRS.get(e["name"], PAIRS)]
 
+    now_utc = datetime.now(tz=UTC).replace(tzinfo=None)
+    todo = []
+    for event in relevant:
+        event_key = f"{event['name']}_{event['date']}"
+        if event_key in existing:
+            continue
+        if event["utc_dt"] > now_utc:
+            continue  # future event, no data yet
+        todo.append(event)
+
+    total_todo = len(todo)
+    logger.info(f"[{pair}/{timeframe}] {total_todo} event(s) remaining (of {len(relevant)} relevant)")
+    if limit is not None and total_todo > limit:
+        logger.info(f"[{pair}/{timeframe}] limiting this run to {limit} of {total_todo} remaining")
+        todo = todo[:limit]
+
     frames: list[pd.DataFrame] = []
     downloaded = 0
+    failed = 0
 
-    for i, event in enumerate(relevant, 1):
-        event_key = f"{event['name']}_{event['date']}"
-
-        if event_key in existing:
-            logger.debug(f"Skipping {pair} {event_key} (already downloaded)")
-            continue
-
-        # Skip future events (no data yet)
-        if event["utc_dt"] > datetime.now(tz=UTC).replace(tzinfo=None):
-            logger.debug(f"Skipping {pair} {event_key} (future event)")
-            continue
-
+    for i, event in enumerate(todo, 1):
         logger.info(
-            f"[{pair}] {event['name']} {event['date']} "
-            f"({i}/{len(relevant)})"
+            f"[{pair}/{timeframe}] {event['name']} {event['date']} "
+            f"({i}/{len(todo)}, {total_todo} remaining this pair)"
         )
 
         df = fetch_event_bars(pair, event, timeframe)
         if df is not None:
             frames.append(df)
             downloaded += 1
+        else:
+            failed += 1
+            logger.error(
+                f"[{pair}/{timeframe}] FAILED (no bars): {event['name']} {event['date']}"
+            )
 
         time.sleep(REQUEST_DELAY_SECS)
 
     if not frames:
-        logger.info(f"[{pair}] No new data to save")
+        logger.info(f"[{pair}/{timeframe}] No new data saved this run ({failed} failed)")
+        if todo:
+            logger.warning(
+                f"[{pair}/{timeframe}] Attempted {len(todo)} event(s), ALL FAILED -- "
+                "check network/rate-limit before continuing"
+            )
         return downloaded
 
     new_data = pd.concat(frames)
@@ -1042,13 +1075,16 @@ def download_pair(
         combined.sort_index(inplace=True)
         combined.to_csv(csv_path)
         logger.info(
-            f"[{pair}] Appended {len(new_data)} rows -> {csv_path.name} "
-            f"(total: {len(combined)})"
+            f"[{pair}/{timeframe}] Appended {len(new_data)} rows ({downloaded} events, "
+            f"{failed} failed) -> {csv_path.name} (total: {len(combined)} rows)"
         )
     else:
         new_data.sort_index(inplace=True)
         new_data.to_csv(csv_path)
-        logger.info(f"[{pair}] Saved {len(new_data)} rows -> {csv_path.name}")
+        logger.info(
+            f"[{pair}/{timeframe}] Saved {len(new_data)} rows ({downloaded} events, "
+            f"{failed} failed) -> {csv_path.name}"
+        )
 
     return downloaded
 
@@ -1098,6 +1134,16 @@ def parse_args() -> argparse.Namespace:
         default=POST_EVENT_HOURS,
         help=f"Hours after event to download (default: {POST_EVENT_HOURS})",
     )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help=(
+            "Max number of NEW event windows to fetch per pair in this run "
+            "(bounds runtime for foreground chunking). Combine with "
+            "--skip-existing and rerun repeatedly to resume."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -1128,7 +1174,7 @@ def main() -> None:
     for tf in timeframes:
         for pair in pairs:
             logger.info(f"--- {pair} @ {tf} ---")
-            n = download_pair(pair, events, tf, args.skip_existing)
+            n = download_pair(pair, events, tf, args.skip_existing, limit=args.limit)
             total_downloaded += n
 
     elapsed = time.time() - t0

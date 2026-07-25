@@ -329,10 +329,17 @@ def load_dukascopy_data(pair: str) -> dict[str, pd.DataFrame]:
 
     df = pd.read_csv(csv_path, index_col=0, parse_dates=True)
 
-    # Group by event
+    # Group by (event_date, event_name).
+    #
+    # Grouping by event_date alone silently merges distinct events that share
+    # a calendar date (e.g. SARB Rate Decision + Unemployment Claims both land
+    # on Thursdays; GDP + Unemployment Claims share 13:30 UTC Thursdays). The
+    # merged group got a single arbitrary label (iloc[0]) and a union of both
+    # windows' bars with duplicate timestamps — dropping most SARB/TCMB events
+    # from non-US analyses and contaminating per-event-type splits now that
+    # the CSVs contain all event types.
     event_groups = {}
-    for event_date, group in df.groupby("event_date"):
-        event_name = group["event_name"].iloc[0]
+    for (event_date, event_name), group in df.groupby(["event_date", "event_name"]):
         key = f"{event_date}_{event_name}_{pair}"
         # Sort by timestamp and drop metadata columns
         bars = group[["open", "high", "low", "close", "volume"]].sort_index()
