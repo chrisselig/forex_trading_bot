@@ -17,7 +17,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$HOME/ibc/logs"
-BOT_LOG="$LOG_DIR/forex_bot_$(date +%Y%m%d).log"
 WATCHDOG_LOG="$LOG_DIR/watchdog.log"
 STALE_MINUTES=10
 
@@ -31,9 +30,15 @@ if ! pgrep -f "forex-bot run" >/dev/null 2>&1; then
     exit 0
 fi
 
-# --- Does the log file exist? ---
-if [[ ! -f "$BOT_LOG" ]]; then
-    log "WARNING: Bot is running but log file $BOT_LOG does not exist"
+# --- Find the log the bot is actually writing to ---
+# The bot runs for days (across midnight, weekends) and does NOT rotate its
+# log by date — its filename is fixed at launch to that day's date. Assuming
+# today's date here silently disabled staleness detection whenever the day
+# rolled over past the launch date. Track the most-recently-modified bot log
+# instead, which is robust to launch date, long uptime, and watchdog restarts.
+BOT_LOG=$(ls -t "$LOG_DIR"/forex_bot_*.log 2>/dev/null | head -1 || true)
+if [[ -z "$BOT_LOG" || ! -f "$BOT_LOG" ]]; then
+    log "WARNING: Bot is running but no forex_bot_*.log found in $LOG_DIR"
     exit 0
 fi
 
