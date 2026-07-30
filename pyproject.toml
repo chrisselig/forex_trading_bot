@@ -27,11 +27,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Pinned to match requirements-dev.txt so CI (pip install -e .[dev]) uses the
+# same tool versions as local + the pre-commit hook. Leaving these unpinned let
+# CI pull newer ruff/pytest with stricter defaults, failing every PR — even
+# doc-only ones — on violations local never saw. Keep in sync with
+# requirements-dev.txt.
 dev = [
-    "pytest",
-    "pytest-asyncio",
-    "pytest-mock",
-    "ruff",
+    "pytest==9.0.3",
+    "pytest-asyncio==1.4.0",
+    "pytest-mock==3.15.1",
+    "ruff==0.15.17",
 ]
 
 [project.scripts]
