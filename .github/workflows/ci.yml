@@ -24,5 +24,8 @@ jobs:
       - name: Ruff lint
         run: ruff check .
 
+      - name: Docs nav coverage
+        run: python scripts/check_docs_nav.py
+
       - name: Unit tests
         run: pytest tests/unit/ -q --tb=short
