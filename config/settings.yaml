@@ -6,13 +6,19 @@ broker:
 
 trading:
   instruments:
-    - USDZAR
     - USDTRY
+    # USDZAR removed 2026-07-30 — report 18 (net-of-cost audit): the event
+    #   straddle's gross edge (+16.5 pips) is smaller than the real IDEALPRO
+    #   round-trip spread (~24 pips), so all 8 USDZAR event sources are net
+    #   losers (pooled net -7.49 [-9.78,-5.12], OOS worse). Robust to the thin
+    #   spread sample. NOTE: USDZAR is still traded by the CARRY book (separate
+    #   carry.instruments) — this only disables the USDZAR event straddle.
+    # USDTRY kept pending real multi-session IDEALPRO spread data — report 18
+    #   verdict is a coin flip (net -1.17 [-2.97,+0.65]) that hinges on whether
+    #   the true spread is ~6 or ~12 pips; sample_ib_spreads.py is collecting it.
     # USDJPY and AUDUSD removed 2026-07-24 — report 16 (corrected data):
-    #   USDJPY/BOJ no edge (+0.9, CI spans 0); AUDUSD 0/9 combos pass, no
-    #   walk-forward-valid cell on any event source.
-    # GBPUSD/GBPJPY/USDCAD remain excluded — "avoid" verdicts hold on
-    # corrected data (report 16 quick checks)
+    #   USDJPY/BOJ no edge (+0.9, CI spans 0); AUDUSD 0/9 combos pass.
+    # GBPUSD/GBPJPY/USDCAD remain excluded — "avoid" verdicts hold (report 16).
   default_timeframe: "5 mins"
 
 risk:
@@ -32,9 +38,10 @@ risk:
   # concurrent event pairs (up to 4) each holding one filled straddle leg.
   max_margin_pct_per_trade: 25.0
   max_spread_pips: 15.0          # Default for majors
-  max_spread_overrides:           # Per-pair overrides for exotics
-    USDZAR: 60.0                  # Event-time spreads routinely 25-50 pips
+  max_spread_overrides:           # Per-pair overrides for exotics (straddle only)
     USDTRY: 80.0                  # Event-time spreads routinely 30-60 pips
+    # USDZAR override removed with the USDZAR straddle (report 18). Carry keeps
+    # its own carry.max_spread_overrides.USDZAR — do not confuse the two.
 
 strategy:
   pre_event_minutes: 30
@@ -44,11 +51,8 @@ strategy:
   straddle_tp_pips: 70         # 7:1 R:R, 30.7% win rate (breakeven 12.5%)
   straddle_sl_pips: 10         # Min 10 pips for news event spread safety
   straddle_pair_overrides:
-    # Only USDZAR and USDTRY pass walk-forward (2020-2024 train, 2025-2026 test)
-    USDZAR:
-      distance_pips: 50
-      tp_pips: 70
-      sl_pips: 10
+    # USDZAR override removed 2026-07-30 (report 18: net loser after real
+    # spread). USDTRY only, pending live spread data on its coin-flip verdict.
     USDTRY:
       distance_pips: 50        # US events (NFP/CPI/FOMC) — 6.5yr MC
       tp_pips: 70

@@ -53,15 +53,17 @@ def test_straddle_pair_overrides():
 def test_straddle_pair_overrides_loaded_from_yaml():
     settings = load_settings()
     overrides = settings.strategy.straddle_pair_overrides
-    assert "USDZAR" in overrides
-    assert overrides["USDZAR"].distance_pips == 50
-    assert overrides["USDZAR"].tp_pips == 70
-    assert overrides["USDZAR"].sl_pips == 10
-    # AUDUSD and USDJPY were removed 2026-07-24 (report 16: no WF-valid edge)
+    # USDTRY is the only remaining straddle instrument. USDZAR removed
+    # 2026-07-30 (report 18: net loser after real spread); AUDUSD and USDJPY
+    # removed 2026-07-24 (report 16: no WF-valid edge). USDZAR still trades
+    # the carry book (settings.carry.instruments), not the straddle.
+    assert "USDZAR" not in overrides
     assert "AUDUSD" not in overrides
     assert "USDJPY" not in overrides
     assert "USDTRY" in overrides
     assert overrides["USDTRY"].distance_pips == 50
+    assert overrides["USDTRY"].tp_pips == 70
+    assert overrides["USDTRY"].sl_pips == 10
 
 
 def test_event_overrides():

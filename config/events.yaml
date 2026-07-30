@@ -4,42 +4,42 @@ target_events:
     aliases: ["NFP", "Non-Farm Payrolls", "Nonfarm Payrolls"]
     country: "USD"
     fred_series: "PAYEMS"
-    pairs: ["USDZAR", "USDTRY"]
+    pairs: ["USDTRY"]
     impact: "high"
 
   - name: "CPI m/m"
     aliases: ["Consumer Price Index"]
     country: "USD"
     fred_series: "CPIAUCSL"
-    pairs: ["USDZAR", "USDTRY"]
+    pairs: ["USDTRY"]
     impact: "high"
 
   - name: "Federal Funds Rate"
     aliases: ["FOMC", "Fed Interest Rate Decision", "FOMC Statement"]
     country: "USD"
     fred_series: "FEDFUNDS"
-    pairs: ["USDZAR", "USDTRY"]
+    pairs: ["USDTRY"]
     impact: "high"
 
   - name: "PPI m/m"
     aliases: ["Producer Price Index", "PPI"]
     country: "USD"
     fred_series: "PPIACO"
-    pairs: ["USDZAR", "USDTRY"]
+    pairs: ["USDTRY"]
     impact: "high"
 
   - name: "GDP q/q"
     aliases: ["Gross Domestic Product", "Advance GDP", "Preliminary GDP", "Final GDP"]
     country: "USD"
     fred_series: "GDP"
-    pairs: ["USDZAR", "USDTRY"]
+    pairs: ["USDTRY"]
     impact: "high"
 
   - name: "Core PCE Price Index m/m"
     aliases: ["PCE", "Personal Consumption Expenditures", "PCE Price Index"]
     country: "USD"
     fred_series: "PCEPI"
-    pairs: ["USDZAR", "USDTRY"]    # USDZAR re-enabled 2026-07-24 — report 16: cfg-params OOS +19.3 (old removal was a WF selection artifact)
+    pairs: ["USDTRY"]    # was USDZAR+USDTRY; USDZAR dropped 2026-07-30 (report 18)
     impact: "high"
 
   # --- US Events (USDTRY only — see docs/research/12-mc-remaining-us.md) ---
@@ -66,18 +66,8 @@ target_events:
 
   # --- Australia + Japan events removed 2026-07-24 (report 16: AUDUSD 0/9 combos, USDJPY/BOJ no edge) ---
 
-  # --- South Africa Events (USDZAR — same 50/70/10 as US events) ---
-  - name: "SARB Interest Rate Decision"
-    aliases: ["SARB Rate", "South African Reserve Bank", "Repo Rate"]
-    country: "ZAR"
-    pairs: ["USDZAR"]
-    impact: "high"
-
-  - name: "CPI y/y"
-    aliases: ["South Africa CPI", "SA CPI"]
-    country: "ZAR"
-    pairs: ["USDZAR"]
-    impact: "high"
+  # --- South Africa events removed 2026-07-30 (report 18: USDZAR event
+  #     straddle is a net loser after real IDEALPRO spread) ---
 
   # --- Turkey Events (USDTRY — uses 20/60/10 via event_overrides) ---
   - name: "TCMB Interest Rate Decision"
@@ -89,6 +79,5 @@ target_events:
 filters:
   country:
     - "USD"
-    - "ZAR"
     - "TRY"
   min_impact: "medium"
