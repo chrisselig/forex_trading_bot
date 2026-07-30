@@ -71,6 +71,9 @@ nav:
     - operations/hosting-options.md
     - operations/telegram-notifications.md
   - Analysis:
+    - research/17-ambient-bracket.md
+    - research/16-mc-revalidation.md
+    - research/15-mc-surprise.md
     - research/14-mc-value-ppp.md
     - research/13-mc-momentum.md
     - research/12-mc-remaining-us.md
