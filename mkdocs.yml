@@ -71,6 +71,7 @@ nav:
     - operations/hosting-options.md
     - operations/telegram-notifications.md
   - Analysis:
+    - research/strategy-buildout-plan.md
     - research/17-ambient-bracket.md
     - research/16-mc-revalidation.md
     - research/15-mc-surprise.md
