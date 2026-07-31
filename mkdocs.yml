@@ -72,6 +72,7 @@ nav:
     - operations/telegram-notifications.md
   - Analysis:
     - research/strategy-buildout-plan.md
+    - research/19-mc-esi.md
     - research/18-event-net-of-cost.md
     - research/17-ambient-bracket.md
     - research/16-mc-revalidation.md
