@@ -55,7 +55,7 @@ confirmation** — parked in the PR with a comment until approved.
 | 1.5 | `fix/dukascopy-timezone` | Dukascopy tz bug — re-validated all combos on corrected data (report 16). USDZAR/USDTRY survive; USDJPY+AUDUSD fail (removal = user decision); **edge is ambient vol harvesting, not events** | **DONE — report 16 merged** |
 | 1.6 | `feat/ambient-bracket-analysis` | Ambient bracket analysis (report 17) — **DON'T BUILD**; also found reports 04-16 are GROSS not net of spread | **DONE — report 17 merged** |
 | 1.7 | `feat/event-net-of-cost-audit` | Re-run reports 04-16 net of one full round-trip spread at real IDEALPRO spreads (spec: [18-event-net-of-cost-spec.md](specs/18-event-net-of-cost-spec.md)) — does the live event edge survive? | in progress |
-| 2 | `feat/economic-surprise-index` | ESI construction + weekly tilt backtest | pending |
+| 2 | `feat/economic-surprise-index` | ESI directional tilt (report 19) — **FAIL: 0/6 variants, indistinguishable from random-sign control; do not build** | **DONE — report 19 merged** |
 | 3 | `feat/fix-flow-strategy` | Month-end/London-fix drift backtest | pending |
 | 4 | `feat/commodity-tot-signal` | Commodity momentum → AUD/CAD/ZAR tilt | pending |
 | 5 | `feat/cot-carry-filter` | COT extremes as carry-book crash filter | pending |
