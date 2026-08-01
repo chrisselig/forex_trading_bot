@@ -105,3 +105,12 @@ value:
   rebalance_minute: 37
   max_spread_pips: 20.0
   max_spread_overrides: {}
+
+# Reporting — daily P&L snapshot pushed to Telegram. Answers "am I up or down
+# right now" for the open carry book (unrealized, held for weeks — the
+# closed-trade `performance` command can't show this). Runs inside the bot
+# process on its existing IB connection (no clientId collision).
+reporting:
+  daily_pnl_snapshot_enabled: true
+  daily_pnl_snapshot_hour_utc: 21    # 3:30 PM MT — after NY session, back from work
+  daily_pnl_snapshot_minute_utc: 30
