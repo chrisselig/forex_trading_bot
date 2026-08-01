@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from forex_bot.broker.client import IBClient
-from forex_bot.models.account import AccountSummary, PortfolioPosition
+from forex_bot.models.account import AccountSummary, CarryPositionPnl, PortfolioPosition
 from forex_bot.notifications.telegram import TelegramNotifier
 
 
@@ -95,3 +95,38 @@ async def test_snapshot_disabled_notifier_is_noop():
     n = TelegramNotifier(bot_token="", chat_id="", enabled=False)
     # Must not raise even with no transport configured
     await n.notify_pnl_snapshot(AccountSummary(unrealized_pnl=10.0), [])
+
+
+@pytest.mark.asyncio
+async def test_snapshot_folds_in_carry_pnl(notifier):
+    """IB's own UnrealizedPnL is $0 for carry (IDEALPRO spot FX never marks
+    to market there) — the snapshot's headline total and position list must
+    include carry's own computed P&L, not just IB's (empty) portfolio feed."""
+    account = AccountSummary(net_liquidation=4840.85, unrealized_pnl=0.0)
+    carry = [
+        CarryPositionPnl(
+            instrument="USDTRY", side="SELL", quantity=990,
+            entry_price=46.82081, current_price=47.52, unrealized_pnl_cad=-20.5,
+        ),
+        CarryPositionPnl(
+            instrument="AUDJPY", side="BUY", quantity=3315,
+            entry_price=112.58, current_price=112.9, unrealized_pnl_cad=9.9,
+        ),
+    ]
+
+    await notifier.notify_pnl_snapshot(account, [], carry_positions=carry)
+
+    text = notifier._send.call_args[0][0]
+    # total = 0.0 (IB) + (-20.5 + 9.9) carry = -10.6
+    assert "−$10.60" in text
+    assert "Open positions (2)" in text
+    assert "USDTRY" in text and "AUDJPY" in text
+    # Biggest mover (USDTRY, |20.5|) listed before AUDJPY (|9.9|)
+    assert text.index("USDTRY") < text.index("AUDJPY")
+
+
+@pytest.mark.asyncio
+async def test_snapshot_no_carry_positions_defaults_empty(notifier):
+    await notifier.notify_pnl_snapshot(AccountSummary(unrealized_pnl=0.0), [])
+    text = notifier._send.call_args[0][0]
+    assert "No open positions" in text

@@ -34,22 +34,54 @@ def status():
     """Show current bot status and account summary."""
     async def _status():
         from forex_bot.broker.client import IBClient
+        from forex_bot.broker.pricing import PricingService
+        from forex_bot.config import get_settings
+        from forex_bot.data.database import init_db
+        from forex_bot.data.trade_journal import TradeJournal
+        from forex_bot.execution.engine import ExecutionEngine
+        from forex_bot.execution.monitor import PositionMonitor
         from forex_bot.reporting.dashboard import Dashboard
+        from forex_bot.risk.circuit_breaker import CircuitBreaker
+        from forex_bot.risk.manager import RiskManager
+        from forex_bot.strategy.carry import CarryManager
 
         dashboard = Dashboard()
         # Distinct clientId so this works while the live bot holds clientId=1.
         async with IBClient(client_id=CLI_CLIENT_ID) as client:
             summary = await client.get_account_summary()
             positions = await client.get_portfolio()
+
+            # Carry (IDEALPRO spot FX) never appears in ib.positions()/
+            # ib.portfolio() — it settles as currency cash-balance changes,
+            # not a broker "position" — so it's tracked and priced separately.
+            carry_pnl = []
+            if get_settings().carry.enabled:
+                await init_db()
+                journal = TradeJournal()
+                pricing = PricingService(client)
+                circuit_breaker = CircuitBreaker()
+                risk_manager = RiskManager(client, circuit_breaker, journal)
+                engine = ExecutionEngine(client, risk_manager, circuit_breaker, journal)
+                monitor = PositionMonitor(client, journal, circuit_breaker)
+                carry_manager = CarryManager(client, engine, journal, pricing, monitor)
+                await carry_manager.restore_state()
+                carry_pnl = await carry_manager.get_open_positions_pnl()
+
             dashboard.show_account(summary)
-            if positions:
-                console.print(f"\n[cyan]Open Positions: {len(positions)}[/cyan]")
-                for p in sorted(positions, key=lambda x: -abs(x.unrealized_pnl)):
-                    color = "green" if p.unrealized_pnl >= 0 else "red"
+
+            rows = [(p.instrument, p.side, p.quantity, p.avg_cost, p.unrealized_pnl) for p in positions]
+            rows += [
+                (p.instrument, p.side, p.quantity, p.entry_price, p.unrealized_pnl_cad)
+                for p in carry_pnl
+            ]
+            if rows:
+                console.print(f"\n[cyan]Open Positions: {len(rows)}[/cyan]")
+                for instrument, side, quantity, avg_cost, pnl in sorted(rows, key=lambda r: -abs(r[4])):
+                    color = "green" if pnl >= 0 else "red"
                     console.print(
-                        f"  {p.side} {p.quantity:,.0f} {p.instrument} "
-                        f"@ {p.avg_cost:.5g}  "
-                        f"[{color}]{p.unrealized_pnl:+,.2f}[/{color}]"
+                        f"  {side} {quantity:,.0f} {instrument} "
+                        f"@ {avg_cost:.5g}  "
+                        f"[{color}]{pnl:+,.2f}[/{color}]"
                     )
             else:
                 console.print("\n[dim]No open positions[/dim]")

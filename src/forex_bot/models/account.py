@@ -30,3 +30,22 @@ class PortfolioPosition(BaseModel):
     market_value: float = 0.0
     unrealized_pnl: float = 0.0
     realized_pnl: float = 0.0
+
+
+class CarryPositionPnl(BaseModel):
+    """Mark-to-market unrealized P&L for a carry position.
+
+    IDEALPRO spot FX settles as a currency cash-balance change, not a
+    broker "position" — it never appears in ib.positions()/ib.portfolio(),
+    and IB's account-level UnrealizedPnL tag doesn't capture it either
+    (confirmed 0.00 for every currency on a live account holding real carry
+    exposure). This is computed from carry's own entry-price tracking
+    against a fresh price snapshot — the only place this P&L can come from.
+    """
+
+    instrument: str
+    side: str = ""
+    quantity: float = 0.0
+    entry_price: float = 0.0
+    current_price: float = 0.0
+    unrealized_pnl_cad: float = 0.0
