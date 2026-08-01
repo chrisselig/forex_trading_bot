@@ -7,7 +7,7 @@ import httpx
 from loguru import logger
 
 from forex_bot.broker.contracts import get_pip_size
-from forex_bot.models.account import AccountSummary
+from forex_bot.models.account import AccountSummary, PortfolioPosition
 from forex_bot.models.events import EconomicEvent
 from forex_bot.models.orders import Order, OrderSide, Trade
 from forex_bot.reporting.performance import PerformanceStats
@@ -480,6 +480,48 @@ class TelegramNotifier:
         lines.append(f"_{self._fmt_et(datetime.utcnow())}_")
 
         await self._send("\n".join(lines))
+
+    async def notify_pnl_snapshot(
+        self,
+        account: AccountSummary,
+        positions: list[PortfolioPosition],
+    ) -> None:
+        """Position-centric daily snapshot: 'am I up or down right now', with a
+        per-pair breakdown. Answers the question the closed-trade performance
+        report can't, since carry positions are held open (unrealized) for
+        weeks. Account-level unrealized P&L is IB's authoritative total; the
+        per-position lines are the breakdown."""
+        u = account.unrealized_pnl
+        usign = "+" if u >= 0 else "−"
+        emoji = "🟢" if u >= 0 else "🔴"
+
+        lines = [
+            f"{emoji} *P&L SNAPSHOT*",
+            "",
+            f"Account NLV: `${account.net_liquidation:,.2f}`",
+            f"*Unrealized P&L: `{usign}${abs(u):,.2f}`*",
+            f"Realized P&L: `${account.realized_pnl:,.2f}`",
+        ]
+
+        if positions:
+            lines.append("")
+            lines.append(f"*Open positions ({len(positions)}):*")
+            # Biggest movers (by absolute P&L) first — the ones worth noticing.
+            for p in sorted(positions, key=lambda x: -abs(x.unrealized_pnl)):
+                dot = "🟢" if p.unrealized_pnl >= 0 else "🔴"
+                psign = "+" if p.unrealized_pnl >= 0 else "−"
+                lines.append(
+                    f"{dot} `{p.instrument}` {p.side} {p.quantity:,.0f}  "
+                    f"`{psign}${abs(p.unrealized_pnl):,.2f}`"
+                )
+        else:
+            lines.append("")
+            lines.append("_No open positions._")
+
+        lines.append("")
+        lines.append(f"_{self._fmt_et(datetime.utcnow())}_")
+
+        await self._send("\n".join(lines), silent=True)
 
     # ------------------------------------------------------------------
     # Event Alerts

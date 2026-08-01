@@ -8,7 +8,7 @@ from ib_async.objects import Position
 
 from forex_bot.config import get_settings
 from forex_bot.broker.exceptions import BrokerConnectionError, DataError
-from forex_bot.models.account import AccountSummary
+from forex_bot.models.account import AccountSummary, PortfolioPosition
 
 # Upper bound for IB data requests — a wedged TWS otherwise hangs callers.
 _IB_REQUEST_TIMEOUT_S = 30.0
@@ -88,6 +88,34 @@ class IBClient:
         """Fetch current positions from IB."""
         await self.ensure_connected()
         return self.ib.positions()
+
+    async def get_portfolio(self) -> list[PortfolioPosition]:
+        """Fetch open positions WITH live mark-to-market and per-position
+        unrealized P&L, from IB's portfolio feed.
+
+        ib.positions() carries no market data (unrealized P&L unknown); this
+        uses ib.portfolio(), which IB populates from the account-update
+        subscription established at connect. Zero-quantity rows are skipped.
+        """
+        await self.ensure_connected()
+        out: list[PortfolioPosition] = []
+        for item in self.ib.portfolio():
+            if item.position == 0:
+                continue
+            c = item.contract
+            out.append(
+                PortfolioPosition(
+                    instrument=c.localSymbol or c.symbol,
+                    side="BUY" if item.position > 0 else "SELL",
+                    quantity=abs(item.position),
+                    avg_cost=item.averageCost,
+                    market_price=item.marketPrice,
+                    market_value=item.marketValue,
+                    unrealized_pnl=item.unrealizedPNL,
+                    realized_pnl=item.realizedPNL,
+                )
+            )
+        return out
 
     async def get_open_orders(self) -> list[IBTrade]:
         """Fetch all open orders from IB."""

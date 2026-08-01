@@ -390,7 +390,45 @@ class Orchestrator:
             replace_existing=True,
         )
 
+        # Daily P&L snapshot to Telegram (open-position mark-to-market)
+        rep_cfg = self._settings.reporting
+        if rep_cfg.daily_pnl_snapshot_enabled:
+            self._scheduler.add_job(
+                self._send_pnl_snapshot,
+                CronTrigger(
+                    hour=rep_cfg.daily_pnl_snapshot_hour_utc,
+                    minute=rep_cfg.daily_pnl_snapshot_minute_utc,
+                    timezone="UTC",
+                ),
+                id="daily_pnl_snapshot",
+                replace_existing=True,
+            )
+            logger.info(
+                f"Daily P&L snapshot scheduled: "
+                f"{rep_cfg.daily_pnl_snapshot_hour_utc:02d}:"
+                f"{rep_cfg.daily_pnl_snapshot_minute_utc:02d} UTC"
+            )
+
         logger.info("Recurring jobs scheduled")
+
+    async def _send_pnl_snapshot(self) -> None:
+        """Fetch account summary + open-position marks and push a P&L snapshot
+        to Telegram. Uses the bot's existing IB connection (no clientId
+        collision). Never raises into the scheduler."""
+        try:
+            if not self._client.is_connected:
+                logger.warning("P&L snapshot skipped: IB not connected")
+                return
+            account = await self._client.get_account_summary()
+            positions = await self._client.get_portfolio()
+            await self._notifier.notify_pnl_snapshot(account, positions)
+            logger.info(
+                f"P&L snapshot sent: NLV=${account.net_liquidation:,.2f} "
+                f"unrealized=${account.unrealized_pnl:,.2f} "
+                f"positions={len(positions)}"
+            )
+        except Exception as e:
+            logger.error(f"P&L snapshot failed: {e}")
 
     async def _schedule_event_jobs(self) -> None:
         """Schedule pre/post event jobs for upcoming events."""

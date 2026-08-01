@@ -9,6 +9,11 @@ from rich.console import Console
 app = typer.Typer(name="forex-bot", help="Event-driven forex trading bot for IBKR")
 console = Console()
 
+# Distinct clientId so CLI commands can connect to IB while the live bot
+# (clientId=1) is running — IB rejects a duplicate clientId. (Spread sampler
+# uses 9; CLI uses 8.)
+CLI_CLIENT_ID = 8
+
 
 def _run(coro):
     """Run an async function synchronously."""
@@ -29,19 +34,23 @@ def status():
     """Show current bot status and account summary."""
     async def _status():
         from forex_bot.broker.client import IBClient
-        from forex_bot.broker.accounts import AccountService
         from forex_bot.reporting.dashboard import Dashboard
 
         dashboard = Dashboard()
-        async with IBClient() as client:
-            account_service = AccountService(client)
-            summary = await account_service.get_summary()
-            positions = await account_service.get_positions()
+        # Distinct clientId so this works while the live bot holds clientId=1.
+        async with IBClient(client_id=CLI_CLIENT_ID) as client:
+            summary = await client.get_account_summary()
+            positions = await client.get_portfolio()
             dashboard.show_account(summary)
             if positions:
                 console.print(f"\n[cyan]Open Positions: {len(positions)}[/cyan]")
-                for pos in positions:
-                    console.print(f"  {pos.side} {pos.quantity} {pos.instrument} @ {pos.avg_cost}")
+                for p in sorted(positions, key=lambda x: -abs(x.unrealized_pnl)):
+                    color = "green" if p.unrealized_pnl >= 0 else "red"
+                    console.print(
+                        f"  {p.side} {p.quantity:,.0f} {p.instrument} "
+                        f"@ {p.avg_cost:.5g}  "
+                        f"[{color}]{p.unrealized_pnl:+,.2f}[/{color}]"
+                    )
             else:
                 console.print("\n[dim]No open positions[/dim]")
 

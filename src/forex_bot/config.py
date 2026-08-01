@@ -200,6 +200,15 @@ class TursoConfig(BaseModel):
     enabled: bool = True
 
 
+class ReportingConfig(BaseModel):
+    # Daily P&L snapshot pushed to Telegram — answers "am I up or down right
+    # now" for the (open, unrealized) carry book. Default 21:30 UTC = 3:30 PM
+    # MT, after the NY session, when the user is typically back from work.
+    daily_pnl_snapshot_enabled: bool = True
+    daily_pnl_snapshot_hour_utc: int = Field(21, ge=0, le=23)
+    daily_pnl_snapshot_minute_utc: int = Field(30, ge=0, le=59)
+
+
 class Settings(BaseSettings):
     broker: BrokerConfig = Field(default_factory=BrokerConfig)
     trading: TradingConfig = Field(default_factory=TradingConfig)
@@ -210,6 +219,7 @@ class Settings(BaseSettings):
     turso: TursoConfig = Field(default_factory=TursoConfig)
     carry: CarryConfig = Field(default_factory=CarryConfig)
     value: ValueConfig = Field(default_factory=ValueConfig)
+    reporting: ReportingConfig = Field(default_factory=ReportingConfig)
 
     fred_api_key: str = ""
     ib_host: str = ""
