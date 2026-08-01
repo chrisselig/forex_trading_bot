@@ -15,6 +15,7 @@ from forex_bot.config import get_settings
 from forex_bot.data.trade_journal import TradeJournal
 from forex_bot.execution.engine import ExecutionEngine
 from forex_bot.execution.monitor import PositionMonitor
+from forex_bot.models.account import CarryPositionPnl
 from forex_bot.models.orders import Order, OrderSide, OrderType
 from forex_bot.notifications.telegram import TelegramNotifier
 from forex_bot.strategy.signals import Signal
@@ -128,6 +129,40 @@ class CarryManager:
     def get_carry_order_ids(self) -> set[int]:
         """Return IB order IDs for all active carry positions."""
         return {p.ib_order_id for p in self._positions.values() if p.ib_order_id}
+
+    async def get_open_positions_pnl(self) -> list[CarryPositionPnl]:
+        """Mark-to-market unrealized P&L for every tracked carry position.
+
+        IDEALPRO spot FX never shows up as a broker "position" (it settles
+        as currency cash-balance changes), so this is the only place carry's
+        live P&L can be computed — from our own entry-price tracking against
+        a fresh price snapshot.
+        """
+        out: list[CarryPositionPnl] = []
+        for pair, pos in self._positions.items():
+            try:
+                price = await self._pricing.get_snapshot(pair)
+                quote_to_cad = await self._pricing.get_quote_to_cad_rate(pair)
+            except (ForexBotError, ValueError) as e:
+                logger.warning(f"Carry: P&L unavailable for {pair}: {e}")
+                continue
+            diff = (
+                price.mid - pos.entry_price
+                if pos.side == OrderSide.BUY
+                else pos.entry_price - price.mid
+            )
+            pnl_cad = diff * pos.quantity * quote_to_cad
+            out.append(
+                CarryPositionPnl(
+                    instrument=pair,
+                    side=pos.side,
+                    quantity=pos.quantity,
+                    entry_price=pos.entry_price,
+                    current_price=price.mid,
+                    unrealized_pnl_cad=pnl_cad,
+                )
+            )
+        return out
 
     def get_active_currencies(self) -> set[str]:
         """Return currencies held by carry positions (for sweep exclusion)."""

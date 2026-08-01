@@ -414,18 +414,29 @@ class Orchestrator:
     async def _send_pnl_snapshot(self) -> None:
         """Fetch account summary + open-position marks and push a P&L snapshot
         to Telegram. Uses the bot's existing IB connection (no clientId
-        collision). Never raises into the scheduler."""
+        collision). Never raises into the scheduler.
+
+        Carry positions are fetched separately (CarryManager.
+        get_open_positions_pnl) because IDEALPRO spot FX never appears in
+        IB's portfolio feed or account-level UnrealizedPnL — see
+        CarryPositionPnl's docstring."""
         try:
             if not self._client.is_connected:
                 logger.warning("P&L snapshot skipped: IB not connected")
                 return
             account = await self._client.get_account_summary()
             positions = await self._client.get_portfolio()
-            await self._notifier.notify_pnl_snapshot(account, positions)
+            carry_positions = (
+                await self._carry_manager.get_open_positions_pnl()
+                if self._carry_manager
+                else []
+            )
+            await self._notifier.notify_pnl_snapshot(account, positions, carry_positions)
+            carry_total = sum(p.unrealized_pnl_cad for p in carry_positions)
             logger.info(
                 f"P&L snapshot sent: NLV=${account.net_liquidation:,.2f} "
-                f"unrealized=${account.unrealized_pnl:,.2f} "
-                f"positions={len(positions)}"
+                f"unrealized=${account.unrealized_pnl + carry_total:,.2f} "
+                f"positions={len(positions)} carry_positions={len(carry_positions)}"
             )
         except Exception as e:
             logger.error(f"P&L snapshot failed: {e}")

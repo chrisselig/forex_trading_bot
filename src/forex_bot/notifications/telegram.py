@@ -7,7 +7,7 @@ import httpx
 from loguru import logger
 
 from forex_bot.broker.contracts import get_pip_size
-from forex_bot.models.account import AccountSummary, PortfolioPosition
+from forex_bot.models.account import AccountSummary, CarryPositionPnl, PortfolioPosition
 from forex_bot.models.events import EconomicEvent
 from forex_bot.models.orders import Order, OrderSide, Trade
 from forex_bot.reporting.performance import PerformanceStats
@@ -485,13 +485,22 @@ class TelegramNotifier:
         self,
         account: AccountSummary,
         positions: list[PortfolioPosition],
+        carry_positions: list[CarryPositionPnl] | None = None,
     ) -> None:
         """Position-centric daily snapshot: 'am I up or down right now', with a
         per-pair breakdown. Answers the question the closed-trade performance
         report can't, since carry positions are held open (unrealized) for
-        weeks. Account-level unrealized P&L is IB's authoritative total; the
-        per-position lines are the breakdown."""
-        u = account.unrealized_pnl
+        weeks.
+
+        IDEALPRO spot FX (how carry trades) never appears in IB's own
+        UnrealizedPnL tag or portfolio feed — it settles as currency
+        cash-balance changes, not a "position". carry_positions carries
+        marked-to-market P&L computed separately (CarryManager.
+        get_open_positions_pnl) and is added to IB's account-level total,
+        which otherwise silently reports $0 for the entire carry book."""
+        carry_positions = carry_positions or []
+        carry_total = sum(p.unrealized_pnl_cad for p in carry_positions)
+        u = account.unrealized_pnl + carry_total
         usign = "+" if u >= 0 else "−"
         emoji = "🟢" if u >= 0 else "🔴"
 
@@ -503,16 +512,24 @@ class TelegramNotifier:
             f"Realized P&L: `${account.realized_pnl:,.2f}`",
         ]
 
-        if positions:
+        # Merge broker-reported positions with carry's own mark-to-market
+        # (carry never appears in `positions` — see docstring above).
+        rows = [(p.instrument, p.side, p.quantity, p.unrealized_pnl) for p in positions]
+        rows += [
+            (p.instrument, p.side, p.quantity, p.unrealized_pnl_cad)
+            for p in carry_positions
+        ]
+
+        if rows:
             lines.append("")
-            lines.append(f"*Open positions ({len(positions)}):*")
+            lines.append(f"*Open positions ({len(rows)}):*")
             # Biggest movers (by absolute P&L) first — the ones worth noticing.
-            for p in sorted(positions, key=lambda x: -abs(x.unrealized_pnl)):
-                dot = "🟢" if p.unrealized_pnl >= 0 else "🔴"
-                psign = "+" if p.unrealized_pnl >= 0 else "−"
+            for instrument, side, quantity, pnl in sorted(rows, key=lambda r: -abs(r[3])):
+                dot = "🟢" if pnl >= 0 else "🔴"
+                psign = "+" if pnl >= 0 else "−"
                 lines.append(
-                    f"{dot} `{p.instrument}` {p.side} {p.quantity:,.0f}  "
-                    f"`{psign}${abs(p.unrealized_pnl):,.2f}`"
+                    f"{dot} `{instrument}` {side} {quantity:,.0f}  "
+                    f"`{psign}${abs(pnl):,.2f}`"
                 )
         else:
             lines.append("")

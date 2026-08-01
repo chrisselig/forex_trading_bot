@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from forex_bot.broker.exceptions import OrderError
+from forex_bot.broker.exceptions import DataError, OrderError
 from forex_bot.models.account import AccountSummary
 from forex_bot.models.market import PriceSnapshot
 from forex_bot.models.orders import OrderSide
@@ -514,3 +514,68 @@ class TestClosePosition:
 
             assert "USDZAR" in carry_manager._positions
             mock_svc.cancel_order.assert_not_called()
+
+
+class TestGetOpenPositionsPnl:
+    """IDEALPRO spot FX never appears in ib.positions()/ib.portfolio() —
+    it settles as currency cash-balance changes, not a broker "position" —
+    so carry's own entry-price tracking is the only source for this P&L."""
+
+    @pytest.mark.asyncio
+    async def test_long_position_profit(self, carry_manager):
+        carry_manager._positions["USDTRY"] = CarryPosition(
+            pair="USDTRY", side=OrderSide.BUY, entry_price=46.0,
+            quantity=990, stop_loss=44.0, ib_order_id=56,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._pricing.get_snapshot = AsyncMock(
+            return_value=PriceSnapshot(
+                instrument="USDTRY", timestamp=datetime.now(UTC), bid=46.99, ask=47.01
+            )
+        )
+        carry_manager._pricing.get_quote_to_cad_rate = AsyncMock(return_value=0.0295)
+
+        out = await carry_manager.get_open_positions_pnl()
+
+        assert len(out) == 1
+        p = out[0]
+        assert p.instrument == "USDTRY"
+        # (47.0 - 46.0) * 990 * 0.0295 = 29.205
+        assert p.unrealized_pnl_cad == pytest.approx(29.205)
+
+    @pytest.mark.asyncio
+    async def test_short_position_loss(self, carry_manager):
+        """SELL USDTRY entered at 46.82; price rose to 47.52 — TRY
+        depreciated, a loss for the short-USD/long-TRY carry leg."""
+        carry_manager._positions["USDTRY"] = CarryPosition(
+            pair="USDTRY", side=OrderSide.SELL, entry_price=46.82081,
+            quantity=990, stop_loss=49.16, ib_order_id=56,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._pricing.get_snapshot = AsyncMock(
+            return_value=PriceSnapshot(
+                instrument="USDTRY", timestamp=datetime.now(UTC), bid=47.51, ask=47.53
+            )
+        )
+        carry_manager._pricing.get_quote_to_cad_rate = AsyncMock(return_value=0.0295)
+
+        out = await carry_manager.get_open_positions_pnl()
+
+        assert out[0].unrealized_pnl_cad < 0
+
+    @pytest.mark.asyncio
+    async def test_no_positions_returns_empty(self, carry_manager):
+        assert await carry_manager.get_open_positions_pnl() == []
+
+    @pytest.mark.asyncio
+    async def test_pricing_failure_skips_position_not_raises(self, carry_manager):
+        carry_manager._positions["USDTRY"] = CarryPosition(
+            pair="USDTRY", side=OrderSide.BUY, entry_price=46.0,
+            quantity=990, stop_loss=44.0, ib_order_id=56,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._pricing.get_snapshot = AsyncMock(side_effect=DataError("no quote"))
+
+        out = await carry_manager.get_open_positions_pnl()
+
+        assert out == []
