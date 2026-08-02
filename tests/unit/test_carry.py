@@ -9,6 +9,7 @@ import pytest
 
 from forex_bot.broker.exceptions import DataError, OrderError
 from forex_bot.models.account import AccountSummary
+from forex_bot.models.cot import CotCrowdingReading
 from forex_bot.models.market import PriceSnapshot
 from forex_bot.models.orders import OrderSide
 from forex_bot.strategy.carry import CarryManager, CarryPosition, CarryScore
@@ -31,6 +32,11 @@ def mock_settings():
         settings.carry.fallback_rates = {"TRY": 50.0}
         settings.carry.max_spread_pips = 30.0
         settings.carry.max_spread_overrides = {}
+        # Disabled by default so the existing rebalance tests (which don't
+        # care about COT) never touch the COT client at all.
+        settings.carry.cot_crowding_enabled = False
+        settings.carry.cot_zscore_threshold = 2.0
+        settings.carry.cot_lookback_weeks = 156
         mock.return_value = settings
         yield settings
 
@@ -50,6 +56,7 @@ def carry_manager(mock_settings):
     monitor.await_fill = AsyncMock(return_value=18.6)
     monitor.record_exit_fill = AsyncMock()
     notifier = AsyncMock()
+    cot_client = AsyncMock()
 
     return CarryManager(
         client=client,
@@ -58,6 +65,7 @@ def carry_manager(mock_settings):
         pricing=pricing,
         monitor=monitor,
         notifier=notifier,
+        cot_client=cot_client,
     )
 
 
@@ -579,3 +587,123 @@ class TestGetOpenPositionsPnl:
         out = await carry_manager.get_open_positions_pnl()
 
         assert out == []
+
+
+class TestCotCrowdingFilter:
+    """Blocks a candidate carry entry when leveraged funds are already
+    crowded, in our direction, in a currency we'd be trading."""
+
+    def _reading(self, currency, z_score):
+        return CotCrowdingReading(
+            currency=currency, report_date=datetime.now(UTC),
+            net_pct_oi=0.1, z_score=z_score, n_weeks=156,
+        )
+
+    @pytest.mark.asyncio
+    async def test_disabled_passes_through_untouched(self, carry_manager, mock_settings):
+        mock_settings.carry.cot_crowding_enabled = False
+        score = CarryScore(
+            pair="USDZAR", base_currency="USD", quote_currency="ZAR",
+            base_rate=5.0, quote_rate=8.0, differential=3.0,
+            direction=OrderSide.SELL, rate_source="fred",
+        )
+
+        kept, blocked = await carry_manager._filter_cot_crowding([score])
+
+        assert kept == [score]
+        assert blocked == []
+        carry_manager._cot.get_crowding.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_crowded_long_blocks_buy(self, carry_manager, mock_settings):
+        """BUY AUDJPY means long AUD — a crowded-long AUD future blocks it."""
+        mock_settings.carry.cot_crowding_enabled = True
+        score = CarryScore(
+            pair="AUDJPY", base_currency="AUD", quote_currency="JPY",
+            base_rate=4.0, quote_rate=0.1, differential=-3.9,
+            direction=OrderSide.BUY, rate_source="fred",
+        )
+        carry_manager._cot.get_crowding = AsyncMock(
+            side_effect=lambda ccy, weeks: self._reading(ccy, 2.5) if ccy == "AUD" else None
+        )
+
+        kept, blocked = await carry_manager._filter_cot_crowding([score])
+
+        assert kept == []
+        assert "AUDJPY" in blocked[0]
+        assert "AUD" in blocked[0]
+
+    @pytest.mark.asyncio
+    async def test_crowded_short_blocks_the_short_leg(self, carry_manager, mock_settings):
+        """BUY AUDJPY also means short JPY — a crowded-short JPY future
+        (the classic JPY-carry-unwind setup) blocks it too."""
+        mock_settings.carry.cot_crowding_enabled = True
+        score = CarryScore(
+            pair="AUDJPY", base_currency="AUD", quote_currency="JPY",
+            base_rate=4.0, quote_rate=0.1, differential=-3.9,
+            direction=OrderSide.BUY, rate_source="fred",
+        )
+        carry_manager._cot.get_crowding = AsyncMock(
+            side_effect=lambda ccy, weeks: self._reading(ccy, -2.8) if ccy == "JPY" else None
+        )
+
+        kept, blocked = await carry_manager._filter_cot_crowding([score])
+
+        assert kept == []
+        assert "JPY" in blocked[0]
+
+    @pytest.mark.asyncio
+    async def test_uncrowded_passes(self, carry_manager, mock_settings):
+        mock_settings.carry.cot_crowding_enabled = True
+        score = CarryScore(
+            pair="USDZAR", base_currency="USD", quote_currency="ZAR",
+            base_rate=5.0, quote_rate=8.0, differential=3.0,
+            direction=OrderSide.SELL, rate_source="fred",
+        )
+        carry_manager._cot.get_crowding = AsyncMock(
+            side_effect=lambda ccy, weeks: self._reading(ccy, 0.4) if ccy == "ZAR" else None
+        )
+
+        kept, blocked = await carry_manager._filter_cot_crowding([score])
+
+        assert kept == [score]
+        assert blocked == []
+
+    @pytest.mark.asyncio
+    async def test_unsupported_currency_passes_through(self, carry_manager, mock_settings):
+        """USDTRY: neither leg has a CFTC-listed future — always fails open."""
+        mock_settings.carry.cot_crowding_enabled = True
+        score = CarryScore(
+            pair="USDTRY", base_currency="USD", quote_currency="TRY",
+            base_rate=5.0, quote_rate=50.0, differential=45.0,
+            direction=OrderSide.SELL, rate_source="fred",
+        )
+        carry_manager._cot.get_crowding = AsyncMock(return_value=None)
+
+        kept, blocked = await carry_manager._filter_cot_crowding([score])
+
+        assert kept == [score]
+        assert blocked == []
+
+    @pytest.mark.asyncio
+    async def test_cache_avoids_duplicate_fetch_for_shared_currency(self, carry_manager, mock_settings):
+        """AUDJPY and NZDJPY both reference JPY — fetch it once per rebalance."""
+        mock_settings.carry.cot_crowding_enabled = True
+        scores = [
+            CarryScore(
+                pair="AUDJPY", base_currency="AUD", quote_currency="JPY",
+                base_rate=4.0, quote_rate=0.1, differential=-3.9,
+                direction=OrderSide.BUY, rate_source="fred",
+            ),
+            CarryScore(
+                pair="NZDJPY", base_currency="NZD", quote_currency="JPY",
+                base_rate=3.5, quote_rate=0.1, differential=-3.4,
+                direction=OrderSide.BUY, rate_source="fred",
+            ),
+        ]
+        carry_manager._cot.get_crowding = AsyncMock(return_value=None)
+
+        await carry_manager._filter_cot_crowding(scores)
+
+        # AUD, JPY (shared), NZD — 3 calls, not 4.
+        assert carry_manager._cot.get_crowding.call_count == 3

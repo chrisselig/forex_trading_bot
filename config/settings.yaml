@@ -86,6 +86,13 @@ carry:
   max_spread_overrides:
     USDZAR: 60.0
     USDTRY: 80.0
+  # COT crash-risk filter — blocks a new carry entry when leveraged funds
+  # are already crowded (|z-score| >= threshold) in the same direction we'd
+  # be trading, over a trailing 3yr window. TRY/NZD have no CFTC-listed
+  # future, so this never blocks USDTRY (fails open on missing data).
+  cot_crowding_enabled: true
+  cot_zscore_threshold: 2.0
+  cot_lookback_weeks: 156
 
 # Value / PPP — long undervalued currencies, short overvalued ones, judged by
 # the real exchange rate's deviation from its long-run mean (relative PPP).
