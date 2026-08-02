@@ -154,6 +154,13 @@ class CarryConfig(BaseModel):
     fallback_rates: dict[str, float] = Field(default_factory=lambda: {"TRY": 50.0})
     max_spread_pips: float = 30.0
     max_spread_overrides: dict[str, float] = Field(default_factory=dict)
+    # COT crash-risk filter: blocks new carry entries that would deepen an
+    # already-crowded speculative position (see calendar/cot_client.py).
+    # Fails open — currencies with no CFTC-listed future (TRY, NZD) or
+    # unavailable COT data pass through unfiltered.
+    cot_crowding_enabled: bool = True
+    cot_zscore_threshold: float = Field(2.0, gt=0)
+    cot_lookback_weeks: int = Field(156, ge=52)  # ~3 years of weekly reports
 
 
 class ValueConfig(BaseModel):

@@ -11,11 +11,13 @@ from forex_bot.broker.exceptions import ForexBotError
 from forex_bot.broker.contracts import get_pip_size
 from forex_bot.broker.orders import OrderService
 from forex_bot.broker.pricing import PricingService
+from forex_bot.calendar.cot_client import CotClient
 from forex_bot.config import get_settings
 from forex_bot.data.trade_journal import TradeJournal
 from forex_bot.execution.engine import ExecutionEngine
 from forex_bot.execution.monitor import PositionMonitor
 from forex_bot.models.account import CarryPositionPnl
+from forex_bot.models.cot import CotCrowdingReading
 from forex_bot.models.orders import Order, OrderSide, OrderType
 from forex_bot.notifications.telegram import TelegramNotifier
 from forex_bot.strategy.signals import Signal
@@ -87,6 +89,7 @@ class CarryManager:
         pricing: PricingService,
         monitor: PositionMonitor,
         notifier: TelegramNotifier | None = None,
+        cot_client: CotClient | None = None,
     ):
         self._client = client
         self._engine = execution_engine
@@ -94,6 +97,7 @@ class CarryManager:
         self._pricing = pricing
         self._monitor = monitor
         self._notifier = notifier
+        self._cot = cot_client or CotClient()
         self._settings = get_settings().carry
         self._positions: dict[str, CarryPosition] = {}  # pair -> position
 
@@ -198,6 +202,7 @@ class CarryManager:
             return
 
         scores = self._calculate_scores(rates)
+        scores, cot_blocked = await self._filter_cot_crowding(scores)
         target_pairs = {s.pair for s in scores}
         target_directions = {s.pair: s.direction for s in scores}
 
@@ -246,7 +251,64 @@ class CarryManager:
             except (ForexBotError, ValueError) as e:
                 logger.error(f"Carry: failed to enter {score.pair}: {e}")
 
-        await self._send_rebalance_summary(scores, entered, closed)
+        await self._send_rebalance_summary(scores, entered, closed, cot_blocked)
+
+    async def _filter_cot_crowding(
+        self, scores: list[CarryScore],
+    ) -> tuple[list[CarryScore], list[str]]:
+        """Drop candidate entries that would deepen an already-crowded
+        speculative position — carry's crash-risk filter.
+
+        For each leg of the pair, checks whether our exposure direction
+        (long/short) matches an extreme (|z| >= threshold) leveraged-fund
+        z-score for that currency's CFTC-listed future. A match means the
+        speculative crowd is already positioned the same way we're about
+        to trade — exactly the setup for a violent unwind if it reverses.
+
+        Fails open: a currency with no CFTC-listed future (TRY, NZD) or a
+        failed/insufficient COT fetch returns None from CotClient and is
+        silently skipped, never blocked. COT data is supplementary risk
+        context, not a mandatory gate — treating missing data as "blocked"
+        would leave carry dark for weeks during e.g. a CFTC reporting delay.
+        """
+        if not self._settings.cot_crowding_enabled:
+            return scores, []
+
+        threshold = self._settings.cot_zscore_threshold
+        lookback = self._settings.cot_lookback_weeks
+        cache: dict[str, CotCrowdingReading | None] = {}
+        kept: list[CarryScore] = []
+        blocked: list[str] = []
+
+        for score in scores:
+            base, quote = score.pair[:3], score.pair[3:]
+            exposures = (
+                {base: 1, quote: -1}
+                if score.direction == OrderSide.BUY
+                else {base: -1, quote: 1}
+            )
+
+            reason = None
+            for ccy, sign in exposures.items():
+                if ccy not in cache:
+                    cache[ccy] = await self._cot.get_crowding(ccy, lookback)
+                reading = cache[ccy]
+                if reading is None:
+                    continue
+                if sign > 0 and reading.z_score >= threshold:
+                    reason = f"{ccy} leveraged funds crowded long (z={reading.z_score:+.2f})"
+                elif sign < 0 and reading.z_score <= -threshold:
+                    reason = f"{ccy} leveraged funds crowded short (z={reading.z_score:+.2f})"
+                if reason:
+                    break
+
+            if reason:
+                logger.warning(f"Carry: COT filter blocked {score.pair} {score.direction} — {reason}")
+                blocked.append(f"{score.pair} ({reason})")
+            else:
+                kept.append(score)
+
+        return kept, blocked
 
     async def _fetch_rates(self) -> dict[str, float]:
         """Fetch interest rates from FRED with fallback to config values."""
@@ -459,6 +521,7 @@ class CarryManager:
         scores: list[CarryScore],
         entered: list[str],
         closed: list[str],
+        cot_blocked: list[str] | None = None,
     ) -> None:
         """Send Telegram summary of rebalance results."""
         if not self._notifier:
@@ -476,6 +539,9 @@ class CarryManager:
 
         if closed:
             lines.append(f"\n*Closed:* {', '.join(closed)}")
+
+        if cot_blocked:
+            lines.append(f"\n*Blocked (COT crowding):* {', '.join(cot_blocked)}")
 
         held = [p for p in self._positions if p not in entered]
         if held:
