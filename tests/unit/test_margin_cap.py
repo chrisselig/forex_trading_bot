@@ -196,3 +196,16 @@ async def test_whatif_init_margin_unparseable_returns_none():
     margin = await service.whatif_init_margin("USDTRY", OrderSide.BUY, 1_000)
 
     assert margin is None
+
+
+@pytest.mark.asyncio
+async def test_whatif_init_margin_bare_list_result_returns_none():
+    # ib_async resolves the whatIf future with a plain [] (its default empty
+    # results container) instead of an OrderState when IB responds to the
+    # reqId with a genuine order-level error rather than an openOrder
+    # callback. Must not raise AttributeError up through order placement.
+    service = make_order_service([])
+
+    margin = await service.whatif_init_margin("USDTRY", OrderSide.BUY, 1_000)
+
+    assert margin is None
