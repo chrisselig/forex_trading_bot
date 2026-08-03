@@ -152,8 +152,12 @@ class OrderService:
             state = await asyncio.wait_for(
                 self.ib.whatIfOrderAsync(contract, ib_order), _QUALIFY_TIMEOUT_S
             )
+            # ib_async resolves this future with a bare [] instead of an
+            # OrderState when IB responds to the whatIf reqId with a genuine
+            # (non-warning) order-level error rather than an openOrder
+            # callback — e.g. the hypothetical order itself gets rejected.
             margin = float(state.initMarginChange)
-        except (TimeoutError, ValueError, TypeError, ConnectionError, OSError) as e:
+        except (TimeoutError, ValueError, TypeError, ConnectionError, OSError, AttributeError) as e:
             logger.warning(f"whatIf margin query failed for {instrument}: {e}")
             return None
         # IB reports "unknown" as Double.MAX_VALUE (~1.8e308)
