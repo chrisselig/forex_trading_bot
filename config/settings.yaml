@@ -70,7 +70,7 @@ strategy:
 
 carry:
   enabled: true
-  instruments: [USDZAR, USDTRY, USDMXN, AUDJPY, NZDJPY]
+  instruments: [USDZAR, USDTRY, USDMXN, AUDJPY, NZDJPY, GBPJPY]
   min_differential_pct: 2.0
   risk_budget_pct: 5.0
   max_concurrent_carry: 5
