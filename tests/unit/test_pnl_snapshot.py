@@ -130,3 +130,27 @@ async def test_snapshot_no_carry_positions_defaults_empty(notifier):
     await notifier.notify_pnl_snapshot(AccountSummary(unrealized_pnl=0.0), [])
     text = notifier._send.call_args[0][0]
     assert "No open positions" in text
+
+
+@pytest.mark.asyncio
+async def test_interest_summary_breaks_out_by_period_and_currency(notifier):
+    summary = {
+        "all_time": {"USD": 12.0, "TRY": 113.0},
+        "this_year": {"USD": 5.0, "TRY": 13.0},
+        "this_month": {"USD": 1.0, "TRY": 3.0},
+    }
+
+    await notifier.notify_interest_summary(summary)
+
+    text = notifier._send.call_args[0][0]
+    assert "INTEREST INCOME" in text
+    assert "This Month" in text and "This Year" in text and "All Time" in text
+    assert "USD" in text and "TRY" in text
+    assert "+$113.00" in text  # TRY all-time
+    assert "+$4.00" in text    # this-month total (1.0 + 3.0)
+
+
+@pytest.mark.asyncio
+async def test_interest_summary_empty_all_time_is_noop(notifier):
+    await notifier.notify_interest_summary({"all_time": {}, "this_year": {}, "this_month": {}})
+    notifier._send.assert_not_called()

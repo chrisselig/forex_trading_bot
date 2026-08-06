@@ -540,6 +540,34 @@ class TelegramNotifier:
 
         await self._send("\n".join(lines), silent=True)
 
+    async def notify_interest_summary(self, period_summary: dict[str, dict[str, float]]) -> None:
+        """Real, IB-computed interest income per currency, broken out by
+        period. Sent once daily after the Flex Query statement is fetched.
+
+        period_summary: {"all_time": {ccy: cad}, "this_year": {...},
+        "this_month": {...}} — see InterestJournal.get_period_summary."""
+        currencies = sorted(period_summary.get("all_time", {}).keys())
+        if not currencies:
+            return
+
+        lines = ["💰 *INTEREST INCOME*", ""]
+        labels = [("this_month", "This Month"), ("this_year", "This Year"), ("all_time", "All Time")]
+        for key, label in labels:
+            totals = period_summary.get(key, {})
+            lines.append(f"*{label}:*")
+            for currency in currencies:
+                amount = totals.get(currency, 0.0)
+                sign = "+" if amount >= 0 else "−"
+                lines.append(f"  `{currency}`  {sign}${abs(amount):,.2f}")
+            grand_total = sum(totals.values())
+            gsign = "+" if grand_total >= 0 else "−"
+            lines.append(f"  *Total: {gsign}${abs(grand_total):,.2f}*")
+            lines.append("")
+
+        lines.append(f"_{self._fmt_et(datetime.utcnow())}_")
+
+        await self._send("\n".join(lines), silent=True)
+
     # ------------------------------------------------------------------
     # Event Alerts
     # ------------------------------------------------------------------

@@ -9,6 +9,7 @@ from loguru import logger
 from sqlalchemy.exc import SQLAlchemyError
 
 from forex_bot.broker.client import IBClient
+from forex_bot.broker.flex_query import FlexQueryClient
 from forex_bot.broker.pricing import PricingService
 from forex_bot.calendar import actuals
 from forex_bot.calendar.export import export_calendar_json
@@ -20,6 +21,7 @@ from forex_bot.config import get_settings
 from forex_bot.broker.sweep import sweep_to_cad
 from forex_bot.data.database import init_db
 from forex_bot.data.dukascopy import download_new_event_data
+from forex_bot.data.interest_journal import InterestJournal
 from forex_bot.data.trade_journal import TradeJournal
 from forex_bot.data.turso_sync import TursoSyncer
 from forex_bot.execution.engine import ExecutionEngine
@@ -79,6 +81,13 @@ class Orchestrator:
             turso=self._turso,
             anomaly_detector=self._anomaly_detector,
             account_type=self._settings.broker.account_type,
+        )
+        self._interest_journal = InterestJournal()
+        flex_cfg = self._settings.flex_query
+        self._flex_client = (
+            FlexQueryClient(token=flex_cfg.token, query_id=flex_cfg.query_id)
+            if flex_cfg.enabled and flex_cfg.token and flex_cfg.query_id
+            else None
         )
         self._risk_manager = RiskManager(self._client, self._circuit_breaker, self._journal)
         self._execution_engine = ExecutionEngine(
@@ -409,7 +418,51 @@ class Orchestrator:
                 f"{rep_cfg.daily_pnl_snapshot_minute_utc:02d} UTC"
             )
 
+        # Daily real interest accrual fetch (IB Flex Query) + Telegram summary
+        flex_cfg = self._settings.flex_query
+        if flex_cfg.enabled and self._flex_client is not None:
+            self._scheduler.add_job(
+                self._fetch_interest_accruals,
+                CronTrigger(
+                    hour=flex_cfg.poll_start_hour_utc,
+                    minute=flex_cfg.poll_start_minute_utc,
+                    timezone="UTC",
+                ),
+                id="daily_interest_accrual",
+                replace_existing=True,
+            )
+            logger.info(
+                f"Daily interest accrual fetch scheduled: "
+                f"{flex_cfg.poll_start_hour_utc:02d}:"
+                f"{flex_cfg.poll_start_minute_utc:02d} UTC"
+            )
+
         logger.info("Recurring jobs scheduled")
+
+    async def _fetch_interest_accruals(self) -> None:
+        """Pull the "Interest Accruals" Flex Query report, upsert the daily
+        rows, and push exactly one Telegram summary. Never raises into the
+        scheduler — Flex Query infra is best-effort and outside the bot's
+        control.
+
+        The same fetch+upsert also serves as a self-healing backfill: the
+        query is configured for a 365-day window with Breakout by Day on, so
+        any gap (e.g. bot downtime) is picked up automatically on the next
+        run. See scripts/backfill_flex_interest.py for an on-demand run."""
+        if self._flex_client is None:
+            return
+        flex_cfg = self._settings.flex_query
+        try:
+            rows = await self._flex_client.fetch_interest_accruals(
+                max_attempts=flex_cfg.poll_max_attempts,
+                retry_interval_s=flex_cfg.poll_retry_interval_seconds,
+            )
+            await self._interest_journal.upsert_rows(rows)
+            summary = await self._interest_journal.get_period_summary()
+            await self._notifier.notify_interest_summary(summary)
+            logger.info(f"Interest accrual fetch complete: {len(rows)} row(s)")
+        except Exception as e:
+            logger.error(f"Interest accrual fetch failed: {e}")
 
     async def _send_pnl_snapshot(self) -> None:
         """Fetch account summary + open-position marks and push a P&L snapshot
