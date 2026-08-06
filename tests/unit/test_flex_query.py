@@ -34,6 +34,7 @@ _INTEREST_XML = """<FlexQueryResponse>
 <InterestAccrualsCurrency currency="USD" fromDate="2026-07-01" toDate="2026-07-01" interestAccrued="1.2345" startingAccrualBalance="0" endingAccrualBalance="1.2345" accrualReversal="0" />
 <InterestAccrualsCurrency currency="TRY" fromDate="2026-07-01" toDate="2026-07-01" interestAccrued="5.6789" startingAccrualBalance="0" endingAccrualBalance="5.6789" accrualReversal="0" />
 <InterestAccrualsCurrency currency="ZAR" fromDate="2026-07-01" toDate="2026-07-01" startingAccrualBalance="0" endingAccrualBalance="0" accrualReversal="0" />
+<InterestAccrualsCurrency currency="BASE_SUMMARY" fromDate="2026-07-01" toDate="2026-07-01" interestAccrued="6.9134" startingAccrualBalance="0" endingAccrualBalance="6.9134" accrualReversal="0" />
 </InterestAccruals>
 </FlexStatement>
 </FlexStatements>
@@ -96,6 +97,17 @@ async def test_parses_interest_accrued_field_and_date_format():
     assert usd.amount_cad == pytest.approx(1.2345)
     assert usd.from_date.isoformat() == "2026-07-01T00:00:00"
     assert usd.to_date.isoformat() == "2026-07-01T00:00:00"
+
+
+@pytest.mark.asyncio
+async def test_base_summary_pseudo_currency_is_excluded():
+    with patch(
+        "forex_bot.broker.flex_query.httpx.AsyncClient",
+        _mock_client_sequence(_SEND_SUCCESS, _INTEREST_XML),
+    ):
+        rows = await FlexQueryClient("t", "q").fetch_interest_accruals()
+
+    assert "BASE_SUMMARY" not in {r.currency for r in rows}
 
 
 @pytest.mark.asyncio
