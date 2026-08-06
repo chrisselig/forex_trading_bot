@@ -216,6 +216,26 @@ class ReportingConfig(BaseModel):
     daily_pnl_snapshot_minute_utc: int = Field(30, ge=0, le=59)
 
 
+class FlexQueryConfig(BaseModel):
+    # Pulls IB's real, broker-computed "Interest Accruals" Flex report daily.
+    # The Flex Query is configured in IBKR Account Management with Period=
+    # "Last 365 Calendar Days" and "Breakout by Day"=Yes, permanently — this
+    # client never overrides dates per-request. Because every fetch returns
+    # one row per currency per day across the whole window, upserting is
+    # idempotent and self-healing, so the same fetch+upsert operation serves
+    # both the daily job and one-off historical backfills. IB's activity data
+    # for a trading day typically isn't ready until early the following
+    # morning, so polling starts several hours after midnight ET and retries
+    # until the statement is ready.
+    enabled: bool = True
+    token: str = ""
+    query_id: str = ""
+    poll_start_hour_utc: int = Field(9, ge=0, le=23)  # ~3 AM MT / 5 AM ET
+    poll_start_minute_utc: int = Field(0, ge=0, le=59)
+    poll_retry_interval_seconds: int = Field(60, gt=0)
+    poll_max_attempts: int = Field(30, gt=0)
+
+
 class Settings(BaseSettings):
     broker: BrokerConfig = Field(default_factory=BrokerConfig)
     trading: TradingConfig = Field(default_factory=TradingConfig)
@@ -227,6 +247,7 @@ class Settings(BaseSettings):
     carry: CarryConfig = Field(default_factory=CarryConfig)
     value: ValueConfig = Field(default_factory=ValueConfig)
     reporting: ReportingConfig = Field(default_factory=ReportingConfig)
+    flex_query: FlexQueryConfig = Field(default_factory=FlexQueryConfig)
 
     fred_api_key: str = ""
     ib_host: str = ""
@@ -236,6 +257,8 @@ class Settings(BaseSettings):
     telegram_chat_id: str = ""
     turso_database_url: str = ""
     turso_auth_token: str = ""
+    ib_flex_token: str = ""
+    ib_flex_query_id: str = ""
 
     model_config = {"env_file": str(PROJECT_ROOT / ".env"), "env_file_encoding": "utf-8", "extra": "ignore"}
 
@@ -270,6 +293,10 @@ class Settings(BaseSettings):
             self.turso.database_url = self.turso_database_url
         if self.turso_auth_token:
             self.turso.auth_token = self.turso_auth_token
+        if self.ib_flex_token:
+            self.flex_query.token = self.ib_flex_token
+        if self.ib_flex_query_id:
+            self.flex_query.query_id = self.ib_flex_query_id
 
 
 def load_settings() -> Settings:

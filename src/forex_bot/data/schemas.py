@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from sqlalchemy import String, Float, Integer, DateTime, Text
+from sqlalchemy import String, Float, Integer, DateTime, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -92,3 +92,20 @@ class OrderRecord(Base):
     fill_price: Mapped[float | None] = mapped_column(Float, nullable=True)
     commission: Mapped[float | None] = mapped_column(Float, nullable=True)
     account_type: Mapped[str] = mapped_column(String(10), default="paper")
+
+
+class InterestAccrualRecord(Base):
+    """One currency's IB-computed interest accrual for one day, pulled from
+    the "Interest Accruals" Flex Query report (Breakout by Day: Yes). Real
+    broker-credited/charged interest, not a theoretical estimate — the
+    from_date/to_date pair is a single day per row."""
+
+    __tablename__ = "interest_accruals"
+    __table_args__ = (UniqueConstraint("currency", "from_date", "to_date", name="uq_interest_accrual_day"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    currency: Mapped[str] = mapped_column(String(10))
+    from_date: Mapped[datetime] = mapped_column(DateTime)
+    to_date: Mapped[datetime] = mapped_column(DateTime)
+    amount_cad: Mapped[float] = mapped_column(Float)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

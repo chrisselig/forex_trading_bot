@@ -121,3 +121,13 @@ reporting:
   daily_pnl_snapshot_enabled: true
   daily_pnl_snapshot_hour_utc: 21    # 3:30 PM MT — after NY session, back from work
   daily_pnl_snapshot_minute_utc: 30
+
+# Real, broker-computed interest income on carry positions (IB Flex Query
+# "Interest Accruals" report — Period="Last 365 Calendar Days", Breakout by
+# Day=Yes). Token/query ID come from .env (IB_FLEX_TOKEN, IB_FLEX_QUERY_ID).
+flex_query:
+  enabled: true
+  poll_start_hour_utc: 9      # ~3 AM MT / 5 AM ET
+  poll_start_minute_utc: 0
+  poll_retry_interval_seconds: 60
+  poll_max_attempts: 30
