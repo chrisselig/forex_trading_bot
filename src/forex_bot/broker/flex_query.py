@@ -21,6 +21,12 @@ _REQUEST_TIMEOUT_S = 30.0
 # The Flex Query in Account Management must have Date Format = "yyyy-MM-dd".
 _DATE_FORMAT = "%Y-%m-%d"
 
+# IB includes a synthetic "BASE_SUMMARY" row alongside the real per-currency
+# rows — it's just the sum of that day's other currency rows already
+# converted to the account base currency, not a real currency. Including it
+# would double-count when summing across currencies for a grand total.
+_SYNTHETIC_CURRENCIES = {"BASE_SUMMARY"}
+
 
 class FlexQueryClient:
     """Pulls the "Interest Accruals" Flex Query report configured in IBKR
@@ -93,6 +99,8 @@ def _parse_interest_accruals(xml_text: str) -> list[InterestAccrualRow]:
         to_date = el.get("toDate")
         amount = el.get("interestAccrued")
         if not currency or not from_date or not to_date or amount is None:
+            continue
+        if currency in _SYNTHETIC_CURRENCIES:
             continue
         try:
             rows.append(
