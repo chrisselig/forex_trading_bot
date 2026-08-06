@@ -37,12 +37,10 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 from monte_carlo_dukascopy import (  # noqa: E402
-    PIP_SIZES,
     bootstrap_metrics,
     load_dukascopy_data,
     simulate_straddle,
