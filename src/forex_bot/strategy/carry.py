@@ -44,6 +44,7 @@ FRED_RATE_SERIES: dict[str, str] = {
     # NZD immediate-rate series is stale (last obs 2024-12); the 3-month
     # interbank rate is the closest currently-updated proxy for the RBNZ OCR.
     "NZD": "IR3TIB01NZM156N",
+    "GBP": "IRSTCI01GBM156N",
 }
 
 
