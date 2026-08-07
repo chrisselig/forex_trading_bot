@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from forex_bot.broker.exceptions import DataError
 from forex_bot.broker.orders import OrderService
 from forex_bot.config import get_settings
 from forex_bot.execution.engine import ExecutionEngine
@@ -20,7 +21,11 @@ from forex_bot.models.orders import OrderSide, OrderType
 from forex_bot.strategy.signals import Signal
 
 
-def make_engine(available_funds: float, whatif_margin: float | None) -> ExecutionEngine:
+def make_engine(
+    available_funds: float,
+    whatif_margin: float | None,
+    quote_to_cad: float | Exception = 1.0,
+) -> ExecutionEngine:
     client = MagicMock()
     client.ensure_connected = AsyncMock()
     client.get_account_summary = AsyncMock(
@@ -38,6 +43,11 @@ def make_engine(available_funds: float, whatif_margin: float | None) -> Executio
     )
     engine._order_service = MagicMock()
     engine._order_service.whatif_init_margin = AsyncMock(return_value=whatif_margin)
+    engine._pricing_service = MagicMock()
+    if isinstance(quote_to_cad, Exception):
+        engine._pricing_service.get_quote_to_cad_rate = AsyncMock(side_effect=quote_to_cad)
+    else:
+        engine._pricing_service.get_quote_to_cad_rate = AsyncMock(return_value=quote_to_cad)
     return engine
 
 
@@ -93,10 +103,74 @@ async def test_over_cap_scales_quantity_down():
 
 
 @pytest.mark.asyncio
-async def test_whatif_unavailable_proceeds_unscaled():
-    # whatIf outage must not lose trades — IB's own check is the backstop
+async def test_whatif_unavailable_uses_conservative_margin_estimate():
+    # whatIf being explicitly unavailable (e.g. IB rejected the hypothetical
+    # order with Error 201) used to mean "proceed at full size" — that's
+    # exactly what let 2.5M-unit USDTRY orders reach IB and get rejected for
+    # real. Estimate notional from quantity * price * quote-to-CAD (the same
+    # conversion used elsewhere in this class) and scale down conservatively.
+    quote_to_cad = 0.030462  # ~ real USDCAD/USDTRY ratio
+    price = 47.04255
+    original_qty = 2_453_000
+    engine = make_engine(available_funds=4_900, whatif_margin=None, quote_to_cad=quote_to_cad)
+    signal = make_signal(quantity=original_qty)
+
+    error = await engine._apply_margin_cap(signal)
+
+    assert error is None
+    assert signal.quantity < original_qty
+    # USDTRY isn't in the majors list -> 30% conservative margin assumption
+    notional_cad = original_qty * price * quote_to_cad
+    margin_estimate = notional_cad * 0.30
+    cap = 4_900 * 0.25
+    expected = int(original_qty * (cap / margin_estimate) * 0.95)
+    assert signal.quantity == pytest.approx(expected, abs=1)
+
+
+@pytest.mark.asyncio
+async def test_whatif_unavailable_majors_use_lower_margin_estimate():
+    # Majors (EURUSD/USDJPY/USDCAD/GBPUSD) get a 2% estimate instead of 30%,
+    # so a much larger position is allowed to pass unscaled at the same
+    # available funds.
+    quote_to_cad = 0.7
+    price = 1.1
+    original_qty = 10_000
+    engine = make_engine(available_funds=100_000, whatif_margin=None, quote_to_cad=quote_to_cad)
+    signal = make_signal(quantity=original_qty)
+    signal.instrument = "EURUSD"
+
+    error = await engine._apply_margin_cap(signal)
+
+    assert error is None
+    notional_cad = original_qty * price * quote_to_cad
+    margin_estimate = notional_cad * 0.02
+    cap = 100_000 * 0.25
+    assert margin_estimate <= cap  # sanity: this scenario should fit unscaled
+    assert signal.quantity == original_qty
+
+
+@pytest.mark.asyncio
+async def test_whatif_and_quote_to_cad_both_unavailable_proceeds_unscaled():
+    # Total data outage (whatIf AND pricing both down) must still fall back
+    # to the original safety net — IB's own submission check is the backstop.
+    engine = make_engine(
+        available_funds=4_900, whatif_margin=None,
+        quote_to_cad=DataError("no market data"),
+    )
+    signal = make_signal(quantity=2_453_000)
+
+    error = await engine._apply_margin_cap(signal)
+
+    assert error is None
+    assert signal.quantity == 2_453_000
+
+
+@pytest.mark.asyncio
+async def test_whatif_unavailable_no_price_proceeds_unscaled():
+    # Can't estimate notional without a price — fail safe, not with an error.
     engine = make_engine(available_funds=4_900, whatif_margin=None)
     signal = make_signal(quantity=2_453_000)
+    signal.price = None
 
     error = await engine._apply_margin_cap(signal)
 
