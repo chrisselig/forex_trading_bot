@@ -72,6 +72,7 @@ nav:
     - operations/telegram-notifications.md
   - Analysis:
     - research/strategy-buildout-plan.md
+    - research/22-mc-majors-straddle.md
     - research/21-mc-carry-threshold.md
     - research/20-cot-crash-risk-filter.md
     - research/19-mc-esi.md
