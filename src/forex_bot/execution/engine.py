@@ -207,7 +207,8 @@ class ExecutionEngine:
         rejection reason when the order cannot fit at any size, else None.
         whatIf being unavailable is not a rejection — IB's own submission
         check remains the backstop, so a whatIf outage must not turn into
-        lost trades.
+        lost trades. However, when whatIf explicitly fails (e.g. Error 201),
+        use a conservative margin estimate rather than blindly proceeding.
         """
         max_pct = get_settings().risk.max_margin_pct_per_trade
         margin = await self._order_service.whatif_init_margin(
@@ -218,11 +219,19 @@ class ExecutionEngine:
             price=signal.price,
         )
         if margin is None:
+            # whatIf unavailable — use conservative margin assumption for exotic pairs
+            # Majors (EURUSD, USDJPY, USDCAD, GBPUSD) require ~2% margin
+            # Exotics (USDTRY, USDZAR, etc) require ~20-40% margin
+            # Use 30% as a safe assumption for exotics to avoid Error 201 rejections
+            is_major = signal.instrument in ["EURUSD", "USDJPY", "USDCAD", "GBPUSD"]
+            margin_pct_est = 0.02 if is_major else 0.30
+            notional_usd = signal.quantity * (1.0 / 10000) * 100  # Rough pip-value-to-notional conversion
+            margin = notional_usd * margin_pct_est
             logger.warning(
-                f"whatIf margin unavailable for {signal.instrument} — "
-                f"placing at risk-sized quantity {signal.quantity:,.0f}"
+                f"whatIf margin unavailable for {signal.instrument}; using "
+                f"conservative estimate {margin_pct_est*100:.0f}% margin = "
+                f"{margin:,.0f} CAD (actual may differ)"
             )
-            return None
         if margin <= 0:
             return None  # Order reduces or frees margin — no cap needed
 
