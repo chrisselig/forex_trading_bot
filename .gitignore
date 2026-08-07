@@ -19,7 +19,7 @@ ENV/
 
 # Data and databases
 /data/
-scripts/data/
+scripts/data
 *.db
 *.sqlite3
 
