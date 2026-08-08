@@ -1,0 +1,2984 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Event-driven forex trading bot for major US economic news releases">
+      
+      
+        <meta name="author" content="Chris Selig">
+      
+      
+      
+        <link rel="prev" href="../20-cot-crash-risk-filter/">
+      
+      
+        <link rel="next" href="../18-event-net-of-cost/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>19 — Economic Surprise Index (ESI) Directional Strategy - Forex Trading Bot</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#19-economic-surprise-index-esi-directional-strategy" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Forex Trading Bot" class="md-header__button md-logo" aria-label="Forex Trading Bot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Forex Trading Bot
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              19 — Economic Surprise Index (ESI) Directional Strategy
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/chrisselig/forex_trading_bot" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chrisselig/forex_trading_bot
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Forex Trading Bot" class="md-nav__button md-logo" aria-label="Forex Trading Bot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Forex Trading Bot
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/chrisselig/forex_trading_bot" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chrisselig/forex_trading_bot
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forex Trading
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Forex Trading
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forex Trading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/market-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/news-trading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Trading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/risk-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risk Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trading Strategies
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Trading Strategies
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trading Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/target-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Target Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/currency-pairs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Currency Pairs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/ib-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IB API Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/auto-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/process-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Process Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/hosting-options/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosting Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/telegram-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram Notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../strategy-buildout-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strategy Buildout Plan — Research Candidates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../23-mc-net-of-cost-slippage-commission/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    23 — Net-of-Cost with Commission + Slippage Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../22-mc-majors-straddle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report 22 — Majors-Pair Event-Straddle Feasibility Study
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../21-mc-carry-threshold/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — Carry Strategy Differential Threshold
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20-cot-crash-risk-filter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    COT Crash-Risk Filter on Carry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19 — Economic Surprise Index (ESI) Directional Strategy
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19 — Economic Surprise Index (ESI) Directional Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tldr-production-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TL;DR / Production recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Method">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-standardized-us-surprises-no-look-ahead" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Standardized US surprises (no look-ahead)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-index-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Index construction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Signals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-backtest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Backtest
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signal-variant-comparison-pooled-5-pair-portfolio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signal-variant comparison (pooled 5-pair portfolio)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-pair-results-base-spread-95-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-pair results (base spread, 95% CI)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#walk-forward-is-vs-oos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Walk-forward: IS vs OOS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#esi-vs-random-sign-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ESI vs random-sign control
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#carry-return-correlation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Carry-return correlation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#which-variants-clear-the-full-pass-bar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which variants clear the full pass bar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#production-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-event-net-of-cost/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    18 — Event-Strategy Net-of-Cost Audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-ambient-bracket/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17 — Ambient Bracket Strategy Analysis (USDZAR / USDTRY)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-mc-revalidation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16 — Full MC Re-validation on Timezone-Corrected Dukascopy Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-mc-surprise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Validation — Post-News Surprise Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-mc-value-ppp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — Value / PPP Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-mc-momentum/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — Currency Momentum Strategy (expanded pair universe)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-mc-remaining-us/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — Remaining US Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-mc-audusd-australia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — AUDUSD + Australian Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-mc-cad-pairs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — CAD Pair Exploration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-mc-gdp-pce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GDP &amp; PCE Monte Carlo Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-mc-ppi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PPI m/m Monte Carlo Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mc-eurusd-audusd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — EURUSD &amp; AUDUSD on US Events (Jan 2020 — Jun 2026)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-non-us-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — Non-US Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-event-type-split/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event-Type Split Analysis — NFP vs CPI vs FOMC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-monte-carlo-6yr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — January 2020 to June 2026
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-monte-carlo-18mo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — 1-Minute Data (Jan 2025 — Jun 2026)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-dukascopy-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dukascopy Historical Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-straddle-hourly/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Straddle Parameter Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../todo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tldr-production-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TL;DR / Production recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Method">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-standardized-us-surprises-no-look-ahead" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Standardized US surprises (no look-ahead)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-index-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Index construction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Signals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-backtest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Backtest
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signal-variant-comparison-pooled-5-pair-portfolio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signal-variant comparison (pooled 5-pair portfolio)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-pair-results-base-spread-95-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-pair results (base spread, 95% CI)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#walk-forward-is-vs-oos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Walk-forward: IS vs OOS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#esi-vs-random-sign-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ESI vs random-sign control
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#carry-return-correlation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Carry-return correlation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#which-variants-clear-the-full-pass-bar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which variants clear the full pass bar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#production-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="19-economic-surprise-index-esi-directional-strategy">19 — Economic Surprise Index (ESI) Directional Strategy<a class="headerlink" href="#19-economic-surprise-index-esi-directional-strategy" title="Permanent link">&para;</a></h1>
+<p><strong>Date</strong>: July 2026
+<strong>Status</strong>: DRAFT — pending user review. No <code>src/</code> or <code>config/</code> changes made.
+<strong>Spec</strong>: <code>docs/research/specs/19-economic-surprise-index-spec.md</code>
+<strong>Script</strong>: <code>scripts/mc_esi.py</code> (new)
+<strong>Data</strong>: <code>scripts/data/ff_history.csv</code> (US surprises, 2020-01 — 2026-06), daily
+close bars in <code>scripts/data/dukascopy/*_daily.csv</code> (already on disk, no fetch
+needed — all 5 pairs cover 2019-06 — 2026-07)</p>
+<hr />
+<h2 id="tldr-production-recommendation">TL;DR / Production recommendation<a class="headerlink" href="#tldr-production-recommendation" title="Permanent link">&para;</a></h2>
+<p><strong>Do not build this as a paper-trade strategy. Zero of 6 signal variants
+clear the pass bar, and the one variant that looked best on paper does not
+survive contact with a random-sign control.</strong></p>
+<ul>
+<li><strong>No variant's net bootstrap CI clears zero.</strong> All 6 (LEVEL × {10,20,40}
+  half-life, MOMENTUM × {10,20,40}) pooled-portfolio results have a 95%
+  bootstrap CI that spans zero at the base spread (1.5 pips). Best point
+  estimate: <strong>MOMENTUM, half-life 20</strong>, net ann. return <strong>+2.05%</strong>, CI
+  <strong>[−3.13%, +7.69%]</strong>, Sharpe 0.33 — a coin flip dressed up with a
+  positive sign.</li>
+<li><strong>Walk-forward kills it outright.</strong> Selecting the best variant on
+  training data (2020-2024) by CI-low still only finds a variant whose
+  <em>training</em> CI-low is <strong>negative</strong> (−3.4%) — there is no candidate in the
+  6-cell grid that even clears zero in-sample. Out-of-sample (2025-2026),
+  that selected variant (MOMENTUM/20) returns <strong>+0.05% annualized</strong>, CI
+  <strong>[−9.43%, +10.19%]</strong> — indistinguishable from zero, indistinguishable
+  from noise.</li>
+<li><strong>Does not clearly beat the random-sign control — the whole point of the
+  spec's Run-D-style discipline.</strong> A 10,000-path random-sign control with
+  the <em>same</em> flip rate (47.9%/week) and <em>same</em> cost model returns a mean
+  of −0.5% ann., CI [−5.6%, +4.8%]. The real ESI signal's point estimate
+  (+2.05%) sits at the <strong>83rd percentile</strong> of that random distribution —
+  better than most random paths, but its own CI-low (−3.13%) is <strong>well
+  inside</strong> the random control's CI-high (+4.8%). The two distributions
+  overlap substantially; this is not statistically distinguishable from
+  chance.</li>
+<li><strong>Underperforms simple buy-and-hold USD.</strong> Buy-and-hold long-USD (no
+  signal at all, same 5 pairs, one spread charge) returns +0.85% ann., CI
+  [−4.27%, +6.34%] — a similar, equally-inconclusive result to the "best"
+  ESI variant, for zero model complexity.</li>
+<li><strong>One flagged exception, explicitly not chased further:</strong> GBPUSD alone,
+  under MOMENTUM at half-life 10 and 20, has a CI that clears zero
+  (+7.27% [+0.14%, +15.02%] and +7.69% [+0.57%, +15.46%] respectively).
+  With 5 pairs × 6 variants = 30 per-pair cells tested, ~1–2 false
+  positives at the 95% level are expected by chance alone, and this
+  specific cell was <strong>not</strong> subjected to its own walk-forward or
+  random-sign control — per the "no parameter torture" instruction, it is
+  reported here as an observation, not investigated further, and <strong>not</strong>
+  a basis for enabling anything.</li>
+<li><strong>ESI vs carry-factor correlation is ~0 (+0.07, n=333 weeks)</strong> — not
+  meaningfully positive or negative. Moot: there is no standalone ESI
+  return to diversify the carry book with in the first place.</li>
+<li><strong>This is a clean negative, and the spec explicitly asked for intellectual
+  honesty over parameter torture.</strong> A US-only ESI, weekly-rebalanced,
+  net of one round-trip spread per turn, does not produce a directional
+  edge on any of EURUSD/GBPUSD/USDJPY/USDCAD/AUDUSD that survives its own
+  walk-forward or beats a matched random-sign control.</li>
+</ul>
+<hr />
+<h2 id="method">Method<a class="headerlink" href="#method" title="Permanent link">&para;</a></h2>
+<h3 id="1-standardized-us-surprises-no-look-ahead">1. Standardized US surprises (no look-ahead)<a class="headerlink" href="#1-standardized-us-surprises-no-look-ahead" title="Permanent link">&para;</a></h3>
+<p>Reuses the exact parsing and no-look-ahead z-score discipline from report 15
+(<code>scripts/mc_surprise.py</code>): for every US release in <code>ff_history.csv</code>
+(12 title types: NFP, CPI m/m, Core CPI m/m, PPI m/m, Federal Funds Rate,
+Advance/Prelim/Final GDP q/q, Core PCE Price Index m/m, ISM Manufacturing
+PMI, Retail Sales m/m, Unemployment Claims):</p>
+<ol>
+<li><code>diff = actual − forecast</code> in native units (K/M/B/% suffix parsing chain,
+   exact replication of <code>EconomicEvent.surprise_pct</code>'s parser).</li>
+<li><code>sigma</code> = trailing standard deviation of that release type's own prior
+   diffs (rolling window of the last 24 releases, minimum 8 priors before
+   any z-score is emitted — same window/minimum as report 15, chosen there
+   specifically to stop the 2020 COVID NFP/Claims outliers from poisoning
+   an expanding-window sigma forever).</li>
+<li><code>z = diff / sigma</code>. Sign is flipped for "unemployment/jobless/claims"
+   titles (lower-than-forecast claims = USD-positive), exact replication of
+   <code>surprise.py</code>'s <code>usd_direction()</code>.</li>
+<li>736 of 992 releases produce a standardized z (the rest are within the
+   8-prior warm-up window per title, or missing actual/forecast). Quarterly
+   GDP releases warm up over ~2 years; Federal Funds Rate rarely surprises
+   (only 1 of 53 decisions clears the rolling-sigma bar) — expected given
+   the Fed telegraphs decisions.</li>
+</ol>
+<h3 id="2-index-construction">2. Index construction<a class="headerlink" href="#2-index-construction" title="Permanent link">&para;</a></h3>
+<p><code>ESI(t) = ESI(t-1) · decay + Σ z_i</code> (sum of any releases landing on trading
+day t), <code>decay = 0.5^(1/half_life)</code>, half-life ∈ {10, 20, 40} trading days
+(Citi's own ESI uses ~1 month ≈ 20 trading days). Positive = US data beating
+expectations = USD-bullish. Computed over the full 2019-06 — 2026-07 daily
+trading calendar (weekdays only; the Dukascopy "Sunday" week-open
+micro-candle is excluded from the calendar to avoid double-counting the
+week's first session).</p>
+<h3 id="3-signals">3. Signals<a class="headerlink" href="#3-signals" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>LEVEL</strong>: long USD iff <code>ESI(t) &gt; 0</code>.</li>
+<li><strong>MOMENTUM</strong>: long USD iff <code>ESI(t) − ESI(t−1 rebalance week) &gt; 0</code>. The
+  1-week lookback is a fixed design choice (not swept — the spec warns
+  against parameter torture, and 6 variants is already the full grid the
+  spec asks for: 2 signal types × 3 half-lives).</li>
+<li>A threshold/dead-band variant (spec item (c), "cut churn") was <strong>not</strong>
+  swept as a third full grid dimension — same reasoning. As a single
+  robustness spot-check (MOMENTUM/hl=20, position held through any
+  week-over-week ESI change smaller than a 0.25 dead-band), turnover drops
+  from 24.8 to 22.0 turns/yr, but the result gets <strong>worse</strong>, not better:
+  ann. −1.31%, CI [−6.36%, +4.16%], Sharpe −0.16. The dead-band does not
+  rescue the signal; not pursued further.</li>
+</ul>
+<h3 id="4-backtest">4. Backtest<a class="headerlink" href="#4-backtest" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Pairs</strong>: EURUSD, GBPUSD, USDJPY, USDCAD, AUDUSD — 5-pair equal-weight
+  pooled portfolio, plus each pair reported individually.</li>
+<li><strong>Rebalance</strong>: weekly. Each ISO week's first available weekday (Monday,
+  or the next trading day if Monday is a holiday) is the rebalance day;
+  position decided from the ESI value known <strong>as of that day's close</strong>
+  (no look-ahead), held to next week's rebalance day's close.</li>
+<li><strong>Direction mapping</strong>: same <code>trade_side()</code> convention as report 15 — long
+  USD ⇒ BUY USDJPY/USDCAD (USD is base), SELL EURUSD/GBPUSD/AUDUSD (USD is
+  quote).</li>
+<li><strong>Cost</strong>: one round-trip major-pair spread charged <strong>only on a sign-flip
+  turn</strong> (no cost on a held position) — base 1.5 pips, stress 3.0 pips,
+  converted to a % cost via each pair's pip size and the entry-day price.</li>
+<li><strong>Backtest window</strong>: 2020-02-01 — 2026-07-01 (334 weeks), a one-month
+  buffer past the first US release so ESI isn't degenerate zero for the
+  very first weeks.</li>
+<li><strong>Walk-forward</strong>: train 2020-2024 (256 weeks), select the best of the 6
+  variants by training CI-low, test 2025-2026 (76 weeks) out-of-sample,
+  untouched.</li>
+<li><strong>Monte Carlo</strong>: 10,000× bootstrap of the weekly-return series, annualized
+  via geometric compounding <code>(∏(1+r))^(52/n) − 1</code>; 95% CI from bootstrap
+  percentiles; Sharpe and max drawdown from the actual (non-resampled) path.</li>
+<li><strong>Controls</strong>:
+  (a) buy-and-hold USD basket — always long USD, same 5 pairs, one spread
+  charge at entry, no further turns;
+  (b) random-sign control — 10,000 simulated sign paths matching the
+  selected variant's observed weekly flip rate (Markov chain: flip with
+  probability <code>p_flip</code> each week), applied to the <strong>same real weekly price
+  data</strong> and <strong>same cost model</strong>, to test whether the ESI signal contains
+  any surprise content beyond a matched-turnover coin flip.</li>
+<li><strong>v1 scope — US-ONLY.</strong> This deliberately ignores the foreign leg's own
+  surprise index (e.g. Eurozone data for EURUSD). US data alone drives the
+  "long/short USD" call; a v2 relative index (US ESI − foreign-leg ESI)
+  is explicitly out of scope here and would need non-US forecast/actual
+  history this project does not yet have.</li>
+</ul>
+<hr />
+<h2 id="signal-variant-comparison-pooled-5-pair-portfolio">Signal-variant comparison (pooled 5-pair portfolio)<a class="headerlink" href="#signal-variant-comparison-pooled-5-pair-portfolio" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Half-life</th>
+<th>Spread</th>
+<th>Ann. return</th>
+<th>95% CI</th>
+<th>Sharpe</th>
+<th>Max DD</th>
+<th>Turns/yr</th>
+<th>N weeks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LEVEL</td>
+<td>10</td>
+<td>base</td>
+<td>−1.02%</td>
+<td>[−6.13%, +4.34%]</td>
+<td>−0.12</td>
+<td>−24.1%</td>
+<td>10.4</td>
+<td>334</td>
+</tr>
+<tr>
+<td>LEVEL</td>
+<td>10</td>
+<td>stress</td>
+<td>−1.17%</td>
+<td>[−6.27%, +4.18%]</td>
+<td>−0.14</td>
+<td>−24.6%</td>
+<td>10.4</td>
+<td>334</td>
+</tr>
+<tr>
+<td>MOMENTUM</td>
+<td>10</td>
+<td>base</td>
+<td>+0.53%</td>
+<td>[−4.72%, +6.09%]</td>
+<td>+0.11</td>
+<td>−17.5%</td>
+<td>26.1</td>
+<td>333</td>
+</tr>
+<tr>
+<td>MOMENTUM</td>
+<td>10</td>
+<td>stress</td>
+<td>+0.17%</td>
+<td>[−5.06%, +5.70%]</td>
+<td>+0.06</td>
+<td>−18.1%</td>
+<td>26.1</td>
+<td>333</td>
+</tr>
+<tr>
+<td>LEVEL</td>
+<td>20</td>
+<td>base</td>
+<td>−0.31%</td>
+<td>[−5.47%, +5.12%]</td>
+<td>−0.01</td>
+<td>−22.8%</td>
+<td>8.6</td>
+<td>334</td>
+</tr>
+<tr>
+<td>LEVEL</td>
+<td>20</td>
+<td>stress</td>
+<td>−0.43%</td>
+<td>[−5.59%, +5.00%]</td>
+<td>−0.03</td>
+<td>−23.1%</td>
+<td>8.6</td>
+<td>334</td>
+</tr>
+<tr>
+<td><strong>MOMENTUM</strong></td>
+<td><strong>20</strong></td>
+<td><strong>base</strong></td>
+<td><strong>+2.05%</strong></td>
+<td><strong>[−3.13%, +7.69%]</strong></td>
+<td><strong>+0.33</strong></td>
+<td><strong>−14.5%</strong></td>
+<td>24.8</td>
+<td>333</td>
+</tr>
+<tr>
+<td>MOMENTUM</td>
+<td>20</td>
+<td>stress</td>
+<td>+1.70%</td>
+<td>[−3.47%, +7.31%]</td>
+<td>+0.28</td>
+<td>−15.1%</td>
+<td>24.8</td>
+<td>333</td>
+</tr>
+<tr>
+<td>LEVEL</td>
+<td>40</td>
+<td>base</td>
+<td>+0.25%</td>
+<td>[−4.98%, +5.56%]</td>
+<td>+0.07</td>
+<td>−22.6%</td>
+<td>3.6</td>
+<td>334</td>
+</tr>
+<tr>
+<td>LEVEL</td>
+<td>40</td>
+<td>stress</td>
+<td>+0.20%</td>
+<td>[−5.02%, +5.49%]</td>
+<td>+0.06</td>
+<td>−22.8%</td>
+<td>3.6</td>
+<td>334</td>
+</tr>
+<tr>
+<td>MOMENTUM</td>
+<td>40</td>
+<td>base</td>
+<td>−2.57%</td>
+<td>[−7.51%, +2.81%]</td>
+<td>−0.35</td>
+<td>−22.7%</td>
+<td>24.2</td>
+<td>333</td>
+</tr>
+<tr>
+<td>MOMENTUM</td>
+<td>40</td>
+<td>stress</td>
+<td>−2.90%</td>
+<td>[−7.82%, +2.45%]</td>
+<td>−0.40</td>
+<td>−24.0%</td>
+<td>24.2</td>
+<td>333</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Every single CI spans zero, at both spread levels.</strong> MOMENTUM/hl=20 is the
+best point estimate, but its own CI-low is negative. LEVEL is uniformly
+worse than MOMENTUM here — flat, then slowly-decaying US ESI level alone
+does not carry directional information at weekly horizons; only its
+week-over-week <em>change</em> shows any (statistically inconclusive) signal.</p>
+<hr />
+<h2 id="per-pair-results-base-spread-95-ci">Per-pair results (base spread, 95% CI)<a class="headerlink" href="#per-pair-results-base-spread-95-ci" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Half-life</th>
+<th>EURUSD</th>
+<th>GBPUSD</th>
+<th>USDJPY</th>
+<th>USDCAD</th>
+<th>AUDUSD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LEVEL</td>
+<td>10</td>
+<td>−0.17% [−5.84,+5.79]</td>
+<td>+0.29% [−6.47,+7.55]</td>
+<td>−1.41% [−8.18,+5.92]</td>
+<td>−2.01% [−6.54,+2.72]</td>
+<td>−2.43% [−9.69,+5.52]</td>
+</tr>
+<tr>
+<td>MOMENTUM</td>
+<td>10</td>
+<td>−1.07% [−6.68,+4.88]</td>
+<td><strong>+7.27% [+0.14,+15.02]</strong></td>
+<td>−2.78% [−9.46,+4.37]</td>
+<td>+0.07% [−4.53,+4.96]</td>
+<td>−1.17% [−8.71,+7.16]</td>
+</tr>
+<tr>
+<td>LEVEL</td>
+<td>20</td>
+<td>−0.55% [−6.18,+5.25]</td>
+<td>−1.00% [−7.81,+6.10]</td>
+<td>−0.66% [−7.47,+6.73]</td>
+<td>+0.14% [−4.45,+4.92]</td>
+<td>−0.12% [−7.63,+8.00]</td>
+</tr>
+<tr>
+<td>MOMENTUM</td>
+<td>20</td>
+<td>+0.20% [−5.46,+6.25]</td>
+<td><strong>+7.69% [+0.57,+15.46]</strong></td>
+<td>+1.00% [−5.94,+8.53]</td>
+<td>+1.44% [−3.21,+6.44]</td>
+<td>−0.53% [−8.11,+7.85]</td>
+</tr>
+<tr>
+<td>LEVEL</td>
+<td>40</td>
+<td>−0.75% [−6.41,+4.95]</td>
+<td>−0.53% [−7.28,+6.49]</td>
+<td>−0.79% [−7.76,+6.55]</td>
+<td>+1.04% [−3.65,+5.84]</td>
+<td>+1.66% [−6.15,+9.85]</td>
+</tr>
+<tr>
+<td>MOMENTUM</td>
+<td>40</td>
+<td>−3.27% [−8.68,+2.52]</td>
+<td>+0.76% [−5.97,+8.14]</td>
+<td>−4.07% [−10.68,+3.00]</td>
+<td>−1.03% [−5.55,+3.77]</td>
+<td>−5.73% [−12.88,+2.14]</td>
+</tr>
+</tbody>
+</table>
+<p>29 of 30 cells span zero. <strong>GBPUSD is the sole exception</strong>, in both
+MOMENTUM/hl=10 and MOMENTUM/hl=20, and is flagged in the TL;DR as a likely
+multiple-comparisons artifact (30 cells tested at 95% ⇒ ~1.5 false
+positives expected) — not walk-forward validated on its own, not chased
+further per the "no parameter torture" instruction.</p>
+<hr />
+<h2 id="walk-forward-is-vs-oos">Walk-forward: IS vs OOS<a class="headerlink" href="#walk-forward-is-vs-oos" title="Permanent link">&para;</a></h2>
+<p>Best variant selected on training data (2020-2024) by CI-low: <strong>MOMENTUM,
+half-life 20</strong> — and even that selection has a negative training CI-low,
+meaning there was no candidate in the 6-cell grid that cleared zero
+in-sample.</p>
+<table>
+<thead>
+<tr>
+<th>Period</th>
+<th>N weeks</th>
+<th>Ann. return</th>
+<th>95% CI</th>
+<th>Sharpe</th>
+<th>Max DD</th>
+<th>Win rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>In-sample (train, 2020-2024)</td>
+<td>256</td>
+<td>+2.49%</td>
+<td>[−3.40%, +9.20%]</td>
+<td>+0.38</td>
+<td>−10.7%</td>
+<td>51.2%</td>
+</tr>
+<tr>
+<td><strong>Out-of-sample (test, 2025-2026)</strong></td>
+<td>76</td>
+<td><strong>+0.05%</strong></td>
+<td><strong>[−9.43%, +10.19%]</strong></td>
+<td>+0.04</td>
+<td>−5.4%</td>
+<td>59.2%</td>
+</tr>
+</tbody>
+</table>
+<p>OOS is essentially flat with a CI more than twice as wide as the point
+estimate in either direction — no signal, no edge, consistent with the
+random-sign control result below.</p>
+<hr />
+<h2 id="esi-vs-random-sign-control">ESI vs random-sign control<a class="headerlink" href="#esi-vs-random-sign-control" title="Permanent link">&para;</a></h2>
+<p>The selected variant's observed weekly flip rate is 47.9% (essentially a
+coin flip — MOMENTUM's week-over-week sign changes are close to i.i.d.).
+A 10,000-path Markov-chain random-sign control was built with that exact
+flip rate, applied to the <strong>same real weekly price returns</strong> and <strong>same
+cost model</strong>:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Ann. return</th>
+<th>95% CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Selected ESI variant (MOMENTUM, hl=20, full window)</td>
+<td>+2.05%</td>
+<td>[−3.13%, +7.69%]</td>
+</tr>
+<tr>
+<td>Buy-and-hold USD (no signal)</td>
+<td>+0.85%</td>
+<td>[−4.27%, +6.34%]</td>
+</tr>
+<tr>
+<td>Random-sign control (mean of 10,000 paths, matched flip rate)</td>
+<td>−0.52%</td>
+<td>[−5.62%, +4.85%]</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>ESI's point estimate sits at the <strong>83rd percentile</strong> of the random-sign
+  distribution — better than most random paths, but not decisively so.</li>
+<li><strong>The CIs do not separate.</strong> ESI's own CI-low (−3.13%) is well inside the
+  random control's CI-high (+4.85%). A signal with genuine surprise content
+  should push its CI-low above the random control's CI-high; this one
+  doesn't come close.</li>
+<li><strong>Verdict: does not clear the spec's explicit bar</strong> ("ESI must beat the
+  random control, or it's just capturing USD trend, not surprise content").
+  It is, at best, statistically indistinguishable from a matched-turnover
+  coin flip.</li>
+</ul>
+<hr />
+<h2 id="carry-return-correlation">Carry-return correlation<a class="headerlink" href="#carry-return-correlation" title="Permanent link">&para;</a></h2>
+<p>Using the same rate-differential carry-factor proxy methodology as
+<code>scripts/mc_value.py</code> (long the higher 3-month-rate currency, equal weight,
+same 5 pairs, FRED short-rate series), resampled to the ESI's weekly
+rebalance calendar:</p>
+<p><strong>correlation = +0.07 (n = 333 weeks).</strong></p>
+<p>Essentially zero — neither a meaningful diversifier nor a duplicate of the
+carry book. Moot in practice: there is no standalone ESI return worth
+adding to a book in the first place (see above), so the diversification
+question doesn't change the recommendation.</p>
+<hr />
+<h2 id="which-variants-clear-the-full-pass-bar">Which variants clear the full pass bar<a class="headerlink" href="#which-variants-clear-the-full-pass-bar" title="Permanent link">&para;</a></h2>
+<p><strong>Pass bar</strong> (all four required): (1) net 95% bootstrap CI-low &gt; 0 at base
+spread (1.5 pips); (2) survives stress spread (3.0 pips) with CI-low still</p>
+<blockquote>
+<p>0; (3) walk-forward OOS (2025-2026) point estimate &gt; 0, ideally with
+CI-low &gt; 0 too; (4) CI-low clears the random-sign control's CI-high (clean
+statistical separation from a matched-turnover coin flip).</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>(1) Base CI&gt;0</th>
+<th>(2) Stress CI&gt;0</th>
+<th>(3) OOS&gt;0</th>
+<th>(4) Beats random control</th>
+<th>Overall</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LEVEL, hl=10</td>
+<td>FAIL</td>
+<td>FAIL</td>
+<td>not tested (not selected)</td>
+<td>not tested</td>
+<td><strong>FAIL</strong></td>
+</tr>
+<tr>
+<td>LEVEL, hl=20</td>
+<td>FAIL</td>
+<td>FAIL</td>
+<td>not tested (not selected)</td>
+<td>not tested</td>
+<td><strong>FAIL</strong></td>
+</tr>
+<tr>
+<td>LEVEL, hl=40</td>
+<td>FAIL</td>
+<td>FAIL</td>
+<td>not tested (not selected)</td>
+<td>not tested</td>
+<td><strong>FAIL</strong></td>
+</tr>
+<tr>
+<td>MOMENTUM, hl=10</td>
+<td>FAIL</td>
+<td>FAIL</td>
+<td>not tested (not selected)</td>
+<td>not tested</td>
+<td><strong>FAIL</strong></td>
+</tr>
+<tr>
+<td><strong>MOMENTUM, hl=20</strong> (walk-forward winner)</td>
+<td>FAIL</td>
+<td>FAIL</td>
+<td>FAIL (+0.05% but CI spans zero)</td>
+<td>FAIL (CIs overlap)</td>
+<td><strong>FAIL</strong></td>
+</tr>
+<tr>
+<td>MOMENTUM, hl=40</td>
+<td>FAIL</td>
+<td>FAIL</td>
+<td>not tested (not selected)</td>
+<td>not tested</td>
+<td><strong>FAIL</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>0 of 6 variants pass. 0 of 6 even clear criterion (1) alone.</strong></p>
+<hr />
+<h2 id="production-recommendation">Production recommendation<a class="headerlink" href="#production-recommendation" title="Permanent link">&para;</a></h2>
+<p><strong>Do not build a paper-trade strategy from this.</strong> Every one of the four
+pass-bar criteria fails for the walk-forward-selected variant, and no other
+variant does any better. This is not "close but needs tuning" — the
+in-sample training CI-low is negative for the <em>best</em> of all 6 candidates,
+before OOS or the random-sign control are even applied. Two additional
+findings reinforce the negative:</p>
+<ul>
+<li>The strategy underperforms doing nothing more sophisticated than
+  buying and holding USD against the same 5-pair basket.</li>
+<li>Its best-looking result is statistically indistinguishable from a
+  random-sign control with matched turnover — i.e., what edge exists in
+  the point estimate is well within the range chance alone would produce.</li>
+</ul>
+<p><strong>Needs foreign ESI data before this idea is worth revisiting.</strong> The spec
+flagged this as the key v1 simplification: a US-only index can only ever
+capture half of a cross-pair's fundamental picture. A v2 relative index
+(US ESI − EUR/GBP/JPY/CAD/AUD-leg ESI, built from each currency's own
+forecast/actual history) is the natural next step <em>if</em> that data becomes
+available — but given how weak even the US-only signal is here, there is no
+strong prior that adding a symmetric foreign leg would flip this from
+"noise" to "edge." Do not prioritize sourcing that data on the strength of
+this result alone.</p>
+<p>One loose thread, explicitly not investigated further per the "no parameter
+torture" instruction: GBPUSD alone shows a CI that clears zero under
+MOMENTUM at two of three half-lives. This is far more likely to be a
+multiple-comparisons artifact (1–2 false positives expected across the 30
+per-pair cells tested) than a real GBP-specific effect, and was not given
+its own walk-forward or random-sign control. If it recurs in a future,
+independently-designed test, it would be worth a dedicated look — it is not
+grounds for any action here.</p>
+<hr />
+<h2 id="caveats">Caveats<a class="headerlink" href="#caveats" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>US-only v1.</strong> No foreign-leg surprise data; the ESI is entirely a
+  "how is the US economy doing vs expectations" signal, applied uniformly
+  across 5 different USD crosses. This is the single biggest simplification
+  and the most obvious place a real signal could be hiding but isn't
+  visible here.</li>
+<li><strong>Quarterly/infrequent release types warm up slowly.</strong> GDP (quarterly)
+  needs ~2 years of releases before contributing a standardized z; Federal
+  Funds Rate essentially never surprises against its own rolling sigma (1
+  of 53 decisions). The ESI is effectively dominated by the
+  higher-frequency release types (Unemployment Claims, CPI, ISM, Retail
+  Sales, NFP).</li>
+<li><strong>MOMENTUM lookback (1 week) and threshold/dead-band were fixed design
+  choices, not swept as full grid dimensions</strong> — deliberately, to avoid
+  turning a clean negative into an overfit "pass" by adding more knobs. A
+  single dead-band spot-check (0.25 dead-band on the ESI level) reduced
+  turnover from 24.8 to 22.0 turns/yr but made the point estimate <em>worse</em>
+  (ann. −1.31%, CI [−6.36%, +4.16%]) — the verdict does not change.</li>
+<li><strong>Daily close-only price data</strong> (Dukascopy bid close), not intraday —
+  appropriate for a weekly-rebalance strategy, but means weekly returns use
+  a single close print per side, not a VWAP or intraday-average execution
+  price.</li>
+<li><strong>Cost model is the same flat "one round-trip major spread" for all 5
+  pairs</strong> (1.5 / 3.0 pips), not the wider event-time or exotic-pair spread
+  tables used in reports 15-18 — appropriate since this is a slow,
+  low-frequency directional strategy on liquid majors, per the spec's own
+  reasoning for why this is "a different animal" from the straddle/event
+  scalping strategies that those spread tables were built for.</li>
+<li><strong>Carry-factor proxy is a rate-differential toy factor</strong> (same
+  methodology as <code>scripts/mc_value.py</code>), not the actual production
+  <code>CarryStrategy</code> P&amp;L (which trades a dynamically-scored universe, not a
+  fixed 5-pair majors basket) — used only as a rough diversification
+  sanity check, consistent with how report 14 used the same proxy for the
+  value-vs-carry comparison.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../20-cot-crash-risk-filter/" class="md-footer__link md-footer__link--prev" aria-label="Previous: COT Crash-Risk Filter on Carry">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                COT Crash-Risk Filter on Carry
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../18-event-net-of-cost/" class="md-footer__link md-footer__link--next" aria-label="Next: 18 — Event-Strategy Net-of-Cost Audit">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                18 — Event-Strategy Net-of-Cost Audit
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "content.code.copy", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
