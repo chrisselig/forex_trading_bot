@@ -207,7 +207,8 @@ class ExecutionEngine:
         rejection reason when the order cannot fit at any size, else None.
         whatIf being unavailable is not a rejection — IB's own submission
         check remains the backstop, so a whatIf outage must not turn into
-        lost trades.
+        lost trades. However, when whatIf explicitly fails (e.g. Error 201),
+        use a conservative margin estimate rather than blindly proceeding.
         """
         max_pct = get_settings().risk.max_margin_pct_per_trade
         margin = await self._order_service.whatif_init_margin(
@@ -218,11 +219,43 @@ class ExecutionEngine:
             price=signal.price,
         )
         if margin is None:
+            # whatIf unavailable — use conservative margin assumption for exotic pairs
+            # Majors (EURUSD, USDJPY, USDCAD, GBPUSD) require ~2% margin
+            # Exotics (USDTRY, USDZAR, etc) require ~20-40% margin
+            # Use 30% as a safe assumption for exotics to avoid Error 201 rejections
+            is_major = signal.instrument in ["EURUSD", "USDJPY", "USDCAD", "GBPUSD"]
+            margin_pct_est = 0.02 if is_major else 0.30
+            if signal.price is None:
+                logger.warning(
+                    f"whatIf margin unavailable for {signal.instrument} and no "
+                    f"price to estimate notional — placing at risk-sized "
+                    f"quantity {signal.quantity:,.0f}"
+                )
+                return None
+            try:
+                # signal.quantity is units of the base currency; quantity *
+                # price converts to quote-currency notional, then the same
+                # quote->CAD helper used elsewhere in this class converts
+                # that to CAD (handles USD-quote, CAD-quote, and cross pairs
+                # like USDTRY/GBPJPY consistently).
+                quote_to_cad = await self._pricing_service.get_quote_to_cad_rate(
+                    signal.instrument
+                )
+                notional_cad = signal.quantity * signal.price * quote_to_cad
+            except DataError as e:
+                logger.warning(
+                    f"whatIf margin unavailable for {signal.instrument} and "
+                    f"quote-to-CAD rate unavailable ({e}) — placing at "
+                    f"risk-sized quantity {signal.quantity:,.0f}"
+                )
+                return None
+            margin = notional_cad * margin_pct_est
             logger.warning(
-                f"whatIf margin unavailable for {signal.instrument} — "
-                f"placing at risk-sized quantity {signal.quantity:,.0f}"
+                f"whatIf margin unavailable for {signal.instrument}; using "
+                f"conservative estimate {margin_pct_est*100:.0f}% margin on "
+                f"~{notional_cad:,.0f} CAD notional = {margin:,.0f} CAD "
+                f"(actual may differ)"
             )
-            return None
         if margin <= 0:
             return None  # Order reduces or frees margin — no cap needed
 
