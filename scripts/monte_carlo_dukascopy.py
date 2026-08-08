@@ -57,7 +57,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 RESULTS_FILE = DATA_DIR / "optimization_results_1min.json"
 REPORT_FILE = DATA_DIR / "STRADDLE_OPTIMIZATION_REPORT_1MIN.md"
 
-PAIRS = ["GBPUSD", "USDCAD", "GBPJPY", "USDZAR", "USDTRY", "EURUSD", "AUDUSD"]
+PAIRS = ["GBPUSD", "USDCAD", "GBPJPY", "USDZAR", "USDTRY", "EURUSD", "AUDUSD", "USDJPY"]
 
 PIP_SIZES = {
     "EURUSD": 0.0001, "GBPUSD": 0.0001, "USDCAD": 0.0001,
@@ -67,9 +67,14 @@ PIP_SIZES = {
 }
 
 # Typical event-time half-spread in pips (conservative estimates)
+# NOTE (report 22): USDJPY was previously missing an explicit entry here
+# (it silently used the EVENT_SPREAD_PIPS.get(pair, 2.0) fallback of 2.0
+# pips, which happens to be a reasonable majors-pair estimate, but was
+# undocumented and easy to mistake for a bug). PIP_SIZES already had the
+# correct 0.01 entry for USDJPY. Added an explicit entry for clarity.
 EVENT_SPREAD_PIPS = {
     "EURUSD": 1.5, "GBPUSD": 2.0, "USDCAD": 2.5, "AUDUSD": 2.0,
-    "GBPJPY": 4.0,
+    "GBPJPY": 4.0, "USDJPY": 2.0,
     "USDZAR": 25.0, "USDTRY": 30.0,
 }
 
