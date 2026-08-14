@@ -55,6 +55,7 @@ def status():
             # ib.portfolio() — it settles as currency cash-balance changes,
             # not a broker "position" — so it's tracked and priced separately.
             carry_pnl = []
+            carry_unpriced = 0
             if get_settings().carry.enabled:
                 await init_db()
                 journal = TradeJournal()
@@ -66,6 +67,7 @@ def status():
                 carry_manager = CarryManager(client, engine, journal, pricing, monitor)
                 await carry_manager.restore_state()
                 carry_pnl = await carry_manager.get_open_positions_pnl()
+                carry_unpriced = carry_manager.get_position_count() - len(carry_pnl)
 
             dashboard.show_account(summary)
 
@@ -83,8 +85,15 @@ def status():
                         f"@ {avg_cost:.5g}  "
                         f"[{color}]{pnl:+,.2f}[/{color}]"
                     )
-            else:
+            elif not carry_unpriced:
                 console.print("\n[dim]No open positions[/dim]")
+
+            if carry_unpriced:
+                console.print(
+                    f"\n[yellow]Warning: {carry_unpriced} carry position(s) "
+                    f"held but price unavailable (market data error) — "
+                    f"check TWS, do not read this as flat[/yellow]"
+                )
 
     asyncio.run(_status())
 

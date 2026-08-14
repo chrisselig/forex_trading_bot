@@ -169,6 +169,13 @@ class CarryManager:
             )
         return out
 
+    def get_position_count(self) -> int:
+        """Count of tracked carry positions regardless of live-price
+        availability — lets callers detect when get_open_positions_pnl()
+        silently dropped a held position it couldn't price (e.g. a market
+        data outage), instead of that position just vanishing from reports."""
+        return len(self._positions)
+
     def get_active_currencies(self) -> set[str]:
         """Return currencies held by carry positions (for sweep exclusion)."""
         currencies: set[str] = set()

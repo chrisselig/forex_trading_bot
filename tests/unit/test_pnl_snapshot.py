@@ -133,6 +133,43 @@ async def test_snapshot_no_carry_positions_defaults_empty(notifier):
 
 
 @pytest.mark.asyncio
+async def test_snapshot_all_carry_unpriced_does_not_claim_flat(notifier):
+    """2026-08-14: all 4 carry positions failed market data at once and
+    get_open_positions_pnl() returned []. The snapshot must not say 'No
+    open positions' in that case — it must say positions exist but
+    couldn't be priced."""
+    account = AccountSummary(net_liquidation=4952.87, unrealized_pnl=0.0)
+
+    await notifier.notify_pnl_snapshot(account, [], carry_positions=[], carry_unpriced=4)
+
+    text = notifier._send.call_args[0][0]
+    assert "No open positions" not in text
+    assert "4 carry position(s) held but price unavailable" in text
+
+
+@pytest.mark.asyncio
+async def test_snapshot_partial_carry_unpriced_shows_both(notifier):
+    """Some carry legs price fine, others don't — show the priced rows
+    plus a warning about the ones that are missing, not just one or the
+    other."""
+    account = AccountSummary(net_liquidation=4952.87, unrealized_pnl=0.0)
+    carry = [
+        CarryPositionPnl(
+            instrument="USDTRY", side="SELL", quantity=990,
+            entry_price=46.82081, current_price=47.52, unrealized_pnl_cad=-20.5,
+        ),
+    ]
+
+    await notifier.notify_pnl_snapshot(account, [], carry_positions=carry, carry_unpriced=3)
+
+    text = notifier._send.call_args[0][0]
+    assert "Open positions (1)" in text
+    assert "USDTRY" in text
+    assert "3 carry position(s) held but price unavailable" in text
+    assert "No open positions" not in text
+
+
+@pytest.mark.asyncio
 async def test_interest_summary_breaks_out_by_period_and_currency(notifier):
     summary = {
         "all_time": {"USD": 12.0, "TRY": 113.0},

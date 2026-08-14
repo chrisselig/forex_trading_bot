@@ -514,6 +514,7 @@ class TelegramNotifier:
         account: AccountSummary,
         positions: list[PortfolioPosition],
         carry_positions: list[CarryPositionPnl] | None = None,
+        carry_unpriced: int = 0,
     ) -> None:
         """Position-centric daily snapshot: 'am I up or down right now', with a
         per-pair breakdown. Answers the question the closed-trade performance
@@ -525,7 +526,13 @@ class TelegramNotifier:
         cash-balance changes, not a "position". carry_positions carries
         marked-to-market P&L computed separately (CarryManager.
         get_open_positions_pnl) and is added to IB's account-level total,
-        which otherwise silently reports $0 for the entire carry book."""
+        which otherwise silently reports $0 for the entire carry book.
+
+        carry_unpriced: count of held carry positions get_open_positions_pnl
+        couldn't price this run (e.g. a market data outage) and silently
+        dropped. Surfaced as a warning rather than letting a real position
+        vanish from the report and read as "no open positions" — that
+        happened 2026-08-14 when all 4 carry pairs failed pricing at once."""
         carry_positions = carry_positions or []
         carry_total = sum(p.unrealized_pnl_cad for p in carry_positions)
         u = account.unrealized_pnl + carry_total
@@ -559,9 +566,17 @@ class TelegramNotifier:
                     f"{dot} `{instrument}` {side} {quantity:,.0f}  "
                     f"`{psign}${abs(pnl):,.2f}`"
                 )
-        else:
+        elif not carry_unpriced:
             lines.append("")
             lines.append("_No open positions._")
+
+        if carry_unpriced:
+            lines.append("")
+            lines.append(
+                f"⚠️ *{carry_unpriced} carry position(s) held but price "
+                f"unavailable* (market data error) — check TWS, do not read "
+                f"this as flat."
+            )
 
         lines.append("")
         lines.append(f"_{self._fmt_et(datetime.utcnow())}_")
