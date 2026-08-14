@@ -588,6 +588,44 @@ class TestGetOpenPositionsPnl:
 
         assert out == []
 
+    @pytest.mark.asyncio
+    async def test_pricing_failure_position_still_counted(self, carry_manager):
+        """2026-08-14: all 4 carry pairs failed pricing at once and
+        get_open_positions_pnl() returned [], which the P&L snapshot read
+        as 'no open positions' though 4 real positions were held.
+        get_position_count() must still see the position so callers can
+        detect and report the gap instead of it silently vanishing."""
+        carry_manager._positions["USDTRY"] = CarryPosition(
+            pair="USDTRY", side=OrderSide.BUY, entry_price=46.0,
+            quantity=990, stop_loss=44.0, ib_order_id=56,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._pricing.get_snapshot = AsyncMock(side_effect=DataError("no quote"))
+
+        out = await carry_manager.get_open_positions_pnl()
+
+        assert out == []
+        assert carry_manager.get_position_count() == 1
+
+
+class TestGetPositionCount:
+    def test_no_positions(self, carry_manager):
+        assert carry_manager.get_position_count() == 0
+
+    def test_counts_all_tracked_positions_regardless_of_pricing(self, carry_manager):
+        carry_manager._positions["USDTRY"] = CarryPosition(
+            pair="USDTRY", side=OrderSide.BUY, entry_price=46.0,
+            quantity=990, stop_loss=44.0, ib_order_id=56,
+            opened_at=datetime.now(UTC),
+        )
+        carry_manager._positions["AUDJPY"] = CarryPosition(
+            pair="AUDJPY", side=OrderSide.SELL, entry_price=112.0,
+            quantity=3315, stop_loss=118.0, ib_order_id=57,
+            opened_at=datetime.now(UTC),
+        )
+
+        assert carry_manager.get_position_count() == 2
+
 
 class TestCotCrowdingFilter:
     """Blocks a candidate carry entry when leveraged funds are already

@@ -484,12 +484,25 @@ class Orchestrator:
                 if self._carry_manager
                 else []
             )
-            await self._notifier.notify_pnl_snapshot(account, positions, carry_positions)
+            carry_unpriced = (
+                self._carry_manager.get_position_count() - len(carry_positions)
+                if self._carry_manager
+                else 0
+            )
+            if carry_unpriced:
+                logger.warning(
+                    f"P&L snapshot: {carry_unpriced} carry position(s) held "
+                    f"but could not be priced this run"
+                )
+            await self._notifier.notify_pnl_snapshot(
+                account, positions, carry_positions, carry_unpriced
+            )
             carry_total = sum(p.unrealized_pnl_cad for p in carry_positions)
             logger.info(
                 f"P&L snapshot sent: NLV=${account.net_liquidation:,.2f} "
                 f"unrealized=${account.unrealized_pnl + carry_total:,.2f} "
-                f"positions={len(positions)} carry_positions={len(carry_positions)}"
+                f"positions={len(positions)} carry_positions={len(carry_positions)} "
+                f"carry_unpriced={carry_unpriced}"
             )
         except Exception as e:
             logger.error(f"P&L snapshot failed: {e}")
