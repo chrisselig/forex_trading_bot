@@ -337,6 +337,27 @@ class OrderService:
         logger.info(f"Cancelling order {ib_trade.order.orderId}")
         self.ib.cancelOrder(ib_trade.order)
 
+    async def cancel_order_by_id(self, ib_order_id: int) -> None:
+        """Cancel an order by its IB order ID alone (no IBTrade handle in hand).
+
+        Used to roll back a straddle leg orphaned by its sibling leg's
+        rejection. A no-op (logged) if the order is no longer open — it may
+        have already filled or been cancelled, e.g. by IB itself when a
+        rejected parent's TP/SL children auto-cancel.
+        """
+        await self._client.ensure_connected()
+        trade = next(
+            (t for t in self.ib.openTrades() if t.order.orderId == ib_order_id), None
+        )
+        if trade is None:
+            logger.warning(
+                f"Cannot cancel order #{ib_order_id}: not found in open trades "
+                f"(already filled or cancelled)"
+            )
+            return
+        logger.info(f"Cancelling order {ib_order_id}")
+        self.ib.cancelOrder(trade.order)
+
     async def cancel_all_orders(self) -> None:
         """Cancel all open orders."""
         await self._client.ensure_connected()

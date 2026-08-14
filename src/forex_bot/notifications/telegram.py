@@ -353,6 +353,34 @@ class TelegramNotifier:
 
         await self._send("\n".join(lines), critical=True)
 
+    async def notify_straddle_rollback(
+        self,
+        instrument: str,
+        cancelled_orders: list[str],
+        event: EconomicEvent | None = None,
+    ) -> None:
+        """Notify when a straddle leg failed to place and its already-placed
+        sibling leg(s) were cancelled to avoid a naked, unhedged position."""
+        lines = [
+            "*STRADDLE ROLLED BACK*",
+            "",
+            f"*{instrument}* — a leg failed to place; cancelled the sibling "
+            f"leg(s) below to avoid an unhedged position.",
+            "",
+            "Cancelled:",
+        ]
+        for o in cancelled_orders:
+            lines.append(f"  - {o}")
+
+        if event:
+            lines.append("")
+            lines.append(f"Event: {event.title} ({self._fmt_et(event.scheduled_at)})")
+
+        lines.append("")
+        lines.append(f"_{self._fmt_et(datetime.utcnow())}_")
+
+        await self._send("\n".join(lines), critical=True)
+
     async def notify_circuit_breaker(self, circuit_breaker: CircuitBreaker) -> None:
         """Notify on circuit breaker state change (COOLDOWN or HALTED)."""
         state = circuit_breaker.state

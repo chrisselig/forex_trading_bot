@@ -289,10 +289,33 @@ class ExecutionEngine:
     async def execute_signals(
         self, signals: list[Signal], event: EconomicEvent | None = None
     ) -> list[Order]:
-        """Execute multiple signals sequentially."""
-        orders = []
+        """Execute multiple signals sequentially.
+
+        A straddle's validated edge assumes both legs are live — a lone
+        surviving leg is an un-hedged directional bet outside the MC-backed
+        strategy (e.g. one leg rejected by IB as an odd-lot order while its
+        sibling was accepted, seen 2026-08-14). If any signal fails to
+        place, cancel whichever sibling legs already went through and skip
+        the rest, rather than leave a naked position hunting for a fill.
+        """
+        orders: list[Order] = []
         for signal in signals:
             order = await self.execute_signal(signal, event=event)
-            if order:
-                orders.append(order)
+            if order is None:
+                if orders:
+                    logger.warning(
+                        f"Signal for {signal.instrument} failed to place — "
+                        f"rolling back {len(orders)} already-placed sibling "
+                        f"order(s) to avoid a naked position"
+                    )
+                    for placed in orders:
+                        await self._order_service.cancel_order_by_id(placed.ib_order_id)
+                    if self._notifier:
+                        await self._notifier.notify_straddle_rollback(
+                            signal.instrument,
+                            [f"{o.side} {o.quantity} {o.instrument}" for o in orders],
+                            event,
+                        )
+                return []
+            orders.append(order)
         return orders
