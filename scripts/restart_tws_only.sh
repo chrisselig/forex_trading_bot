@@ -81,5 +81,26 @@ log "TWS API is listening on port $API_PORT (took ${elapsed}s)"
 log "Waiting 15s for TWS to finish initializing..."
 sleep 15
 
+# --- Dismiss stray popups IBC has no handler for ---
+# "Announcements" and "Loading..." are separate top-level windows (an
+# IBKR news panel + its content spinner) that appear after login but
+# don't match any of IBC's built-in dialog regexes, so IBC never closes
+# them — they're cosmetic and don't block the API, but sit open forever.
+# Checked across a few seconds since they can appear a beat after the
+# main Login Messages dialog closes.
+if command -v xdotool &>/dev/null; then
+    for _ in 1 2 3; do
+        for title in "Announcements" "Loading\.\.\."; do
+            for wid in $(DISPLAY="$DISPLAY" xdotool search --name "^${title}$" 2>/dev/null || true); do
+                DISPLAY="$DISPLAY" xdotool windowclose "$wid" 2>/dev/null \
+                    && log "Dismissed stray TWS popup: $title ($wid)"
+            done
+        done
+        sleep 3
+    done
+else
+    log "xdotool not installed — skipping stray popup cleanup"
+fi
+
 log "TWS restart complete."
 exit 0
