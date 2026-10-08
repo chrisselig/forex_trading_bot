@@ -5,17 +5,20 @@ broker:
   timeout: 30
 
 trading:
-  instruments:
-    - USDTRY
+  instruments: []
     # USDZAR removed 2026-07-30 — report 18 (net-of-cost audit): the event
     #   straddle's gross edge (+16.5 pips) is smaller than the real IDEALPRO
     #   round-trip spread (~24 pips), so all 8 USDZAR event sources are net
     #   losers (pooled net -7.49 [-9.78,-5.12], OOS worse). Robust to the thin
     #   spread sample. NOTE: USDZAR is still traded by the CARRY book (separate
     #   carry.instruments) — this only disables the USDZAR event straddle.
-    # USDTRY kept pending real multi-session IDEALPRO spread data — report 18
-    #   verdict is a coin flip (net -1.17 [-2.97,+0.65]) that hinges on whether
-    #   the true spread is ~6 or ~12 pips; sample_ib_spreads.py is collecting it.
+    # USDTRY removed 2026-10-08 — report 23 (net-of-cost audit w/ real
+    #   commission+slippage) decisively flipped USDTRY's coin-flip to FAIL:
+    #   net -8.27 pips/trade, CI [-14.57,-1.97], ≈ -$20,716/yr. Was left
+    #   enabled pending user decision (per todo.md) and kept firing live
+    #   straddle orders in the meantime. NOTE: USDTRY is still traded by the
+    #   CARRY book (separate carry.instruments) — this only disables the
+    #   USDTRY event straddle.
     # USDJPY and AUDUSD removed 2026-07-24 — report 16 (corrected data):
     #   USDJPY/BOJ no edge (+0.9, CI spans 0); AUDUSD 0/9 combos pass.
     # GBPUSD/GBPJPY/USDCAD remain excluded — "avoid" verdicts hold (report 16).
@@ -69,7 +72,16 @@ strategy:
   max_holding_minutes: 120
 
 carry:
-  enabled: true
+  # Disabled 2026-10-08 pending investigation: 60-day interest_accruals show
+  # -4,103 CAD (JPY) + -37 CAD (USD) funding-leg cost with ~$0 recorded income
+  # on the long legs (ZAR/TRY/GBP/NZD/AUD) despite open positions in all of
+  # them. Likely IB's interest-tier schedule (margin/short interest charged
+  # from $0, long cash balances need to clear a threshold before IB pays
+  # anything) rather than a code bug — position sizes here are probably too
+  # small per currency to clear that threshold. Needs real per-currency
+  # cash-balance/tier confirmation via ib.accountValues() before re-enabling.
+  # Existing open positions are untouched — this only stops new rebalances.
+  enabled: false
   instruments: [USDZAR, USDTRY, USDMXN, AUDJPY, NZDJPY, GBPJPY]
   min_differential_pct: 2.0
   risk_budget_pct: 5.0
