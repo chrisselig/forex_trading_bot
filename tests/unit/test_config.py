@@ -6,7 +6,9 @@ from forex_bot.config import load_settings, BrokerConfig, RiskConfig, StrategyCo
 def test_loads_settings_from_yaml():
     settings = load_settings()
     assert settings.broker.port in (4001, 4002, 7496, 7497)
-    assert len(settings.trading.instruments) > 0
+    # Event straddle is fully disabled (2026-10-08, report 23: USDTRY net
+    # -8.27 pips/trade after real commission+slippage) — empty is correct.
+    assert settings.trading.instruments == []
 
 
 def test_broker_defaults():
