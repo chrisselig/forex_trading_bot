@@ -1,0 +1,3472 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Event-driven forex trading bot for major US economic news releases">
+      
+      
+        <meta name="author" content="Chris Selig">
+      
+      
+      
+        <link rel="prev" href="../17-ambient-bracket/">
+      
+      
+        <link rel="next" href="../15-mc-surprise/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>16 — Full MC Re-validation on Timezone-Corrected Dukascopy Data - Forex Trading Bot</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#16-full-mc-re-validation-on-timezone-corrected-dukascopy-data" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Forex Trading Bot" class="md-header__button md-logo" aria-label="Forex Trading Bot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Forex Trading Bot
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              16 — Full MC Re-validation on Timezone-Corrected Dukascopy Data
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/chrisselig/forex_trading_bot" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chrisselig/forex_trading_bot
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Forex Trading Bot" class="md-nav__button md-logo" aria-label="Forex Trading Bot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Forex Trading Bot
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/chrisselig/forex_trading_bot" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chrisselig/forex_trading_bot
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forex Trading
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Forex Trading
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forex Trading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/market-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/news-trading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Trading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/risk-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risk Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trading Strategies
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Trading Strategies
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trading Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/target-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Target Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/currency-pairs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Currency Pairs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/ib-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IB API Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/auto-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/process-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Process Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/hosting-options/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosting Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/telegram-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram Notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../strategy-buildout-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strategy Buildout Plan — Research Candidates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../23-mc-net-of-cost-slippage-commission/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    23 — Net-of-Cost with Commission + Slippage Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../22-mc-majors-straddle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report 22 — Majors-Pair Event-Straddle Feasibility Study
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../21-mc-carry-threshold/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — Carry Strategy Differential Threshold
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20-cot-crash-risk-filter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    COT Crash-Risk Filter on Carry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../19-mc-esi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19 — Economic Surprise Index (ESI) Directional Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-event-net-of-cost/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    18 — Event-Strategy Net-of-Cost Audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-ambient-bracket/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17 — Ambient Bracket Strategy Analysis (USDZAR / USDTRY)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16 — Full MC Re-validation on Timezone-Corrected Dukascopy Data
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16 — Full MC Re-validation on Timezone-Corrected Dukascopy Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-report-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this report exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-the-shifted-data-looked-plausible-and-what-it-reveals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the shifted data looked plausible — and what it reveals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why the shifted data looked plausible — and what it reveals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism-the-simulator-anchored-on-the-window-not-the-clock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mechanism: the simulator anchored on the window, not the clock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replication-control-experiment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replication + control experiment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-this-means" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this means
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verdict-table-every-active-production-combo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verdict table — every active production combo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usdzar-detail-mc_event_split-clean-rerun" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USDZAR — detail (mc_event_split, clean rerun)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usdtry-detail-mc_event_split-mc_non_us-fixed-param-evals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USDTRY — detail (mc_event_split + mc_non_us + fixed-param evals)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="USDTRY — detail (mc_event_split + mc_non_us + fixed-param evals)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#remaining-us-events-grid-walk-forward-detail-report-12-methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remaining US events — grid + walk-forward detail (report-12 methodology)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usdjpy-boj-fails-on-corrected-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USDJPY / BOJ — FAILS on corrected data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audusd-fails-at-all-configured-params" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AUDUSD — FAILS at all configured params
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AUDUSD — FAILS at all configured params">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fresh-grids-report-11-methodology-us-australia-combined-spread-15-wf-2020-2023-2024-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fresh grids (report-11 methodology: US / Australia / Combined, spread 1.5, WF 2020-2023 / 2024-2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disabled-pairs-quick-check-old-report-optimal-params-corrected-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disabled pairs — quick check (old-report optimal params, corrected data)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#production-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methodology-notes-caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Methodology notes &amp; caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-mc-surprise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Validation — Post-News Surprise Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-mc-value-ppp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — Value / PPP Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-mc-momentum/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — Currency Momentum Strategy (expanded pair universe)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-mc-remaining-us/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — Remaining US Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-mc-audusd-australia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — AUDUSD + Australian Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-mc-cad-pairs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — CAD Pair Exploration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-mc-gdp-pce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GDP &amp; PCE Monte Carlo Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-mc-ppi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PPI m/m Monte Carlo Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mc-eurusd-audusd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — EURUSD &amp; AUDUSD on US Events (Jan 2020 — Jun 2026)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-non-us-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — Non-US Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-event-type-split/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event-Type Split Analysis — NFP vs CPI vs FOMC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-monte-carlo-6yr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — January 2020 to June 2026
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-monte-carlo-18mo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — 1-Minute Data (Jan 2025 — Jun 2026)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-dukascopy-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dukascopy Historical Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-straddle-hourly/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Straddle Parameter Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../todo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-report-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this report exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-the-shifted-data-looked-plausible-and-what-it-reveals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the shifted data looked plausible — and what it reveals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why the shifted data looked plausible — and what it reveals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism-the-simulator-anchored-on-the-window-not-the-clock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mechanism: the simulator anchored on the window, not the clock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replication-control-experiment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replication + control experiment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-this-means" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this means
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verdict-table-every-active-production-combo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verdict table — every active production combo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usdzar-detail-mc_event_split-clean-rerun" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USDZAR — detail (mc_event_split, clean rerun)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usdtry-detail-mc_event_split-mc_non_us-fixed-param-evals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USDTRY — detail (mc_event_split + mc_non_us + fixed-param evals)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="USDTRY — detail (mc_event_split + mc_non_us + fixed-param evals)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#remaining-us-events-grid-walk-forward-detail-report-12-methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remaining US events — grid + walk-forward detail (report-12 methodology)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usdjpy-boj-fails-on-corrected-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USDJPY / BOJ — FAILS on corrected data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audusd-fails-at-all-configured-params" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AUDUSD — FAILS at all configured params
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AUDUSD — FAILS at all configured params">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fresh-grids-report-11-methodology-us-australia-combined-spread-15-wf-2020-2023-2024-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fresh grids (report-11 methodology: US / Australia / Combined, spread 1.5, WF 2020-2023 / 2024-2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disabled-pairs-quick-check-old-report-optimal-params-corrected-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disabled pairs — quick check (old-report optimal params, corrected data)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#production-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methodology-notes-caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Methodology notes &amp; caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="16-full-mc-re-validation-on-timezone-corrected-dukascopy-data">16 — Full MC Re-validation on Timezone-Corrected Dukascopy Data<a class="headerlink" href="#16-full-mc-re-validation-on-timezone-corrected-dukascopy-data" title="Permanent link">&para;</a></h1>
+<p><strong>Date</strong>: July 2026
+<strong>Status</strong>: DRAFT — pending user review. No config changes made.
+<strong>Spec</strong>: <code>docs/research/specs/16-dukascopy-tz-revalidation-spec.md</code>
+<strong>Scripts</strong>: <code>scripts/mc_event_split.py</code>, <code>scripts/mc_non_us.py</code>,
+<code>scripts/mc_grids_fast.py</code> (grid substitute for the killed
+<code>mc_remaining_us.py</code> / <code>mc_audusd_explore.py</code> reruns — see caveat 8),
+<code>scripts/mc_fixed_params_check.py</code> (configured-param evals),
+<code>scripts/mc_ambient_control.py</code> (control experiment)</p>
+<hr />
+<h2 id="why-this-report-exists">Why this report exists<a class="headerlink" href="#why-this-report-exists" title="Permanent link">&para;</a></h2>
+<p>Every prior Monte Carlo report (04-12) was computed on <strong>timezone-shifted
+data</strong>. <code>scripts/download_dukascopy.py</code> passed naive datetimes to
+<code>dukascopy_python.fetch()</code>, which interprets naive datetimes in the <em>system
+local</em> timezone (America/Edmonton). Every event window was therefore fetched
++6h/+7h late: the "event window" actually contained bars from 6-7 hours after
+the release, and the simulated "release burst" was in reality mid-afternoon
+drift.</p>
+<p>Two bugs were fixed for this re-validation:</p>
+<ol>
+<li><strong>Downloader timezone bug</strong> (<code>scripts/download_dukascopy.py</code>): <code>start</code>/<code>end</code>
+   are now made UTC-aware (<code>.replace(tzinfo=UTC)</code>) immediately before
+   <code>dp.fetch()</code>. Proof: the NFP 2023-02-03 GBPUSD window now spans 11:30-17:30
+   UTC and contains an 86.0-pip 1-min bar exactly at 13:30:00 UTC (the release
+   minute). The old file's window contained no such burst.</li>
+<li><strong>Loader collision bug</strong> (<code>scripts/monte_carlo_dukascopy.py</code>,
+   <code>load_dukascopy_data</code>): events were grouped by <code>event_date</code> only. Two events
+   on the same date (SARB + Unemployment Claims both land on Thursdays; GDP +
+   Unemployment Claims share 13:30 UTC Thursdays) were merged into one group
+   with an arbitrary label and duplicated bars. With the CSVs now containing
+   all event types, this silently dropped 36 of 40 SARB events and contaminated
+   per-event-type splits. Grouping is now by <code>(event_date, event_name)</code>.</li>
+</ol>
+<p>All numbers below are from the corrected data <strong>and</strong> the corrected loader.
+Old numbers are quoted from reports 04-12 (shifted data) for comparison only —
+they describe a strategy that was never actually tested at release time.</p>
+<p><strong>Data re-downloaded</strong>: 11,692 event windows, 4.19M 1-min bars, 11 pairs,
+Jan 2020 - Jun 2026. Old (shifted) CSVs preserved in
+<code>scripts/data/dukascopy_SHIFTED_BAD/</code>. Old result JSON/reports preserved in
+<code>scripts/data/OLD_RESULTS_SHIFTED_BAD/</code>.</p>
+<hr />
+<h2 id="executive-summary">Executive summary<a class="headerlink" href="#executive-summary" title="Permanent link">&para;</a></h2>
+<p><strong>USDZAR and USDTRY pass at their exact configured params on nearly every
+configured event source</strong> — often with better numbers than the shifted-data
+reports claimed. <strong>But the control experiment below shows the profit is NOT
+primarily an event edge</strong>: the same 50/70/10 straddle on 160 uniformly random
+NON-event weekdays (Run D) earns +10.9 to +12.7 pips/trade with CIs entirely
+above zero — statistically indistinguishable from the true event windows
+(+15.1 USDZAR / +13.3 USDTRY), at both London/NY and Asia anchors. <strong>The
+strategy is ambient volatility harvesting on two EM pairs; the event calendar
+is a scheduler, not the edge.</strong> A PASS in the verdict table certifies that
+this ambient volatility cleared the assumed spread through the 7:1 TP:SL
+bracket, 2020-2026 including OOS — with at most a ~+2-3 pip event-specific
+increment (CIs overlap). See "Why the shifted data looked plausible" for the
+evidence and consequences.</p>
+<p><strong>Two pair-level failures</strong>:</p>
+<ul>
+<li><strong>USDJPY / BOJ</strong> at configured 25/15/15: E[P&amp;L]=+0.9, CI=[-3.1, +4.9] — no
+  edge. Walk-forward on Japanese events fails (OOS -2.0). Recommend removing.</li>
+<li><strong>AUDUSD (all 9 configured combos)</strong> at configured params: every US event
+  fails at 40/15/25 (PPI is significantly <em>negative</em>: -10.4 [-16.3, -4.2]);
+  every AU event fails at 40/70/30 (CIs span zero, tiny N). Fresh grids on
+  all three event sources find no walk-forward-valid optimum. Recommend
+  removing.</li>
+</ul>
+<p><strong>Two surprising reversals on disabled pairs</strong> (quick check only, not deep
+grids): EURUSD on US events and CADJPY on Japanese events now show CIs above
+zero including out-of-sample. Not production recommendations — flagged for a
+dedicated follow-up analysis.</p>
+<hr />
+<h2 id="why-the-shifted-data-looked-plausible-and-what-it-reveals">Why the shifted data looked plausible — and what it reveals<a class="headerlink" href="#why-the-shifted-data-looked-plausible-and-what-it-reveals" title="Permanent link">&para;</a></h2>
+<p>The old windows contained no releases, yet reports 04-12 produced numbers of
+the same magnitude as this re-validation (USDZAR +17.1 then, +9.9..+23.5 now).
+That demanded an explanation before trusting any PASS below.</p>
+<h3 id="mechanism-the-simulator-anchored-on-the-window-not-the-clock">Mechanism: the simulator anchored on the window, not the clock<a class="headerlink" href="#mechanism-the-simulator-anchored-on-the-window-not-the-clock" title="Permanent link">&para;</a></h3>
+<p><code>simulate_straddle()</code> locates its entry bar with
+<code>argmin(|bar_times - (event_utc - 30min)|)</code> — the bar <em>closest</em> to the
+intended pre-event time, with no requirement that it precede the event. The
+shifted CSVs contained bars spanning <code>[event+4h, event+10h]</code> (the -2h/+4h
+request, shifted +6h). The closest bar to <code>event-30min</code> was therefore simply
+the <strong>first bar of the window</strong>, and the guard (<code>pre_idx &gt;= len(bars)-10</code>)
+did not fire. Every old backtest silently simulated a straddle placed ~4h
+after the release and held for up to the following 6 hours of (real, correctly
+timestamped) bars. A consistent, well-defined window — just not the one
+anyone intended.</p>
+<h3 id="replication-control-experiment">Replication + control experiment<a class="headerlink" href="#replication-control-experiment" title="Permanent link">&para;</a></h3>
+<p><code>simulate_straddle</code> at 50/70/10 (configured spreads: USDZAR 25, USDTRY 30),
+6-US-event scope, five anchors
+(script: <code>scripts/mc_ambient_control.py</code>; Run D windows downloaded with the
+fixed fetcher — 160 uniformly sampled weekdays per pair, 2020-2026, with no
+tracked high-impact release for the pair that day per the pair's event CSV +
+<code>ff_history.csv</code>, holiday weeks excluded):</p>
+<table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Data</th>
+<th>Anchor</th>
+<th>USDZAR E[P&amp;L] / CI</th>
+<th>USDTRY E[P&amp;L] / CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>old shifted CSV</td>
+<td>stored event_utc (= window start, event+4h)</td>
+<td>+16.0 [+12.9, +19.3] N=798</td>
+<td>+12.1 [+9.4, +14.8] N=644</td>
+</tr>
+<tr>
+<td>B</td>
+<td>old shifted CSV</td>
+<td>event+6.5h — no event in window, event day</td>
+<td>+12.1 [+9.6, +14.6] N=761</td>
+<td>+17.3 [+12.7, +22.6] N=588</td>
+</tr>
+<tr>
+<td>C</td>
+<td>corrected CSV</td>
+<td>true event time</td>
+<td>+15.1 [+12.5, +17.6] N=820</td>
+<td>+13.3 [+10.6, +16.1] N=648</td>
+</tr>
+<tr>
+<td><strong>D</strong></td>
+<td><strong>non-event days</strong></td>
+<td><strong>14:00 UTC (London/NY)</strong></td>
+<td><strong>+11.7 [+7.9, +15.8]</strong> N=291</td>
+<td><strong>+11.8 [+7.1, +16.7]</strong> N=210</td>
+</tr>
+<tr>
+<td><strong>D</strong></td>
+<td><strong>non-event days</strong></td>
+<td><strong>03:00 UTC (Asia)</strong></td>
+<td><strong>+12.7 [+8.5, +16.9]</strong> N=285</td>
+<td><strong>+10.9 [+6.6, +15.5]</strong> N=231</td>
+</tr>
+</tbody>
+</table>
+<p>(NFP+CPI+FOMC scope, Run A: USDZAR +16.5, USDTRY +12.5 — matching report 04's
++17.1 / +13.6 almost exactly. Mechanism confirmed.)</p>
+<h3 id="what-this-means">What this means<a class="headerlink" href="#what-this-means" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Run D is conclusive: Run D ~ Run C.</strong> On 160 uniformly random weekdays
+   with no tracked release — at both a liquid London/NY anchor and an
+   illiquid Asia anchor — the same bracket earns +10.9 to +12.7 pips/trade
+   with CIs entirely above zero, statistically indistinguishable from the
+   true event windows (+15.1 / +13.3; CIs overlap). Run B's ambiguity
+   (residual post-event elevation) is resolved: post-release elevation is NOT
+   needed. <strong>The strategy is ambient volatility harvesting; the event
+   calendar is acting as a scheduler, not as the edge.</strong></li>
+<li><strong>It is volatility harvesting, not trend drift.</strong> Per-leg breakdown on
+   corrected event windows: USDZAR BUY +14.5 / SELL +15.8 (symmetric — not a
+   rand-depreciation bet); USDTRY BUY +6.5 / SELL <strong>+18.4</strong> (the <em>short-USD</em>
+   leg earns more, the opposite of the lira-collapse drift story). The 7:1
+   TP:SL bracket wins whenever a 50-pip excursion runs another 70 pips before
+   retracing 10 — which these pairs did, in any window, any session,
+   ~27-31% of the time, 2020-2026.</li>
+<li><strong>Event-specific increment</strong>: USDZAR ~+3 pips/trade over ambient (C vs D,
+   CIs overlap); USDTRY ~+2 (C vs D, CIs overlap). The per-event-type spread
+   in the verdict table (FOMC +23.5 vs NFP +9.9 on USDZAR) is the strongest
+   remaining evidence that release choice matters at all.</li>
+<li><strong>Reinterpretation of every PASS below</strong>: PASS = "this pair's 2020-2026
+   ambient volatility cleared the assumed 25/30-pip spread through an
+   asymmetric bracket, including in 2025-26 OOS." It does <em>not</em> certify a
+   news-reaction edge. Consequences:</li>
+<li>The strategy's true risk factor is a <strong>volatility/spread regime</strong> on two
+     EM pairs, not a diversified set of 17 event edges. Event diversification
+     is largely illusory — all 17 combos load on the same two underlying
+     exposures.</li>
+<li>Results are highly sensitive to the flat spread assumption (25/30
+     pips). Event-time spreads on exotics can be far wider (config caps at
+     60/80 pips); non-event spreads are typically narrower than event
+     spreads, which if anything <em>flatters</em> the event windows in this
+     comparison. Live slippage monitoring is the real test.</li>
+<li>The economics of the current config are not invalidated — event days
+     are as good as any other day, and the OOS numbers held up. But the
+     <em>rationale</em> in reports 04-12 ("news-reaction straddle") is wrong.</li>
+<li><strong>Follow-up (not this report)</strong>: a dedicated "ambient bracket strategy"
+     analysis — realistic non-event spreads, trade frequency and overlap
+     limits, session effects, capacity, regime dependence (does this survive
+     a ZAR/TRY low-vol regime?). This report does NOT recommend expanding
+     trading hours; the current event schedule remains the tested
+     configuration.</li>
+</ol>
+<p>The USDJPY and AUDUSD failures below are unaffected by this nuance — they
+fail even with ambient volatility included.</p>
+<hr />
+<h2 id="verdict-table-every-active-production-combo">Verdict table — every active production combo<a class="headerlink" href="#verdict-table-every-active-production-combo" title="Permanent link">&para;</a></h2>
+<p>Configured params from <code>config/settings.yaml</code> / <code>config/events.yaml</code>.
+"OLD" = shifted-data reports 04-12. "NEW" = corrected data, corrected loader.
+OOS = fixed configured params evaluated on 2025-2026 (not train-optimal).</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Combo</th>
+<th>Params</th>
+<th>OLD E[P&amp;L] / CI</th>
+<th>NEW E[P&amp;L] / CI</th>
+<th>NEW Sharpe</th>
+<th>NEW OOS E (2025-26)</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>USDZAR / NFP</td>
+<td>50/70/10</td>
+<td>+23.1 [+12.2,+36.6]</td>
+<td>+9.9 [+4.6,+15.6]</td>
+<td>3.49</td>
+<td>+15.1</td>
+<td><strong>SURVIVES</strong> (weaker)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>USDZAR / CPI</td>
+<td>50/70/10</td>
+<td>+13.7 [+8.0,+19.7]</td>
+<td>+15.2 [+9.0,+21.3]</td>
+<td>4.86</td>
+<td>+7.0</td>
+<td><strong>SURVIVES</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td>USDZAR / FOMC</td>
+<td>50/70/10</td>
+<td>+13.8 [+6.2,+21.5]</td>
+<td>+23.5 [+15.3,+31.6]</td>
+<td>5.87</td>
+<td>+13.3</td>
+<td><strong>SURVIVES</strong> (stronger)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>USDZAR / PPI</td>
+<td>50/70/10</td>
+<td>+17.1 [+10.3,+23.9]</td>
+<td>+14.8 [+8.8,+20.9]</td>
+<td>4.80</td>
+<td>+4.5</td>
+<td><strong>SURVIVES</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td>USDZAR / GDP</td>
+<td>50/70/10</td>
+<td>+15.8 [+9.4,+22.3]</td>
+<td>+17.0 [+10.8,+23.2]</td>
+<td>5.35</td>
+<td>+14.0</td>
+<td><strong>SURVIVES</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td>USDZAR / SARB</td>
+<td>50/70/10</td>
+<td>+16.3 [+7.9,+24.7]</td>
+<td>+23.2 [+14.9,+32.6]</td>
+<td>5.15</td>
+<td>+12.2</td>
+<td><strong>SURVIVES</strong> (stronger)</td>
+</tr>
+<tr>
+<td>7</td>
+<td>USDZAR / SA CPI</td>
+<td>50/70/10</td>
+<td>+17.8 [+11.7,+23.9]</td>
+<td>+17.4 [+11.4,+23.4]</td>
+<td>5.53</td>
+<td>+14.4</td>
+<td><strong>SURVIVES</strong></td>
+</tr>
+<tr>
+<td>8</td>
+<td>USDTRY / NFP</td>
+<td>50/70/10</td>
+<td>+13.7 [+7.4,+20.2]</td>
+<td>+12.3 [+6.3,+18.8]</td>
+<td>3.80</td>
+<td>+10.4</td>
+<td><strong>SURVIVES</strong></td>
+</tr>
+<tr>
+<td>9</td>
+<td>USDTRY / CPI</td>
+<td>50/70/10</td>
+<td>+12.5 [+6.2,+19.1]</td>
+<td>+16.9 [+10.7,+23.8]</td>
+<td>4.81</td>
+<td>+7.4</td>
+<td><strong>SURVIVES</strong></td>
+</tr>
+<tr>
+<td>10</td>
+<td>USDTRY / FOMC</td>
+<td>50/70/10</td>
+<td>+16.1 [+6.6,+26.3]</td>
+<td>+18.0 [+10.2,+25.9]</td>
+<td>4.52</td>
+<td>+30.0</td>
+<td><strong>SURVIVES</strong> (stronger)</td>
+</tr>
+<tr>
+<td>11</td>
+<td>USDTRY / PPI</td>
+<td>50/70/10</td>
+<td>+11.1 [+4.7,+17.7]</td>
+<td>+16.2 [+9.1,+23.4]</td>
+<td>4.34</td>
+<td>+17.0</td>
+<td><strong>SURVIVES</strong></td>
+</tr>
+<tr>
+<td>12</td>
+<td>USDTRY / GDP</td>
+<td>50/70/10</td>
+<td>+8.5 [+1.4,+15.5]</td>
+<td>+9.8 [+3.0,+16.7]</td>
+<td>2.87</td>
+<td>+15.3</td>
+<td><strong>SURVIVES</strong></td>
+</tr>
+<tr>
+<td>13</td>
+<td>USDTRY / PCE</td>
+<td>50/70/10</td>
+<td>+14.5 [+7.6,+22.0]</td>
+<td>+8.0 [+2.3,+14.5]</td>
+<td>2.48</td>
+<td>+12.2</td>
+<td><strong>SURVIVES</strong> (weaker)</td>
+</tr>
+<tr>
+<td>14</td>
+<td>USDTRY / TCMB</td>
+<td>20/60/10</td>
+<td>+10.5 [+5.2,+16.2]</td>
+<td>+9.0 [+3.7,+14.5]</td>
+<td>3.20</td>
+<td>+6.5</td>
+<td><strong>SURVIVES</strong> (new optimum 35/70/10: +13.1)</td>
+</tr>
+<tr>
+<td>15</td>
+<td>USDTRY / Unemp. Claims</td>
+<td>50/70/10</td>
+<td>OOS +16.9..+22.7</td>
+<td>+9.8 [+6.8,+13.1]</td>
+<td>6.11</td>
+<td>+9.0</td>
+<td><strong>SURVIVES</strong></td>
+</tr>
+<tr>
+<td>16</td>
+<td>USDTRY / ISM PMI</td>
+<td>50/70/10</td>
+<td>OOS +6.3..+7.1</td>
+<td>+9.6 [+3.8,+16.2]</td>
+<td>2.89</td>
+<td>+3.3</td>
+<td><strong>SURVIVES, weakened</strong> (WF OOS CI spans 0)</td>
+</tr>
+<tr>
+<td>17</td>
+<td>USDTRY / Retail Sales</td>
+<td>50/70/10</td>
+<td>OOS +9.6..+17.0</td>
+<td>+14.2 [+7.0,+21.5]</td>
+<td>3.81</td>
+<td>+11.1</td>
+<td><strong>SURVIVES</strong> (WF OOS CI spans 0)</td>
+</tr>
+<tr>
+<td>18</td>
+<td>USDJPY / BOJ</td>
+<td>25/15/15</td>
+<td>+2.5 [-0.3,+5.3]</td>
+<td>+0.9 [-3.1,+4.9]</td>
+<td>0.46</td>
+<td>+3.2 [-5.0,+11.4]</td>
+<td><strong>FAILS</strong> — no edge</td>
+</tr>
+<tr>
+<td>19</td>
+<td>AUDUSD / NFP</td>
+<td>40/15/25</td>
+<td>(r11 combined)</td>
+<td>-1.8 [-7.5,+3.8]</td>
+<td>-0.59</td>
+<td>+5.6 (N=6)</td>
+<td><strong>FAILS</strong></td>
+</tr>
+<tr>
+<td>20</td>
+<td>AUDUSD / CPI</td>
+<td>40/15/25</td>
+<td>(r11 combined)</td>
+<td>-2.2 [-7.6,+2.9]</td>
+<td>-0.81</td>
+<td>-4.2</td>
+<td><strong>FAILS</strong></td>
+</tr>
+<tr>
+<td>21</td>
+<td>AUDUSD / FOMC</td>
+<td>40/15/25</td>
+<td>(r11 combined)</td>
+<td>+4.3 [-1.2,+9.3]</td>
+<td>1.74</td>
+<td>-0.3</td>
+<td><strong>FAILS</strong> (CI spans 0)</td>
+</tr>
+<tr>
+<td>22</td>
+<td>AUDUSD / PPI</td>
+<td>40/15/25</td>
+<td>(r11 combined)</td>
+<td>-10.4 [-16.3,-4.2]</td>
+<td>-3.50</td>
+<td>-14.6</td>
+<td><strong>FAILS</strong> (significantly negative)</td>
+</tr>
+<tr>
+<td>23</td>
+<td>AUDUSD / GDP</td>
+<td>40/15/25</td>
+<td>(r11 combined)</td>
+<td>-0.2 [-6.0,+5.4]</td>
+<td>0.03</td>
+<td>-0.9</td>
+<td><strong>FAILS</strong></td>
+</tr>
+<tr>
+<td>24</td>
+<td>AUDUSD / PCE</td>
+<td>40/15/25</td>
+<td>(r11 combined)</td>
+<td>-2.7 [-9.0,+3.5]</td>
+<td>-0.80</td>
+<td>-1.3</td>
+<td><strong>FAILS</strong></td>
+</tr>
+<tr>
+<td>25</td>
+<td>AUDUSD / RBA</td>
+<td>40/70/30</td>
+<td>+11.6 [-0.9,+25.6]</td>
+<td>+3.3 [-5.6,+12.5]</td>
+<td>0.72</td>
+<td>+5.6 (N=2)</td>
+<td><strong>FAILS</strong> (CI spans 0)</td>
+</tr>
+<tr>
+<td>26</td>
+<td>AUDUSD / AU CPI</td>
+<td>40/70/30</td>
+<td>+19.2 [+8.1,+32.0]</td>
+<td>+4.2 [-13.4,+14.9]</td>
+<td>2.76</td>
+<td>(N=1)</td>
+<td><strong>FAILS</strong> (CI spans 0, N=5)</td>
+</tr>
+<tr>
+<td>27</td>
+<td>AUDUSD / AU Empl.</td>
+<td>40/70/30</td>
+<td>+17.2 [+3.2,+31.9]</td>
+<td>+1.4 [-6.1,+9.1]</td>
+<td>0.34</td>
+<td>-6.3 (N=2)</td>
+<td><strong>FAILS</strong> (CI spans 0)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="usdzar-detail-mc_event_split-clean-rerun">USDZAR — detail (mc_event_split, clean rerun)<a class="headerlink" href="#usdzar-detail-mc_event_split-clean-rerun" title="Permanent link">&para;</a></h2>
+<p>Configured 50/70/10, spread 25 pips. Walk-forward = grid-search train
+2020-2024, evaluate train-best on 2025-2026 (same methodology as reports
+05/08/09).</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>NEW E[P&amp;L]</th>
+<th>95% CI</th>
+<th>WR</th>
+<th>Sharpe</th>
+<th>N</th>
+<th>WF train-best</th>
+<th>WF OOS</th>
+<th>Cfg-params OOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFP</td>
+<td>+9.9</td>
+<td>[+4.6, +15.6]</td>
+<td>24.8%</td>
+<td>3.49</td>
+<td>153</td>
+<td>40/70/10</td>
+<td>+18.9</td>
+<td>+15.1</td>
+</tr>
+<tr>
+<td>CPI</td>
+<td>+15.2</td>
+<td>[+9.0, +21.3]</td>
+<td>31.5%</td>
+<td>4.86</td>
+<td>143</td>
+<td>40/65/10</td>
+<td>+5.0</td>
+<td>+7.0</td>
+</tr>
+<tr>
+<td>FOMC</td>
+<td>+23.5</td>
+<td>[+15.3, +31.6]</td>
+<td>41.8%</td>
+<td>5.87</td>
+<td>98</td>
+<td>50/70/10</td>
+<td>+13.3</td>
+<td>+13.3</td>
+</tr>
+<tr>
+<td>PPI</td>
+<td>+14.8</td>
+<td>[+8.8, +20.9]</td>
+<td>31.0%</td>
+<td>4.80</td>
+<td>145</td>
+<td>50/70/10</td>
+<td>+4.5</td>
+<td>+4.5</td>
+</tr>
+<tr>
+<td>GDP</td>
+<td>+17.0</td>
+<td>[+10.8, +23.2]</td>
+<td>33.8%</td>
+<td>5.35</td>
+<td>142</td>
+<td>50/65/10</td>
+<td>+12.5</td>
+<td>+14.0</td>
+</tr>
+<tr>
+<td>PCE (not in prod)</td>
+<td>+13.4</td>
+<td>[+7.7, +19.7]</td>
+<td>29.3%</td>
+<td>4.33</td>
+<td>140</td>
+<td>25/40/10</td>
+<td>-2.2</td>
+<td><strong>+19.3</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Optimal params per event type all cluster around 40-50 / 65-70 / 10 — the
+unified 50/70/10 production setting remains reasonable for every event type.</p>
+<p>Note on PCE: it was excluded from USDZAR production because the old
+walk-forward failed (OOS -0.7). On corrected data the train-optimal WF still
+fails (-2.2) but the <em>configured-params</em> OOS is +19.3 [+6.0, +32.7] — the WF
+failure is a param-selection artifact (train picks tight 25/40/10, which
+doesn't generalize; 50/70/10 does). Re-enabling USDZAR/PCE is worth
+considering — user decision.</p>
+<h2 id="usdtry-detail-mc_event_split-mc_non_us-fixed-param-evals">USDTRY — detail (mc_event_split + mc_non_us + fixed-param evals)<a class="headerlink" href="#usdtry-detail-mc_event_split-mc_non_us-fixed-param-evals" title="Permanent link">&para;</a></h2>
+<p>Configured 50/70/10 (US events), 20/60/10 (TCMB), spread 30 pips.</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>NEW E[P&amp;L]</th>
+<th>95% CI</th>
+<th>WR</th>
+<th>Sharpe</th>
+<th>N</th>
+<th>WF train-best</th>
+<th>WF OOS</th>
+<th>Cfg-params OOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFP</td>
+<td>+12.3</td>
+<td>[+6.3, +18.8]</td>
+<td>28.5%</td>
+<td>3.80</td>
+<td>123</td>
+<td>40/65/10</td>
+<td>+12.8</td>
+<td>+10.4</td>
+</tr>
+<tr>
+<td>CPI</td>
+<td>+16.9</td>
+<td>[+10.7, +23.8]</td>
+<td>33.6%</td>
+<td>4.81</td>
+<td>116</td>
+<td>40/70/10</td>
+<td>+7.4</td>
+<td>+7.4</td>
+</tr>
+<tr>
+<td>FOMC</td>
+<td>+18.0</td>
+<td>[+10.2, +25.9]</td>
+<td>35.9%</td>
+<td>4.52</td>
+<td>92</td>
+<td>50/70/10</td>
+<td>+30.0</td>
+<td>+30.0</td>
+</tr>
+<tr>
+<td>PPI</td>
+<td>+16.2</td>
+<td>[+9.1, +23.4]</td>
+<td>33.3%</td>
+<td>4.34</td>
+<td>102</td>
+<td>25/60/10</td>
+<td>-3.6</td>
+<td><strong>+17.0</strong></td>
+</tr>
+<tr>
+<td>GDP</td>
+<td>+9.8</td>
+<td>[+3.0, +16.7]</td>
+<td>24.8%</td>
+<td>2.87</td>
+<td>105</td>
+<td>40/70/10</td>
+<td>+10.0</td>
+<td>+15.3</td>
+</tr>
+<tr>
+<td>PCE</td>
+<td>+8.0</td>
+<td>[+2.3, +14.5]</td>
+<td>22.5%</td>
+<td>2.48</td>
+<td>111</td>
+<td>30/65/10</td>
+<td>+13.9</td>
+<td>+12.2</td>
+</tr>
+<tr>
+<td>TCMB @ 20/60/10</td>
+<td>+9.0</td>
+<td>[+3.7, +14.5]</td>
+<td>27.6%</td>
+<td>3.20</td>
+<td>123</td>
+<td>30/65/10</td>
+<td>+8.8</td>
+<td>+6.5</td>
+</tr>
+<tr>
+<td>Unemp. Claims @ 50/70/10</td>
+<td>+9.8</td>
+<td>[+6.8, +13.1]</td>
+<td>24.9%</td>
+<td>6.11</td>
+<td>461</td>
+<td>—</td>
+<td>—</td>
+<td>+9.0</td>
+</tr>
+<tr>
+<td>ISM PMI @ 50/70/10</td>
+<td>+9.6</td>
+<td>[+3.8, +16.2]</td>
+<td>24.5%</td>
+<td>2.89</td>
+<td>110</td>
+<td>—</td>
+<td>—</td>
+<td>+3.3</td>
+</tr>
+<tr>
+<td>Retail Sales @ 50/70/10</td>
+<td>+14.2</td>
+<td>[+7.0, +21.5]</td>
+<td>30.3%</td>
+<td>3.81</td>
+<td>99</td>
+<td>—</td>
+<td>—</td>
+<td>+11.1</td>
+</tr>
+</tbody>
+</table>
+<p>USDTRY PPI's WF "failure" (-3.6) is again a train-optimal artifact: the
+configured 50/70/10 params deliver +17.0 [+0.1, +33.8] OOS.</p>
+<p>TCMB: full-sample grid optimum moved from 20/60/10 (old) to 35/70/10
+(E=+13.1 [+7.2, +19.8], Sharpe 3.96). Configured 20/60/10 still passes
+(+9.0 [+3.7, +14.5]). Optionally update the TCMB event override to 35/70/10 —
+user decision.</p>
+<h3 id="remaining-us-events-grid-walk-forward-detail-report-12-methodology">Remaining US events — grid + walk-forward detail (report-12 methodology)<a class="headerlink" href="#remaining-us-events-grid-walk-forward-detail-report-12-methodology" title="Permanent link">&para;</a></h3>
+<p>Spread 50 (report 12's default for USDTRY), WF split 2020-2023 / 2024-2026
+(matching report 12). Full 540-cell grids; top cells re-ranked by bootstrap
+CI-low. (The stock <code>mc_remaining_us.py</code> rerun was killed by the environment
+mid-run twice; these grids reproduce its methodology in a slimmer harness —
+see caveats.)</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Grid best</th>
+<th>FULL E / CI</th>
+<th>WF train-best</th>
+<th>WF OOS E / CI</th>
+<th>Cfg 50/70/10 @ sp50</th>
+<th>Best cell @ spread 30 / 80</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unemp. Claims</td>
+<td>45/70/10</td>
+<td>+10.4 [+7.2, +13.6]</td>
+<td>45/70/10</td>
+<td><strong>+11.4 [+5.9, +16.8]</strong></td>
+<td>+10.1 [+6.9, +13.4]</td>
+<td>+8.9 / +11.0 (CI&gt;0 both)</td>
+</tr>
+<tr>
+<td>ISM PMI</td>
+<td>15/45/10</td>
+<td>+11.5 [+7.0, +16.6]</td>
+<td>35/65/10</td>
+<td>+2.2 [-4.8, +10.9]</td>
+<td>+10.4 [+4.3, +17.2]</td>
+<td>+8.1 / +6.3 (CI&gt;0 both)</td>
+</tr>
+<tr>
+<td>Retail Sales</td>
+<td>35/70/10</td>
+<td>+14.7 [+7.7, +21.7]</td>
+<td>35/70/15</td>
+<td>+9.1 [-2.7, +21.8]</td>
+<td>+15.0 [+7.5, +22.5]</td>
+<td>+12.2 / +15.0 (CI&gt;0 both)</td>
+</tr>
+</tbody>
+</table>
+<p>Unemployment Claims is the strongest (weekly N=456, OOS CI entirely above
+zero, robust across spread 30-80). ISM and Retail Sales pass full-sample at
+all spreads but their WF OOS CIs span zero — weaker than report 12 claimed,
+though OOS point estimates remain positive. Given the ambient-volatility
+finding, all three are consistent with "USDTRY vol harvesting works on any
+day" rather than event-specific edges.</p>
+<h2 id="usdjpy-boj-fails-on-corrected-data">USDJPY / BOJ — FAILS on corrected data<a class="headerlink" href="#usdjpy-boj-fails-on-corrected-data" title="Permanent link">&para;</a></h2>
+<p>Configured 25/15/15, spread 2.0:</p>
+<ul>
+<li>Full sample: E[P&amp;L]=+0.9, CI=[-3.1, +4.9], WR 52.0%, Sharpe 0.46, N=50</li>
+<li>OOS 2025-26: +3.2 [-5.0, +11.4], N=11</li>
+</ul>
+<p>mc_non_us grid (BOJ + Japan CPI): full-sample optimum 50/60/10 gives +8.9
+[+0.8, +17.8] (N=47, barely clears zero) but <strong>walk-forward fails</strong>:
+train-best 30/70/25 → OOS <strong>-2.0</strong> (Sharpe -0.60, N=23).</p>
+<p>The old report 06 verdict was already borderline ("CI barely touches zero,
+paper-trade, re-evaluate end of 2026"). On corrected data there is no
+detectable edge at configured params and no walk-forward-valid alternative.
+<strong>Recommendation: remove USDJPY/BOJ from production.</strong></p>
+<h2 id="audusd-fails-at-all-configured-params">AUDUSD — FAILS at all configured params<a class="headerlink" href="#audusd-fails-at-all-configured-params" title="Permanent link">&para;</a></h2>
+<p>Configured: US events 40/15/25, AU events 40/70/30, spread 1.5.</p>
+<p>Every one of the 9 configured combos fails on corrected data (see verdict
+table rows 19-27). AUDUSD/PPI is <em>significantly negative</em> (-10.4
+[-16.3, -4.2]) — actively losing money at configured params.</p>
+<h3 id="fresh-grids-report-11-methodology-us-australia-combined-spread-15-wf-2020-2023-2024-2026">Fresh grids (report-11 methodology: US / Australia / Combined, spread 1.5, WF 2020-2023 / 2024-2026)<a class="headerlink" href="#fresh-grids-report-11-methodology-us-australia-combined-spread-15-wf-2020-2023-2024-2026" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Grid best</th>
+<th>FULL E / CI</th>
+<th>WF train-best</th>
+<th>WF OOS E / CI</th>
+<th>Spread sweep 1.0-4.0 (best cell)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>US (6 events, 436)</td>
+<td>50/65/10</td>
+<td>+5.5 [+1.0, +10.3]</td>
+<td>50/65/20</td>
+<td>+3.4 [-5.4, +12.8]</td>
+<td>+5.3..+5.9, CI&gt;0 all spreads</td>
+</tr>
+<tr>
+<td>Australia (3 events, 173)</td>
+<td>50/15/15</td>
+<td>+6.1 [+1.5, +10.2]</td>
+<td>45/20/10</td>
+<td><strong>-1.4 [-10.0, +10.6]</strong></td>
+<td>+5.3..+6.8, CI&gt;0 all spreads</td>
+</tr>
+<tr>
+<td>Combined (609)</td>
+<td>50/65/20</td>
+<td>+5.8 [+1.3, +10.6]</td>
+<td>50/65/20</td>
+<td>+2.9 [-5.5, +11.7]</td>
+<td>+5.5..+7.1, CI&gt;0 all spreads</td>
+</tr>
+</tbody>
+</table>
+<p>No source produces a walk-forward-valid optimum: Australia OOS is negative;
+US and Combined OOS point estimates are positive but their CIs span zero
+(OOS Sharpe 0.65 / 0.59, N=27-29). Report 11's "Combined passes at spread</p>
+<blockquote>
+<p>=3.0" does not reproduce on corrected data — and its configured parameters
+(40/15/25 US, 40/70/30 AU) fail outright at every event source. New optima
+cluster at 50/65/20-ish with E[P&amp;L] ~+5-7 — less than half the per-trade
+expectancy of USDZAR/USDTRY, on a pair whose ambient volatility (unlike the
+exotics) does not carry the bracket.</p>
+</blockquote>
+<p><strong>Recommendation: remove AUDUSD from production.</strong> No passing cell at
+configured params; no walk-forward-valid new optimum found ("no passing
+cell" in spec terms).</p>
+<hr />
+<h2 id="disabled-pairs-quick-check-old-report-optimal-params-corrected-data">Disabled pairs — quick check (old-report optimal params, corrected data)<a class="headerlink" href="#disabled-pairs-quick-check-old-report-optimal-params-corrected-data" title="Permanent link">&para;</a></h2>
+<p>Fixed-param evaluation only (no fresh grids), per spec. FULL = 2020-2026,
+OOS = 2025-2026.</p>
+<table>
+<thead>
+<tr>
+<th>Pair / events</th>
+<th>Old params</th>
+<th>NEW FULL E / CI</th>
+<th>NEW OOS E / CI</th>
+<th>Old verdict</th>
+<th>Holds?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GBPUSD / NFP+CPI+FOMC</td>
+<td>35/15/25</td>
+<td>+1.7 [-0.8, +4.1]</td>
+<td>+4.6 [-1.3, +10.0]</td>
+<td>avoid</td>
+<td><strong>HOLDS</strong></td>
+</tr>
+<tr>
+<td>USDCAD / NFP+CPI+FOMC</td>
+<td>10/15/15</td>
+<td>+1.1 [-0.5, +2.7]</td>
+<td>+1.3 [-1.9, +4.5]</td>
+<td>avoid</td>
+<td><strong>HOLDS</strong></td>
+</tr>
+<tr>
+<td>GBPJPY / NFP+CPI+FOMC</td>
+<td>10/15/10</td>
+<td>-2.4 [-3.5, -1.2]</td>
+<td>-1.2 [-3.8, +1.5]</td>
+<td>avoid</td>
+<td><strong>HOLDS</strong></td>
+</tr>
+<tr>
+<td>USDCAD / Canada events</td>
+<td>10/15/10 (new grid)</td>
+<td>+2.2 [+0.9, +3.6]</td>
+<td>WF OOS <strong>-3.7</strong></td>
+<td>avoid</td>
+<td><strong>HOLDS</strong> (WF fails)</td>
+</tr>
+<tr>
+<td>EURUSD / 6 US events</td>
+<td>10/20/10</td>
+<td><strong>+2.3 [+1.2, +3.4]</strong>, Sh 4.14</td>
+<td><strong>+2.6 [+0.3, +5.1]</strong></td>
+<td>avoid</td>
+<td><strong>QUESTIONABLE</strong> — now passes both full-sample and OOS</td>
+</tr>
+<tr>
+<td>CADJPY / Canada events</td>
+<td>45/20/15</td>
+<td>-3.4 [-4.9, -1.8]</td>
+<td>-3.3 [-6.4, -0.2]</td>
+<td>avoid</td>
+<td><strong>HOLDS</strong></td>
+</tr>
+<tr>
+<td>CADJPY / Japan events</td>
+<td>50/50/10</td>
+<td><strong>+8.5 [+5.3, +11.9]</strong>, Sh 4.94</td>
+<td><strong>+8.4 [+1.6, +15.2]</strong></td>
+<td>avoid</td>
+<td><strong>QUESTIONABLE</strong> — now passes both full-sample and OOS</td>
+</tr>
+<tr>
+<td>CADJPY / US events</td>
+<td>50/15/30</td>
+<td>-14.8 [-16.2, -13.3]</td>
+<td>-14.5</td>
+<td>avoid</td>
+<td><strong>HOLDS</strong></td>
+</tr>
+<tr>
+<td>EURCAD / Canada events</td>
+<td>25/15/15</td>
+<td>+0.4 [-1.5, +2.3]</td>
+<td>-0.0</td>
+<td>avoid</td>
+<td><strong>HOLDS</strong></td>
+</tr>
+<tr>
+<td>EURCAD / US events</td>
+<td>10/15/20</td>
+<td>-0.6 [-1.9, +0.7]</td>
+<td>+0.1</td>
+<td>avoid</td>
+<td><strong>HOLDS</strong></td>
+</tr>
+<tr>
+<td>GBPCAD / Canada events</td>
+<td>10/15/10</td>
+<td>+0.8 [-0.5, +2.1]</td>
+<td>-0.9</td>
+<td>avoid</td>
+<td><strong>HOLDS</strong></td>
+</tr>
+<tr>
+<td>GBPCAD / US events</td>
+<td>15/15/10</td>
+<td>-1.1 [-2.0, -0.1]</td>
+<td>-0.6</td>
+<td>avoid</td>
+<td><strong>HOLDS</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>EURUSD and CADJPY/Japan flags</strong>: these are <em>quick checks at old-report
+params</em>, evaluated once — no grid search, no multiple-comparison correction,
+no spread sensitivity. E[P&amp;L] per trade is small (EURUSD +2.3 pips vs 1.5-pip
+spread assumption; sensitive to spread estimate error). Do NOT enable either
+without a dedicated full analysis (grid + walk-forward + spread sweep +
+Bonferroni). Old "avoid" verdicts were computed on shifted data, so they carry
+no evidentiary weight either way.</p>
+<hr />
+<h2 id="production-recommendation">Production recommendation<a class="headerlink" href="#production-recommendation" title="Permanent link">&para;</a></h2>
+<p>Justified by corrected-data analysis (all at current configured params).
+Standing caveat from the control experiment: these PASSes certify
+ambient-volatility profitability on event days, not a news-reaction edge.
+The current config is <strong>not invalidated economically</strong> — event days perform
+like any other day and OOS holds up — <strong>but its rationale is wrong</strong> (it is
+a vol-harvesting bracket, not a news straddle). The proper follow-up is a
+dedicated "ambient bracket strategy" analysis (realistic off-event spreads,
+trade frequency, session effects); this report does NOT recommend expanding
+trading hours beyond the tested event schedule:</p>
+<ul>
+<li><strong>KEEP</strong> <code>USDZAR</code> in <code>trading.instruments</code>; keep 50/70/10 override; keep all
+  5 US event sources (NFP, CPI, FOMC, PPI, GDP) + SARB + SA CPI in
+  <code>config/events.yaml</code>.</li>
+<li><strong>KEEP</strong> <code>USDTRY</code> in <code>trading.instruments</code>; keep 50/70/10 override; keep all
+  9 US event sources + TCMB. TCMB override 20/60/10 still valid; 35/70/10 is
+  the new full-sample optimum (optional change).</li>
+<li><strong>REMOVE</strong> <code>USDJPY</code> from <code>trading.instruments</code> and BOJ Policy Rate from
+  <code>config/events.yaml</code> — no edge at configured params, walk-forward fails.</li>
+<li><strong>REMOVE</strong> <code>AUDUSD</code> from <code>trading.instruments</code> and RBA/AU CPI/AU
+  Employment + AUDUSD from US event pair lists — all 9 combos fail at
+  configured params; PPI actively negative.</li>
+<li><strong>OPTIONAL / user decision</strong>: consider re-enabling USDZAR/PCE (configured
+  params OOS +19.3 [+6.0, +32.7]; old exclusion was based on a train-optimal
+  WF artifact).</li>
+<li><strong>DO NOT</strong> enable EURUSD or CADJPY without a dedicated follow-up analysis
+  (see flags above).</li>
+</ul>
+<p>Per the Analysis-Driven Configuration rule, none of these changes have been
+applied to <code>config/settings.yaml</code> — they await user confirmation.</p>
+<hr />
+<h2 id="methodology-notes-caveats">Methodology notes &amp; caveats<a class="headerlink" href="#methodology-notes-caveats" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Fixed-param OOS vs train-optimal WF</strong>: the stock scripts' walk-forward
+   picks train-period-optimal params and evaluates them OOS. When the
+   train-optimal cell differs from the production cell, WF results describe
+   the wrong strategy. Both numbers are reported; the "Cfg-params OOS" column
+   is the production-relevant one.</li>
+<li><strong>Loader fix changes all comparisons</strong>: old reports 04-12 ran with the
+   date-collision loader on smaller CSVs (fewer event types → fewer
+   collisions). Old numbers are therefore not exactly reproducible even on old
+   data; treat OLD columns as approximate context.</li>
+<li><strong>Spread assumptions unchanged</strong> from prior reports (USDZAR 25, USDTRY 30,
+   USDJPY 2.0, AUDUSD 1.5, majors 1.5-4.0 pips event-time half-spread).</li>
+<li><strong>Bootstrap</strong>: 10,000 resamples, 95% CI, no Bonferroni correction on
+   single-combo evaluations (matches original per-combo methodology).</li>
+<li><strong>AU CPI / RBA sample sizes are tiny</strong> at distance 40 (N=5-25 triggered
+   trades) — the AUDUSD AU-event verdicts are driven as much by lack of
+   evidence as by negative evidence.</li>
+<li><strong>5-min data not re-downloaded</strong> — no current MC script consumes it.</li>
+<li>Unemployment Claims windows for 2025-12-25 and 2026-01-01 are genuinely
+   absent from Dukascopy (holiday weeks, "No data") — 2 windows per pair
+   missing, immaterial.</li>
+<li><strong>Stock-script substitution</strong>: <code>mc_remaining_us.py</code> and
+   <code>mc_audusd_explore.py</code> reruns were killed by the environment twice
+   (~55 min in, no output). Their grids were reproduced with
+   <code>scripts/mc_grids_fast.py</code> — same 540-cell grid, same CI-low ranking
+   criterion, same 2020-2023/2024-2026 WF split; the only deviation is that
+   cells are pre-ranked by a normal-approximation CI-low and only the top 25
+   are re-ranked with the full 10k bootstrap (the winner is bootstrap-ranked,
+   so the reported optimum is bootstrap-validated). Consequently
+   <code>scripts/data/MC_REMAINING_US_REPORT.md</code> and <code>MC_AUDUSD_EXPLORE_REPORT.md</code>
+   still contain the STALE June (shifted-data) text — superseded by this
+   report; raw new grid output is in
+   <code>scripts/data/revalidation_grids_usdtry.txt</code> / <code>revalidation_grids_audusd.txt</code>.</li>
+<li><strong><code>scripts/data/MC_NON_US_REPORT.md</code> and <code>event_split_results.json</code> were
+   regenerated</strong> by the clean reruns. The auto-generated "Recommendation"
+   text in MC_NON_US_REPORT.md (e.g. "USDCAD recommended") applies naive
+   CI-only thresholds and is superseded by this report's verdicts (USDCAD
+   fails walk-forward: OOS -3.7).</li>
+<li><strong>Evidence files</strong>: shifted CSVs in <code>scripts/data/dukascopy_SHIFTED_BAD/</code>;
+    pre-fix result JSON/reports in <code>scripts/data/OLD_RESULTS_SHIFTED_BAD/</code>;
+    configured-param evals in <code>scripts/data/revalidation_fixed_params.txt</code>
+    (script <code>scripts/mc_fixed_params_check.py</code>); ambient control output in
+    <code>scripts/data/revalidation_ambient_control.txt</code>
+    (script <code>scripts/mc_ambient_control.py</code>; Run D data in
+    <code>scripts/data/dukascopy/{PAIR}_ambient_1min.csv</code>).</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../17-ambient-bracket/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 17 — Ambient Bracket Strategy Analysis (USDZAR / USDTRY)">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                17 — Ambient Bracket Strategy Analysis (USDZAR / USDTRY)
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../15-mc-surprise/" class="md-footer__link md-footer__link--next" aria-label="Next: Monte Carlo Validation — Post-News Surprise Strategy">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Monte Carlo Validation — Post-News Surprise Strategy
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "content.code.copy", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

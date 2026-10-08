@@ -1,0 +1,3141 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Event-driven forex trading bot for major US economic news releases">
+      
+      
+        <meta name="author" content="Chris Selig">
+      
+      
+      
+        <link rel="prev" href="../18-event-net-of-cost/">
+      
+      
+        <link rel="next" href="../16-mc-revalidation/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>17 — Ambient Bracket Strategy Analysis (USDZAR / USDTRY) - Forex Trading Bot</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#17-ambient-bracket-strategy-analysis-usdzar-usdtry" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Forex Trading Bot" class="md-header__button md-logo" aria-label="Forex Trading Bot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Forex Trading Bot
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              17 — Ambient Bracket Strategy Analysis (USDZAR / USDTRY)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/chrisselig/forex_trading_bot" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chrisselig/forex_trading_bot
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Forex Trading Bot" class="md-nav__button md-logo" aria-label="Forex Trading Bot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Forex Trading Bot
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/chrisselig/forex_trading_bot" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chrisselig/forex_trading_bot
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forex Trading
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Forex Trading
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forex Trading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/market-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/news-trading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Trading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/risk-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risk Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trading Strategies
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Trading Strategies
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trading Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/target-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Target Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/currency-pairs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Currency Pairs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/ib-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IB API Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/auto-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/process-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Process Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/hosting-options/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosting Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/telegram-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram Notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../strategy-buildout-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strategy Buildout Plan — Research Candidates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../23-mc-net-of-cost-slippage-commission/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    23 — Net-of-Cost with Commission + Slippage Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../22-mc-majors-straddle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report 22 — Majors-Pair Event-Straddle Feasibility Study
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../21-mc-carry-threshold/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — Carry Strategy Differential Threshold
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20-cot-crash-risk-filter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    COT Crash-Risk Filter on Carry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../19-mc-esi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19 — Economic Surprise Index (ESI) Directional Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-event-net-of-cost/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    18 — Event-Strategy Net-of-Cost Audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17 — Ambient Bracket Strategy Analysis (USDZAR / USDTRY)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17 — Ambient Bracket Strategy Analysis (USDZAR / USDTRY)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tldr-production-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TL;DR / Production recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-a-measured-spread-profile-dukascopy-tick-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase A — Measured spread profile (Dukascopy tick data)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase A — Measured spread profile (Dukascopy tick data)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spread-profile-overall-by-anchor-pips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spread profile — overall by anchor (pips)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#yearly-trend-regime-shifts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Yearly trend &amp; regime shifts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calibration-the-headline-finding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calibration — the headline finding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-a4-live-idealpro-sampler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase A.4 — live IDEALPRO sampler
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-b-ambient-vs-event-under-measured-spreads-507010" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase B — Ambient vs event under measured spreads (50/70/10)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase B — Ambient vs event under measured spreads (50/70/10)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ambient-507010-all-anchors-20202026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ambient (50/70/10, all anchors, 2020–2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#event-windows-report-16-run-c-scope-identical-cost-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event windows (report 16 Run C scope, identical cost model)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-grid-walk-forward-train-20202024-test-20252026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter grid + walk-forward (train 2020–2024, test 2025–2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-c-portfolio-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase C — Portfolio design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase C — Portfolio design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vol-regime-terciles-prior-day-5-day-realized-vol-atr-proxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vol-regime terciles (prior-day 5-day realized vol; ATR proxy)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#margin-reality-49k-cad-account-25-of-availablefundsorder-cap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Margin reality (~$4.9K CAD account, 25%-of-AvailableFunds/order cap)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pass-bar-from-spec-and-verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pass bar (from spec) and verdict
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#production-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methodology-notes-caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Methodology notes &amp; caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reviewer-addendum-fable-2026-07-29" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reviewer addendum (Fable, 2026-07-29)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-mc-revalidation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16 — Full MC Re-validation on Timezone-Corrected Dukascopy Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-mc-surprise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Validation — Post-News Surprise Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-mc-value-ppp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — Value / PPP Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-mc-momentum/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — Currency Momentum Strategy (expanded pair universe)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-mc-remaining-us/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — Remaining US Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-mc-audusd-australia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — AUDUSD + Australian Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-mc-cad-pairs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — CAD Pair Exploration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-mc-gdp-pce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GDP &amp; PCE Monte Carlo Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-mc-ppi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PPI m/m Monte Carlo Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mc-eurusd-audusd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo — EURUSD &amp; AUDUSD on US Events (Jan 2020 — Jun 2026)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-non-us-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — Non-US Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-event-type-split/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event-Type Split Analysis — NFP vs CPI vs FOMC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-monte-carlo-6yr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — January 2020 to June 2026
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-monte-carlo-18mo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monte Carlo Optimization — 1-Minute Data (Jan 2025 — Jun 2026)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-dukascopy-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dukascopy Historical Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-straddle-hourly/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Straddle Parameter Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../todo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tldr-production-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TL;DR / Production recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-a-measured-spread-profile-dukascopy-tick-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase A — Measured spread profile (Dukascopy tick data)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase A — Measured spread profile (Dukascopy tick data)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spread-profile-overall-by-anchor-pips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spread profile — overall by anchor (pips)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#yearly-trend-regime-shifts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Yearly trend &amp; regime shifts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calibration-the-headline-finding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calibration — the headline finding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-a4-live-idealpro-sampler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase A.4 — live IDEALPRO sampler
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-b-ambient-vs-event-under-measured-spreads-507010" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase B — Ambient vs event under measured spreads (50/70/10)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase B — Ambient vs event under measured spreads (50/70/10)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ambient-507010-all-anchors-20202026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ambient (50/70/10, all anchors, 2020–2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#event-windows-report-16-run-c-scope-identical-cost-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event windows (report 16 Run C scope, identical cost model)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-grid-walk-forward-train-20202024-test-20252026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter grid + walk-forward (train 2020–2024, test 2025–2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-c-portfolio-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase C — Portfolio design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase C — Portfolio design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vol-regime-terciles-prior-day-5-day-realized-vol-atr-proxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vol-regime terciles (prior-day 5-day realized vol; ATR proxy)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#margin-reality-49k-cad-account-25-of-availablefundsorder-cap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Margin reality (~$4.9K CAD account, 25%-of-AvailableFunds/order cap)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pass-bar-from-spec-and-verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pass bar (from spec) and verdict
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#production-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methodology-notes-caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Methodology notes &amp; caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reviewer-addendum-fable-2026-07-29" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reviewer addendum (Fable, 2026-07-29)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="17-ambient-bracket-strategy-analysis-usdzar-usdtry">17 — Ambient Bracket Strategy Analysis (USDZAR / USDTRY)<a class="headerlink" href="#17-ambient-bracket-strategy-analysis-usdzar-usdtry" title="Permanent link">&para;</a></h1>
+<p><strong>Date</strong>: July 2026
+<strong>Status</strong>: REVIEWED &amp; APPROVED (Fable, 2026-07-29) — cost model verified
+independently (see reviewer addendum at end). No config changes made. No src/ changes.
+<strong>Spec</strong>: <code>docs/research/specs/17-ambient-bracket-spec.md</code>
+<strong>Builds on</strong>: <code>docs/research/16-mc-revalidation.md</code> (Run D ambient control)
+<strong>Scripts</strong>:
+<code>scripts/mc_spread_profile.py</code> (Phase A — Dukascopy tick spread profile + calibration),
+<code>scripts/mc_ambient_bracket.py</code> (Phases B/C — ambient/event sim, grid, portfolio),
+<code>scripts/sample_ib_spreads.py</code> (live IDEALPRO sampler, created + smoke-tested once).</p>
+<hr />
+<h2 id="tldr-production-recommendation">TL;DR / Production recommendation<a class="headerlink" href="#tldr-production-recommendation" title="Permanent link">&para;</a></h2>
+<p><strong>Do NOT build the ambient (trade-daily) bracket variant.</strong> The analysis
+does not clear the pass bar under any honest cost model, and — more
+importantly — it exposed that <strong>the load-bearing input the whole idea
+rests on (the spread) cannot be measured from the data we have, and the
+one 6.5-year source we do have (Dukascopy exotic tick spreads) is a
+retail-feed artifact 3–15× wider than the real IDEALPRO spread the bot
+actually pays.</strong></p>
+<p>The clean, valuable answer the spec asked for: <strong>measured spreads kill the
+ambient edge.</strong> Specifically —</p>
+<ol>
+<li>In report 16's own bracket cost model, spread only <em>gates which trades
+   trigger</em>; it is never deducted from realized P&amp;L. So "passing at p75/p95
+   measured spreads" in that model is <strong>hollow</strong> — E[P&amp;L]/trade actually
+   <em>rises</em> as the spread widens (wider trigger selects stronger breakouts).</li>
+<li>Under an honest <strong>one-full-spread-per-round-trip</strong> cost (correct for
+   bid-based backtest data), the ambient design is <strong>deeply negative at
+   Dukascopy measured spreads</strong> (−74 to −259 pips/trade) and <strong>still
+   negative-to-marginal at the real IDEALPRO spread</strong> (USDZAR −11, USDTRY
+   −1.3 pips/trade; walk-forward OOS USDZAR −13, USDTRY +2.4 with a CI that
+   spans zero).</li>
+<li>The pair whose economics are not hopeless is <strong>USDTRY</strong>, and only
+   because its true IDEALPRO spread is genuinely tight (~6–12 pips), and
+   only in the two liquid sessions (09:00 / 14:00 UTC) — its overnight
+   spread blows out to 130–300 pips. USDZAR's ~24-pip spread is larger than
+   the gross per-trade edge of a 50/70/10 bracket, so it cannot profit
+   from trading daily.</li>
+</ol>
+<p>Keep the current <strong>event-scheduled</strong> configuration exactly as report 16
+left it. This report does <strong>not</strong> recommend expanding trading hours.</p>
+<p><strong>Standing caveat with teeth</strong>: the honest full-spread cost model also
+turns report 16's <em>event</em> numbers negative at real spreads (USDZAR event
+−6.7, USDTRY event −1.5 pips/trade). That is because reports 04–16 never
+charged the spread as a P&amp;L deduction — only as a trigger shift. Whether
+the live event strategy truly clears its spread is a separate question
+that needs the live sampler's data; it is out of scope here, but the same
+scrutiny applies. Do not read report 16's "+15 pips/trade on event days"
+as net of costs — it is gross.</p>
+<hr />
+<h2 id="phase-a-measured-spread-profile-dukascopy-tick-data">Phase A — Measured spread profile (Dukascopy tick data)<a class="headerlink" href="#phase-a-measured-spread-profile-dukascopy-tick-data" title="Permanent link">&para;</a></h2>
+<h3 id="method">Method<a class="headerlink" href="#method" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Tick data (<code>dukascopy_python</code>, <code>INTERVAL_TICK</code>, both bid+ask in one call),
+  fetched with <strong>tz-aware UTC</strong> datetimes only (the report-16 catastrophic
+  naive-datetime bug is not reintroduced; verified in <code>mc_spread_profile.py</code>).</li>
+<li><strong>200 sampled weekdays/pair</strong>, 2020–2026, holiday weeks excluded: report
+  16's 160 Run-D non-event days + 40 non-overlapping extension days (seed 43).</li>
+<li>Four <strong>30-min probe windows/day</strong> at anchors <strong>03:00 / 09:00 / 14:00 /
+  20:00 UTC</strong> (Asia / early London / London–NY overlap / NY-only).</li>
+<li>Spread per tick = (askPrice − bidPrice) / pip. <strong>All four anchors were
+  downloaded</strong> (the 20:00 anchor was NOT skipped). 55 windows returned no
+  ticks (genuine USDTRY overnight illiquidity — marker files written).</li>
+<li><strong>Total tick data downloaded: 184 MB</strong> (cached under
+  <code>scripts/data/_cache/ticks/</code>). Full-day 1-min bars for Phase B: 32 MB
+  (<code>scripts/data/_cache/ambient1m/</code>).</li>
+</ul>
+<h3 id="spread-profile-overall-by-anchor-pips">Spread profile — overall by anchor (pips)<a class="headerlink" href="#spread-profile-overall-by-anchor-pips" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Anchor (UTC)</th>
+<th>median</th>
+<th>p75</th>
+<th>p95</th>
+<th>days</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USDZAR</td>
+<td>03:00</td>
+<td>102.2</td>
+<td>130.7</td>
+<td>186.6</td>
+<td>200</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>09:00</td>
+<td>57.9</td>
+<td>67.3</td>
+<td>87.5</td>
+<td>200</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>14:00</td>
+<td>59.0</td>
+<td>68.4</td>
+<td>101.4</td>
+<td>200</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>20:00</td>
+<td>77.9</td>
+<td>89.8</td>
+<td>137.4</td>
+<td>200</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>03:00</td>
+<td>168.2</td>
+<td>259.7</td>
+<td>478.6</td>
+<td>160</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>09:00</td>
+<td>48.8</td>
+<td>77.4</td>
+<td>194.3</td>
+<td>200</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>14:00</td>
+<td>48.1</td>
+<td>89.5</td>
+<td>220.9</td>
+<td>200</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>20:00</td>
+<td>136.1</td>
+<td>304.7</td>
+<td>480.2</td>
+<td>185</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Session structure</strong>: for both pairs the two liquid European/US sessions
+(09:00, 14:00) are 2–4× tighter than the Asia (03:00) and NY-close (20:00)
+windows. Any ambient strategy that trades all four anchors is trading its
+worst spreads half the time.</p>
+<h3 id="yearly-trend-regime-shifts">Yearly trend &amp; regime shifts<a class="headerlink" href="#yearly-trend-regime-shifts" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>USDZAR is tightening</strong>: 03:00 median 129 (2020) → 71 (2026); 14:00
+  median 71 → 45. Structural liquidity improvement over the window.</li>
+<li><strong>USDTRY widened sharply post-2023 election / CBRT policy pivot</strong>
+  (flagged split 2023-06-01): pooled median 33.7 → 92.8 pips, p75 78.8 →
+  168.9. The 03:00/14:00 medians confirm it (14:00: 21→98 pips into 2022,
+  still 56–94 in 2024–26). TRY spread is regime-dependent and elevated
+  versus its pre-2022 self.</li>
+</ul>
+<h3 id="calibration-the-headline-finding">Calibration — the headline finding<a class="headerlink" href="#calibration-the-headline-finding" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Journal mean (n)</th>
+<th>Live IDEALPRO smoke</th>
+<th>Report 16 assumed</th>
+<th>Dukascopy p75 (avg anchor)</th>
+<th>Dukascopy ÷ real</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USDZAR</td>
+<td><strong>23.5</strong> (n=5)</td>
+<td><strong>24.9</strong></td>
+<td>25.0</td>
+<td>89.0</td>
+<td>~3.6×</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td><strong>12.1</strong> (n=12)</td>
+<td><strong>5.9</strong></td>
+<td>30.0</td>
+<td>182.8</td>
+<td>~8–15×</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>The trade journal's real IDEALPRO <code>entry_spread_pips</code> and a one-shot live
+  snapshot (<code>sample_ib_spreads.py</code>, clientId=9, port 7497, read-only) both
+  land <strong>right on report 16's USDZAR assumption (25)</strong> and <strong>well below its
+  USDTRY assumption (30)</strong>. Report 16's flat 25/30 was well-calibrated
+  (USDZAR) to conservative (USDTRY) <strong>for the IBKR venue</strong>.</li>
+<li><strong>Dukascopy exotic tick spreads are NOT the spread the bot trades.</strong>
+  Dukascopy's retail feed marks exotics 3.6× (ZAR) to 8–15× (TRY) wider
+  than IDEALPRO. Using Dukascopy spreads as "the measured cost" would model
+  a broker the user does not and cannot trade with (OANDA-class retail
+  markup; recall OANDA is unavailable in Alberta anyway).</li>
+<li><strong>Consequence for the spec</strong>: "use measured spreads instead of assumed"
+  presumed Dukascopy ticks would be the realistic measure. They are not.
+  The realistic measure is the IDEALPRO spread, and the only trustworthy
+  IDEALPRO data is ~17 journal fills from a single month plus one live
+  snapshot — far too little to characterize a daily all-session strategy.
+  That is why <code>sample_ib_spreads.py</code> exists (see Phase A.4).</li>
+</ul>
+<h3 id="phase-a4-live-idealpro-sampler">Phase A.4 — live IDEALPRO sampler<a class="headerlink" href="#phase-a4-live-idealpro-sampler" title="Permanent link">&para;</a></h3>
+<p><code>scripts/sample_ib_spreads.py</code>: standalone <code>ib_async</code> client, <strong>clientId=9
+only</strong> (never 1 — that is the live bot), read-only snapshots, appends to
+<code>scripts/data/ib_spread_samples.csv</code>, disconnects, exits. Smoke-tested once
+against the running paper TWS (port 7497): USDZAR 24.9 pips, USDTRY 5.9 pips
+appended successfully. Intended to run hourly on weekdays (cron stanza in
+the script docstring — <strong>not installed automatically</strong>) to build the
+multi-session IDEALPRO spread series this analysis lacked.</p>
+<hr />
+<h2 id="phase-b-ambient-vs-event-under-measured-spreads-507010">Phase B — Ambient vs event under measured spreads (50/70/10)<a class="headerlink" href="#phase-b-ambient-vs-event-under-measured-spreads-507010" title="Permanent link">&para;</a></h2>
+<p><code>simulate_bracket()</code> was verified <strong>bit-identical to report 16's
+<code>simulate_straddle()</code></strong> on 315 real windows (<code>--selftest</code>), using the same
+<code>[anchor−2h, anchor+4h]</code> window and mechanics as report 16 Run D.</p>
+<p>Two cost conventions are reported:</p>
+<ul>
+<li><strong>[r16]</strong> = report 16's model. The spread shifts the entry-trigger level
+  (<code>buy_stop = mid + distance + spread/2</code>) but TP/SL are measured <em>from that
+  entry</em>, so realized P&amp;L is exactly +tp / −sl / timeout and <strong>never
+  reflects the spread</strong>. Empirically E[P&amp;L] <em>rises</em> with spread (wider
+  trigger ⇒ fewer, stronger breakouts; N falls). This model charges <strong>no net
+  transaction cost</strong>.</li>
+<li><strong>[full]</strong> = [r16] minus <strong>one full spread per round trip</strong>, the standard
+  conservative convention for bid-based backtest data (you buy at the ask,
+  the trigger was measured on the bid, so realized P&amp;L overstates by one
+  spread). This is not double-counting the spread/2 trigger shift — that
+  shift is a selection effect, the full spread is the transaction cost.</li>
+</ul>
+<h3 id="ambient-507010-all-anchors-20202026">Ambient (50/70/10, all anchors, 2020–2026)<a class="headerlink" href="#ambient-507010-all-anchors-20202026" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Spread source</th>
+<th>[r16] E / CI</th>
+<th>[full] E / CI</th>
+<th>N</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USDZAR</td>
+<td>flat 25 (r16)</td>
+<td>+12.7 [+10.9,+14.6]</td>
+<td><strong>−12.3 [−14.1,−10.4]</strong></td>
+<td>1437</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>IDEALPRO 23.5</td>
+<td>+12.4 [+10.6,+14.3]</td>
+<td><strong>−11.1 [−12.9,−9.2]</strong></td>
+<td>1441</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>Dukascopy p75</td>
+<td>+13.8 [+11.8,+15.7]</td>
+<td><strong>−73.9 [−76.4,−71.5]</strong></td>
+<td>1348</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>Dukascopy p95</td>
+<td>+14.8 [+12.8,+16.8]</td>
+<td><strong>−109.2 [−113.0,−105.5]</strong></td>
+<td>1296</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>flat 30 (r16)</td>
+<td>+11.2 [+9.1,+13.3]</td>
+<td><strong>−18.8 [−20.9,−16.7]</strong></td>
+<td>1055</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>IDEALPRO 12.1</td>
+<td>+10.8 [+8.8,+13.0]</td>
+<td><strong>−1.3 [−3.3,+0.9]</strong></td>
+<td>1103</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>Dukascopy p75</td>
+<td>+15.0 [+12.3,+17.8]</td>
+<td><strong>−135.9 [−145.0,−126.9]</strong></td>
+<td>746</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>Dukascopy p95</td>
+<td>+15.7 [+12.8,+18.7]</td>
+<td><strong>−259.0 [−276.2,−242.3]</strong></td>
+<td>597</td>
+</tr>
+</tbody>
+</table>
+<h3 id="event-windows-report-16-run-c-scope-identical-cost-model">Event windows (report 16 Run C scope, identical cost model)<a class="headerlink" href="#event-windows-report-16-run-c-scope-identical-cost-model" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Spread source</th>
+<th>[r16] E / CI</th>
+<th>[full] E / CI</th>
+<th>N</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USDZAR</td>
+<td>IDEALPRO 23.5</td>
+<td>+16.8 [+14.3,+19.2]</td>
+<td><strong>−6.7 [−9.2,−4.3]</strong></td>
+<td>905</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>Dukascopy p75</td>
+<td>+17.5 [+15.1,+20.1]</td>
+<td><strong>−53.2 [−55.7,−50.7]</strong></td>
+<td>889</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>IDEALPRO 12.1</td>
+<td>+10.6 [+8.8,+12.4]</td>
+<td><strong>−1.5 [−3.3,+0.3]</strong></td>
+<td>1488</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>Dukascopy p75</td>
+<td>+12.4 [+10.4,+14.4]</td>
+<td><strong>−84.1 [−88.3,−79.9]</strong></td>
+<td>1258</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Event vs ambient</strong>: under the identical cost model they are
+indistinguishable (event ~+2–3 pips over ambient in [r16], CIs overlap) —
+confirming report 16's core finding that this is ambient volatility
+harvesting, not a news-reaction edge. The event schedule adds no cost-
+clearing advantage; it just trades less often.</p>
+<h3 id="parameter-grid-walk-forward-train-20202024-test-20252026">Parameter grid + walk-forward (train 2020–2024, test 2025–2026)<a class="headerlink" href="#parameter-grid-walk-forward-train-20202024-test-20252026" title="Permanent link">&para;</a></h3>
+<p>18-cell grid (distance {35,50,65} × TP {50,70,90} × SL {10,15}) at
+Dukascopy p75, ranked by bootstrap CI-low. Because [r16] is spread-
+insensitive, the grid optimum drifts to the widest cell (<strong>65/90/10</strong> for
+both pairs — more selective trigger, bigger conditional win). Walk-forward
+OOS:</p>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>WF OOS 50/70/10 [r16] @p75</th>
+<th>@p95</th>
+<th>[full] @p75</th>
+<th>[full] @p95</th>
+<th>[full] @ IDEALPRO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USDZAR</td>
+<td>+12.0 [+8.2,+15.8]</td>
+<td>+11.5 [+7.8,+15.3]</td>
+<td>−64.3</td>
+<td>−93.0</td>
+<td><strong>−13.1 [−16.6,−9.3]</strong></td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>+14.5 [+8.3,+21.1]</td>
+<td>+16.8 [+9.8,+24.2]</td>
+<td>−157.7</td>
+<td>−237.1</td>
+<td><strong>+2.4 [−2.2,+7.2]</strong></td>
+</tr>
+</tbody>
+</table>
+<p>50/70/10 stays a reasonable cell in the [r16] model (no OOS collapse), so
+the <em>geometry</em> is fine; the strategy dies on <strong>cost</strong>, not on parameter
+overfit.</p>
+<hr />
+<h2 id="phase-c-portfolio-design">Phase C — Portfolio design<a class="headerlink" href="#phase-c-portfolio-design" title="Permanent link">&para;</a></h2>
+<p>One bracket per pair per anchor per day, no concurrent same-pair trades
+(overlap guard on exit time), ~4.5h max hold (report-16 window). Frequency
+is high because it trades daily across up to 4 anchors. Metrics shown for
+[r16] (no cost) and [full] (−1 spread) at Dukascopy p75; <strong>the [full]
+column is the decision-relevant one.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Design</th>
+<th>trades/yr</th>
+<th>[r16] E/trade</th>
+<th>[full] E/trade</th>
+<th>[r16] E/yr</th>
+<th>[full] E/yr</th>
+<th>annSharpe (daily, r16)</th>
+<th>DD95 [r16]/[full]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D1 both, 4 anchors</td>
+<td>~1552</td>
+<td>+14.2</td>
+<td><strong>−96.0</strong></td>
+<td>+22,076</td>
+<td>−148,959</td>
+<td>13.5</td>
+<td>220 / 210,260</td>
+</tr>
+<tr>
+<td>D2 both, 14:00 only</td>
+<td>~454</td>
+<td>+13.1</td>
+<td><strong>−62.5</strong></td>
+<td>+5,929</td>
+<td>−28,377</td>
+<td>7.5</td>
+<td>240 / 38,822</td>
+</tr>
+<tr>
+<td>D3 both, 09:00+14:00</td>
+<td>~875</td>
+<td>+13.5</td>
+<td><strong>−58.8</strong></td>
+<td>+11,788</td>
+<td>−51,483</td>
+<td>10.8</td>
+<td>240 / 71,160</td>
+</tr>
+<tr>
+<td>D4 USDZAR, 4 anchors</td>
+<td>~1698</td>
+<td>+13.8</td>
+<td><strong>−73.9</strong></td>
+<td>+23,389</td>
+<td>−125,536</td>
+<td>14.9</td>
+<td>230 / 102,520</td>
+</tr>
+<tr>
+<td>D5 USDTRY, 4 anchors</td>
+<td>~964</td>
+<td>+15.0</td>
+<td><strong>−135.9</strong></td>
+<td>+14,503</td>
+<td>−130,969</td>
+<td>11.2</td>
+<td>200 / 109,831</td>
+</tr>
+</tbody>
+</table>
+<p>At Dukascopy spreads every design is catastrophic under [full]. The [r16]
+numbers look spectacular (annualized daily Sharpe 7–15, tens of thousands
+of pips/yr) precisely <em>because</em> [r16] charges no cost — do not be seduced by
+them. Pair daily-P&amp;L correlation is low (<strong>r = 0.22</strong>, n=55 common days),
+so diversification is real but irrelevant if each leg is unprofitable.</p>
+<h3 id="vol-regime-terciles-prior-day-5-day-realized-vol-atr-proxy">Vol-regime terciles (prior-day 5-day realized vol; ATR proxy)<a class="headerlink" href="#vol-regime-terciles-prior-day-5-day-realized-vol-atr-proxy" title="Permanent link">&para;</a></h3>
+<p>Daily Dukascopy CSVs carry close only, so "prior-day ATR" is the 5-day
+rolling std of daily log returns ending the prior day.</p>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Regime</th>
+<th>[r16] E / CI</th>
+<th>[full] E / CI (Duka p75)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USDZAR</td>
+<td>low</td>
+<td>+10.7 [+7.5,+13.9]</td>
+<td>−75.3</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>mid</td>
+<td>+12.2 [+8.9,+15.5]</td>
+<td>−76.1</td>
+</tr>
+<tr>
+<td>USDZAR</td>
+<td>high</td>
+<td><strong>+18.3 [+14.8,+21.8]</strong></td>
+<td>−70.5</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>low</td>
+<td>+13.6 [+7.9,+19.7]</td>
+<td>−172.5</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>mid</td>
+<td>+11.8 [+7.5,+16.3]</td>
+<td>−146.9</td>
+</tr>
+<tr>
+<td>USDTRY</td>
+<td>high</td>
+<td><strong>+18.5 [+14.4,+22.6]</strong></td>
+<td>−105.8</td>
+</tr>
+</tbody>
+</table>
+<p>The gross ([r16]) edge is <strong>concentrated in high-vol regimes</strong> (+18 vs +11
+in low-vol) for both pairs — consistent with volatility harvesting. But
+high vol also comes with wider spreads, and under [full] even the high-vol
+tercile is deeply negative at Dukascopy spreads. A high-vol-only ambient
+filter would help gross P&amp;L but does not rescue the cost problem.</p>
+<h3 id="margin-reality-49k-cad-account-25-of-availablefundsorder-cap">Margin reality (~$4.9K CAD account, 25%-of-AvailableFunds/order cap)<a class="headerlink" href="#margin-reality-49k-cad-account-25-of-availablefundsorder-cap" title="Permanent link">&para;</a></h3>
+<p>Exotic margin rates (USDTRY ~30%, USDZAR ~10%) and the <code>max_margin_pct_
+per_trade: 25.0</code> cap mean a single risk-sized straddle already consumes
+most of one order's margin budget. With <code>max_concurrent_positions: 4</code> and
+each straddle holding two legs, <strong>the account cannot run both pairs across
+4 daily anchors concurrently</strong> — a daily ambient schedule (D1: ~6
+placements/day, up to 4 legs open) would routinely hit the margin cap and
+have orders scaled down or rejected (Error 201). Practical budget: ~1–2
+concurrent straddle legs. The high trades/yr counts in the table above are
+therefore <strong>not simultaneously executable</strong> at this account size; the
+ambient design is also <strong>capacity-constrained</strong>, independent of the cost
+verdict.</p>
+<hr />
+<h2 id="pass-bar-from-spec-and-verdict">Pass bar (from spec) and verdict<a class="headerlink" href="#pass-bar-from-spec-and-verdict" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>A design point passes only if <strong>95% CI &gt; 0 at p75 measured spreads AND
+walk-forward OOS positive AND survives p95 spread stress.</strong></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Reading of "measured spread"</th>
+<th>USDZAR</th>
+<th>USDTRY</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dukascopy p75/p95, [r16] model (literal)</td>
+<td>passes hollowly</td>
+<td>passes hollowly</td>
+</tr>
+<tr>
+<td>Dukascopy p75/p95, [full] honest cost</td>
+<td><strong>FAIL</strong> (−74/−109)</td>
+<td><strong>FAIL</strong> (−136/−259)</td>
+</tr>
+<tr>
+<td>IDEALPRO real spread, [full] honest cost</td>
+<td><strong>FAIL</strong> (−11; OOS −13)</td>
+<td><strong>FAIL</strong> (−1.3; OOS +2.4, CI spans 0)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>The only reading that "passes" is the one where the cost model charges
+  nothing (report 16's own model). That certifies the <em>bracket geometry
+  clears no cost</em>, which is not a tradeable claim.</li>
+<li>Every reading that charges a real transaction cost <strong>fails the bar</strong> — at
+  Dukascopy spreads by a mile, and at the real IDEALPRO spread still
+  negative (USDZAR) or a CI that spans zero (USDTRY OOS +2.4 [−2.2,+7.2]).</li>
+</ul>
+<p><strong>No ambient design point passes the full bar.</strong></p>
+<hr />
+<h2 id="production-recommendation">Production recommendation<a class="headerlink" href="#production-recommendation" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Do not build the ambient / trade-daily bracket variant.</strong> It fails the
+   pass bar under every honest cost model. USDZAR's real spread (~24 pips)
+   exceeds the gross per-trade edge of a 50/70/10 bracket; it cannot profit
+   from trading daily. USDTRY is the only pair with a plausible positive
+   net expectancy, and only in its two liquid sessions and only if its tight
+   ~6–12-pip IDEALPRO spread persists (its overnight spread is 130–300 pips).</li>
+<li><strong>Keep the current event-scheduled config unchanged</strong> (report 16 scope).
+   This report changes no <code>config/settings.yaml</code> or <code>config/events.yaml</code>.</li>
+<li><strong>Run <code>sample_ib_spreads.py</code> on the suggested weekday-hourly cron</strong> for a
+   few months before <em>any</em> ambient work is reconsidered. The single most
+   important missing input is a real multi-session IDEALPRO spread
+   distribution; Dukascopy cannot supply it and the journal is too small.</li>
+<li><strong>Flag for a future report (out of scope here)</strong>: the honest full-spread
+   cost turns report 16's <em>event</em> numbers negative at real spreads too,
+   because reports 04–16 never deducted the spread from realized P&amp;L. The
+   live event strategy's true net-of-cost profitability deserves the same
+   audit. Report 16's "+10–15 pips/trade" figures are <strong>gross, not net.</strong></li>
+</ol>
+<hr />
+<h2 id="methodology-notes-caveats">Methodology notes &amp; caveats<a class="headerlink" href="#methodology-notes-caveats" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Bid-only tick data.</strong> Dukascopy <code>OFFER_SIDE_BID</code> returns both bid and
+   ask columns, so spreads are true measured bid/ask — not a one-sided
+   proxy. Bars used for the P&amp;L sim are bid bars (as in all reports 04–16),
+   which is exactly why the [full] one-full-spread deduction is the correct
+   cost correction.</li>
+<li><strong>Dukascopy is a retail feed.</strong> Its exotic spreads do not represent
+   IDEALPRO and are used here only to (a) characterize session/regime
+   <em>structure</em> and (b) run the spec's literal p75/p95 stress. All economic
+   verdicts key off the IDEALPRO-calibrated spread.</li>
+<li><strong>IDEALPRO calibration sample is small</strong> (5 USDZAR + 12 USDTRY journal
+   fills, all July 2026, plus one live snapshot each). The 23.5 / 12.1 / 5.9
+   figures are indicative, not distributions. This is the analysis's biggest
+   uncertainty and the reason for the sampler.</li>
+<li><strong>[r16] vs [full] cost model</strong> is the crux. [r16] reproduces reports
+   04–16 exactly (verified). [full] adds the omitted transaction cost. Both
+   are shown; [full] at IDEALPRO is the decision criterion.</li>
+<li><strong>Bootstrap</strong>: 10,000 resamples, 95% CI, no Bonferroni (single-combo
+   evals, matching prior reports). Path max-drawdown from 2,000 resampled
+   equity paths.</li>
+<li><strong>Vol proxy</strong> is 5-day realized-vol (close-only), not true ATR — daily
+   Dukascopy CSVs lack high/low.</li>
+<li><strong>Margin analysis</strong> is from documented margin rates and the configured
+   25% cap, not a live whatIf sweep (no orders were placed beyond the single
+   read-only spread snapshot).</li>
+<li><strong>Foreground, resume-safe downloads</strong>: 184 MB ticks + 32 MB 1-min bars,
+   fetched in bounded foreground chunks with per-window/per-day caching.</li>
+<li><strong>No config or src changes; no commits/pushes.</strong> Evidence:
+   <code>scripts/data/_cache/ticks/</code>, <code>scripts/data/_cache/ambient1m/</code>,
+   <code>scripts/data/ambient_bracket_results.json</code>,
+   <code>scripts/data/ib_spread_samples.csv</code>.</li>
+</ol>
+<hr />
+<h2 id="reviewer-addendum-fable-2026-07-29">Reviewer addendum (Fable, 2026-07-29)<a class="headerlink" href="#reviewer-addendum-fable-2026-07-29" title="Permanent link">&para;</a></h2>
+<p><strong>Cost model verified.</strong> I re-derived the bracket accounting from
+<code>simulate_bracket()</code> mechanics: bars are bid, entry triggers on the bid but a
+real long fills at the ask (bid+spread) while the exit sells at the bid, so
+each round trip is overstated by exactly one full spread. The <code>+spread/2</code>
+trigger shift nets out because TP/SL are measured from the shifted entry.
+Deducting one full spread is correct and does <strong>not</strong> double-count. The report's
+central methodological finding — reports 04–16 report <strong>gross</strong> P&amp;L, never
+deducting the round-trip spread — is sound.</p>
+<p><strong>Live reality check (trade journal, data/forex_bot.db).</strong> The event straddle
+strategy has <strong>filled 0 of 30 orders</strong> (16 cancelled, 12 error — the size/margin
+rejections resolved over PRs #75/#76/#80, 2 pending). It has never executed a
+single fill, so there is <strong>no live realized P&amp;L</strong> to confirm or refute the
+backtested edge. Combined with the gross-not-net finding, the honest status of
+the flagship strategy is: <strong>its real-world profitability is unproven, and the
+backtest edge that justified it may not survive real IDEALPRO spreads.</strong></p>
+<p><strong>Secondary: journal/broker desync.</strong> The journal holds 3 carry trades marked
+open (USDTRY, AUDJPY, USDZAR; opened Jul 6–13) while IB reconcile reports 0
+positions. AUDJPY isn't even in the instrument set. Needs a separate
+reconciliation pass — not in scope here.</p>
+<p><strong>Follow-ups filed</strong> (todo.md): (1) event-strategy net-of-cost audit — re-run
+reports 04–16 with the one-full-spread deduction at measured IDEALPRO spreads;
+this is now higher priority than any new strategy candidate. (2) investigate why
+straddle orders never fill. (3) carry journal/broker reconciliation.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../18-event-net-of-cost/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 18 — Event-Strategy Net-of-Cost Audit">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                18 — Event-Strategy Net-of-Cost Audit
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../16-mc-revalidation/" class="md-footer__link md-footer__link--next" aria-label="Next: 16 — Full MC Re-validation on Timezone-Corrected Dukascopy Data">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                16 — Full MC Re-validation on Timezone-Corrected Dukascopy Data
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "content.code.copy", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
